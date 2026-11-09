@@ -18,6 +18,13 @@ struct DBManApp: App {
         .windowResizability(.contentMinSize)
         .defaultSize(width: 980, height: 620)
 
+        Window("Agents", id: "agents") {
+            AgentsWindow()
+                .environment(app)
+                .frame(minWidth: 960, minHeight: 600)
+        }
+        .defaultSize(width: 1100, height: 680)
+
         // One window per open connection; the value is the profile id.
         WindowGroup("Database", for: UUID.self) { $profileID in
             WorkspaceWindow(profileID: profileID)

@@ -19,9 +19,28 @@ import SwiftUI
     static var select: Int? { env("DBMAN_SELECT").flatMap(Int.init) }
     static var connectURL: String? { env("DBMAN_CONNECT_TEST") }
     static var openSettings: Bool { env("DBMAN_WINDOW") == "settings" }
+    /// DBMAN_AGENTS=<platform id>|perms|activity|agentpack|other opens the Agents window there. DBMAN_AGENT_HOME=<dir> is the fake HOME for detection (AgentsModel).
+    static var agentsSection: String? { env("DBMAN_AGENTS") }
+
+    /// DBMAN_SHOT=<dir>: after 6 s write the Agents window's own pixels, one PNG per DBMAN_SHOT_SECTIONS entry (e.g. cursor,perms,activity), to <dir>/agents-<section>.png.
+    /// In-process, so no screen capture is involved.
+    private static func shoot() {
+        guard let dir = env("DBMAN_SHOT") else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(6))
+            for s in (env("DBMAN_SHOT_SECTIONS") ?? "").split(separator: ",").map(String.init) {
+                AgentsModel.shared.section = AgentsWindow.section(s)
+                try? await Task.sleep(for: .seconds(1))
+                guard let v = NSApp.windows.first(where: { $0.title == "Agents" })?.contentView?.superview, let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) else { continue }
+                v.cacheDisplay(in: v.bounds, to: rep)
+                try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "\(dir)/agents-\(s).png"))
+            }
+        }
+    }
 
     /// Called once at launch.
     static func launch() {
+        shoot()
         if env("DBMAN_APPEARANCE") == "dark" { NSApp.appearance = NSAppearance(named: .darkAqua) }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(300)) // let the scene install openWindow
@@ -84,6 +103,7 @@ import SwiftUI
     static var select: Int? { nil }
     static var connectURL: String? { nil }
     static var openSettings: Bool { false }
+    static var agentsSection: String? { nil }
     static func launch() {}
     static func connected(_ ws: WorkspaceModel) async {}
     #endif

@@ -8,7 +8,11 @@ public final class MCPService: @unchecked Sendable {
     static let version = "2.0.0"
     let b: Backend
     let schemas = SchemaCache()
+    public let live = LiveSessions()
     public init(_ backend: Backend) { b = backend }
+
+    /// The transport of `server` ended.
+    func ended(_ server: Server) { live.closed(ObjectIdentifier(server)) }
 
     /// Starts a server on `transport`; returns when the handshake machinery is up. `initialize.clientInfo` becomes an `agents` row.
     @discardableResult
@@ -43,6 +47,7 @@ public final class MCPService: @unchecked Sendable {
             let id = Self.slug(info.name)
             try b.store.upsertAgent(id: id, name: info.name, version: info.version)
             agent.id = id
+            live.opened(ObjectIdentifier(server), name: info.name, version: info.version)
         }
         return server
     }

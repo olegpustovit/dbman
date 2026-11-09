@@ -46,9 +46,11 @@ struct TableBrowserView: View {
                 HStack(spacing: HT.M.gap) {
                     mainFrame(d)
                     if ws.showInspector, tab == 0, !ws.layers.open {
-                        TableInspector(ws: ws, info: info, columns: columnNames, row: selection.flatMap { $0 < d.rows.count ? d.rows[$0] : nil },
-                                       focused: $focused, stats: stats, staged: mine, onFollow: { follow($0, in: d.rows) })
-                            .frame(width: HT.M.inspector)
+                        AgentsInspector(ws: ws) {
+                            TableInspector(ws: ws, info: info, columns: columnNames, row: selection.flatMap { $0 < d.rows.count ? d.rows[$0] : nil },
+                                           focused: $focused, stats: stats, staged: mine, onFollow: { follow($0, in: d.rows) })
+                        }
+                        .frame(width: HT.M.inspector)
                     }
                 }
                 if ws.showConsole { ConsolePanel(ws: ws).frame(height: 160) }

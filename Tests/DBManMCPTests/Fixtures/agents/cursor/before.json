@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "dbman": {
+      "args": ["--stdio"],
+      "command": "/Users/me/Downloads/DBMan.app/Contents/Helpers/dbman-mcp"
+    },
+    "linear": {
+      "url": "https://mcp.linear.app/sse"
+    }
+  }
+}

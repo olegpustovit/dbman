@@ -1,0 +1,12 @@
+{
+  "inputs": [],
+  "servers": {
+    "dbman": {
+      "args": [
+        "--stdio"
+      ],
+      "command": "/Applications/DBMan.app/Contents/Helpers/dbman-mcp",
+      "type": "stdio"
+    }
+  }
+}

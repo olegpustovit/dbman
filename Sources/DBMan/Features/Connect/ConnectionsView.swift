@@ -53,20 +53,24 @@ struct ConnectionsView: View {
             }
             .frame(width: 260)
 
-            Group {
-                if let p = selected, p.environment == .system { internalPane(p) } else {
-                    ConnectionEditor(profile: selected) { id in
-                        selectedID = id
-                        isNew = false
+            VStack(spacing: HT.M.gap) {
+                if app.profiles.allSatisfy({ $0.environment == .system }) { firstRun }
+                Group {
+                    if let p = selected, p.environment == .system { internalPane(p) } else {
+                        ConnectionEditor(profile: selected) { id in
+                            selectedID = id
+                            isNew = false
+                        }
                     }
                 }
+                .id(editorKey)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .id(editorKey)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(HT.M.windowPadding)
         .background(DotGridBackground())
         .task { if DevHooks.openSettings { try? await Task.sleep(for: .milliseconds(500)); openSettings() } }
+        .task { if DevHooks.agentsSection != nil { try? await Task.sleep(for: .milliseconds(500)); openWindow(id: "agents") } }
         .dropDestination(for: URL.self) { urls, _ in
             let files = urls.filter { Self.sqliteExts.contains($0.pathExtension.lowercased()) }
             files.forEach { app.openFile($0) }
@@ -86,6 +90,15 @@ struct ConnectionsView: View {
             // Model code (openFile) opens windows through this closure; the Connections window must set it too.
             app.openWindow = { openWindow(value: $0) }
             if selectedID == nil { selectedID = app.profiles.first?.id }
+        }
+    }
+
+    /// First run (no connection yet): three ways in. The agent card is G16.
+    private var firstRun: some View {
+        HStack(spacing: HT.M.gap) {
+            OptionTile(title: "NEW CONNECTION", subtitle: "POSTGRES // MYSQL // SQLITE", isSelected: false) { newCount += 1; isNew = true }
+            OptionTile(title: "TRY A SAMPLE DATABASE", subtitle: "SQLITE // NOTHING TO SET UP", isSelected: false) { if let id = app.ensureSampleDatabase() { openWindow(value: id) } }
+            OptionTile(title: "CONNECT AN AGENT", subtitle: "CLAUDE CODE // CODEX // CURSOR // ⌘⇧A", isSelected: false) { openWindow(id: "agents") }
         }
     }
 

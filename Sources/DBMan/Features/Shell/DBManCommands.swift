@@ -37,6 +37,9 @@ struct DBManCommands: Commands {
             Button("Relative Dates") { ws?.relativeDates.toggle() }.keyboardShortcut("r", modifiers: [.control, .command])
             Button("Command Palette") { ws?.paletteOpen.toggle() }.keyboardShortcut("k")
         }
+        CommandMenu("Agents") {
+            Button("Connect an Agent…") { openWindow(id: "agents") }.keyboardShortcut("a", modifiers: [.shift, .command])
+        }
         CommandMenu("Navigate") {
             Button("Back") { ws?.back() }.keyboardShortcut("[").disabled(ws?.history.isEmpty ?? true)
             Button("Forward") { ws?.goForward() }.keyboardShortcut("]").disabled(ws?.forward.isEmpty ?? true)

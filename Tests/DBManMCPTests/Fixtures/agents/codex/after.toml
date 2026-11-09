@@ -1,0 +1,16 @@
+model = "gpt-5-codex"
+
+[mcp_servers.github]
+command = "github-mcp-server"
+args = ["stdio"]
+
+[mcp_servers.dbman]
+command = "/Applications/DBMan.app/Contents/Helpers/dbman-mcp"
+args = ["--stdio"]
+startup_timeout_sec = 20
+
+[mcp_servers.dbman.env]
+FOO = "bar"
+
+[projects."/Users/me/shop"]
+trust_level = "trusted"

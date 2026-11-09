@@ -4,6 +4,7 @@ public struct Permission: Equatable, Sendable {
     public var level: String // off | read | overlay
     public var timeoutMs: Int?
     public var rowCap: Int?
+    public init(level: String, timeoutMs: Int? = nil, rowCap: Int? = nil) { self.level = level; self.timeoutMs = timeoutMs; self.rowCap = rowCap }
 }
 
 /// Everything the MCP server persists about agents (SPEC §6): agents, permissions, sensitive columns, activity, approvals.

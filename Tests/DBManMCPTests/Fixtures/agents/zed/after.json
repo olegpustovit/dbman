@@ -1,0 +1,18 @@
+{
+  "context_servers": {
+    "dbman": {
+      "args": [
+        "--stdio"
+      ],
+      "command": "/Applications/DBMan.app/Contents/Helpers/dbman-mcp",
+      "source": "custom"
+    },
+    "fetch": {
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "command": "uvx"
+    }
+  },
+  "theme": "One Dark"
+}
