@@ -35,7 +35,7 @@ let package = Package(
         // DBMan's own SQLite store (settings, connections, layers…). Only sqlite3; migrations are embedded in code.
         .target(
             name: "DBStore",
-            resources: [.embedInCode("Migrations/0001_init.sql")],
+            resources: [.embedInCode("Migrations/0001_init.sql"), .embedInCode("Migrations/0002_approvals.sql")],
             swiftSettings: v5,
             linkerSettings: [.linkedLibrary("sqlite3")]
         ),

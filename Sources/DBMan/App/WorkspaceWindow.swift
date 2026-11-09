@@ -51,6 +51,7 @@ struct WorkspaceView: View {
         .background(DotGridBackground())
         .overlay { if ws.paletteOpen { PaletteView(ws: ws) } }
         .sheet(isPresented: $ws.reviewOpen) { ReviewSheet(ws: ws) }
+        .sheet(item: Binding(get: { ApprovalCenter.shared.sheetTarget == ws.profile.id ? ApprovalCenter.shared.current : nil }, set: { if $0 == nil { ApprovalCenter.shared.current = nil } })) { ApprovalDialog(a: $0) }
         .task(id: AppModel.shared.storeRev) { ws.layers.reload(ws); ws.dash.reload(ws) } // own writes, agents over MCP, sqlite3
         .background(Button("") { ws.layers.open.toggle(); if !ws.layers.open { ws.layers.compare = false } }.keyboardShortcut("l", modifiers: [.option, .command]).opacity(0).accessibilityHidden(true))
     }

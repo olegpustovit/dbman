@@ -36,7 +36,7 @@ public final class Store: @unchecked Sendable {
     private var pending = false
     private var watchers: [DispatchSourceFileSystemObject] = []
 
-    private static let migrations: [String] = [PackageResources._001_init_sql].map { String(decoding: $0, as: UTF8.self) } // shortcut: list each migration here (embedInCode mangles the file name), when migrations get many: generate the list
+    private static let migrations: [String] = [PackageResources._001_init_sql, PackageResources._002_approvals_sql].map { String(decoding: $0, as: UTF8.self) } // shortcut: list each migration here (embedInCode mangles the file name), when migrations get many: generate the list
 
     public static let productionURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent("DBMan/dbman.sqlite")

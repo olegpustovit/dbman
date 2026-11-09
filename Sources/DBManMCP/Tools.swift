@@ -1,3 +1,4 @@
+import CryptoKit
 import DBCore
 import DBStore
 import Foundation
@@ -19,11 +20,11 @@ enum Catalogue {
 
     static let tools: [Tool] = [
         tool("connections.list", "List the databases DBMan lets you use: name, engine, env tag (production is guarded), status and YOUR permission level on each.", connection: false),
-        tool("connections.add", "Ask the human to add a database. Never pass a password: DBMan shows a secure credential sheet and the call returns NEEDS_APPROVAL until they finish.",
+        tool("connections.add", "Ask the human to add a database. Never pass a password: DBMan shows a secure credential sheet and the call waits (up to 10 minutes) until they finish: you get the new id, REJECTED (note) or NEEDS_APPROVAL_TIMEOUT.",
              [("url", "string", "postgres://user@host:5432/db, mysql://… or a path to a .sqlite file (no password)"), ("name", "string", "Display name"),
               ("env", "string", "local | staging | production")], required: ["name"], connection: false),
         tool("connections.test", "Open the connection and run SELECT 1; returns ok and latency."),
-        tool("connections.remove", "Ask the human to remove a connection (needs approval in DBMan).", connection: true),
+        tool("connections.remove", "Ask the human to remove a connection; waits (up to 10 minutes) for their approval in DBMan.", connection: true),
         tool("schema.tables", "List tables and views with estimated row counts and column counts. Start here."),
         tool("schema.describe", "Columns (type, nullability, PK, FK), indexes, row estimate and referencing tables of one table. Columns marked hidden return «redacted» in query results.",
              [("table", "string", "Table name")], required: ["table"]),
@@ -88,6 +89,7 @@ extension MCPService {
         if agent == "unknown" { try? b.store.upsertAgent(id: agent, name: agent, version: nil) } // no initialize seen: still keep the activity row's FK valid
         var out: Value = .null
         do {
+            if b.store.setting("agents_paused") == "true" { throw ToolError("APP_LOCKED", "paused by user", status: "blocked") } // PAUSE ALL AGENTS (SPEC G12)
             guard Catalogue.tools.contains(where: { $0.name == name }) else { throw ToolError("UNKNOWN_TOOL", name) }
             out = try await run(name, args, agent: agent, trace: trace)
         } catch let e as ToolError {
@@ -129,7 +131,7 @@ extension MCPService {
 
     private func run(_ name: String, _ a: [String: Value], agent: String, trace: Trace) async throws -> Value {
         if name.hasPrefix("connections."), name != "connections.test", name != "connections.remove" {
-            return name == "connections.list" ? try await list(agent) : try add(a, agent: agent)
+            return name == "connections.list" ? try await list(agent) : try await add(a, agent: agent)
         }
         if name == "dashboard.components" { return try Self.components() }
         var a = a
@@ -141,8 +143,11 @@ extension MCPService {
 
         switch name {
         case "connections.remove":
-            _ = try b.store.addApproval(kind: "apply", agent: agent, connection: c.id, payload: #"{"action":"remove_connection"}"#) // kind 'apply': the table has no 'remove' kind, P6 adds the sheet
-            throw ToolError("NEEDS_APPROVAL", "pending in DBMan", status: "blocked")
+            let id = try b.store.addApproval(kind: "remove", agent: agent, connection: c.id, payload: Self.json(["name": .string(c.name), "env": .string(c.env)]))
+            _ = try await awaitApproval(id)
+            if try b.store.connections().contains(where: { $0.id == c.id }) { try b.store.remove(c.id) } // the app's REMOVE already did this and wiped the secret; idempotent
+            trace.connection = nil // gone: the activity row's foreign key would fail
+            return ["removed": .string(c.name)]
         case "ui.open":
             guard let route = a["route"]?.stringValue else { throw ToolError("INVALID_ARGUMENT", "route is required") }
             guard ["table", "query", "dashboard"].contains(route) else { throw ToolError("UNSUPPORTED", "route \(route) is not available; use table, query or dashboard") }
@@ -220,17 +225,37 @@ extension MCPService {
         return .array(out)
     }
 
-    private func add(_ a: [String: Value], agent: String) throws -> Value {
+    static func json(_ v: [String: Value]) -> String { (try? String(decoding: encoder.encode(Value.object(v)), as: UTF8.self)) ?? "{}" }
+
+    /// Parks the tool call until the human decides, the row expires (approval_ttl_s) or the client goes away. Polls the store, so a decision made
+    /// in the app, by another process or with sqlite3 all count.
+    private func awaitApproval(_ id: String) async throws -> ApprovalRow {
+        while true {
+            try b.store.expireApprovals()
+            guard let a = try b.store.approval(id) else { throw ToolError("NEEDS_APPROVAL_TIMEOUT", "the request disappeared", status: "blocked") }
+            switch a.status {
+            case "pending":
+                do { try await Task.sleep(for: .milliseconds(Self.approvalPollMs)) } catch { _ = try? b.store.decideApproval(id, "expired"); throw error }
+            case "rejected": throw ToolError("REJECTED", a.field("note") ?? "rejected by the user", status: "denied")
+            case "expired": throw ToolError("NEEDS_APPROVAL_TIMEOUT", "no decision in DBMan; ask again", status: "blocked")
+            default: return a
+            }
+        }
+    }
+    nonisolated(unsafe) static var approvalPollMs = 200
+
+    private func add(_ a: [String: Value], agent: String) async throws -> Value {
         guard let name = a["name"]?.stringValue, !name.isEmpty else { throw ToolError("INVALID_ARGUMENT", "name is required") }
         guard let url = a["url"]?.stringValue, let (p, password) = ConnectionURL.parseWithPassword(url) else { throw ToolError("INVALID_ARGUMENT", "url is required (postgres://user@host/db, mysql://…, or a .sqlite path)") }
         guard password == nil else { throw ToolError("INVALID_ARGUMENT", "passwords are never accepted over MCP; DBMan asks the human for it") }
         let env = a["env"]?.stringValue ?? "local"
         guard ["local", "staging", "production"].contains(env) else { throw ToolError("INVALID_ARGUMENT", "env must be local, staging or production") }
         let payload = Value.object(["name": .string(name), "engine": .string(p.engine.rawValue), "host": .string(p.host), "port": .int(p.port), "database": .string(p.database),
-                                    "user": .string(p.user), "file_path": p.filePath.map { .string($0) } ?? .null, "env": .string(env)])
-        // P6 builds the credential sheet; until then the request just waits in `approvals`.
-        _ = try b.store.addApproval(kind: "credentials", agent: agent, connection: nil, payload: String(decoding: Self.encoder.encode(payload), as: UTF8.self))
-        throw ToolError("NEEDS_APPROVAL", "pending in DBMan", status: "blocked")
+                                    "user": .string(p.user), "ssl_mode": .string(p.sslMode.rawValue), "file_path": p.filePath.map { .string($0) } ?? .null, "env": .string(env)])
+        guard !(try b.store.connections().contains { $0.name.lowercased() == name.lowercased() }) else { throw ToolError("INVALID_ARGUMENT", "a connection named \"\(name)\" exists; see connections.list") }
+        let done = try await awaitApproval(try b.store.addApproval(kind: "credentials", agent: agent, connection: nil, payload: String(decoding: Self.encoder.encode(payload), as: UTF8.self)))
+        guard let id = done.field("connection_id") else { throw ToolError("ERROR", "approved without a connection") }
+        return ["id": .string(id), "name": .string(done.field("name") ?? name)]
     }
 
     // MARK: schema
@@ -301,7 +326,12 @@ extension MCPService {
             let sc = try await schema(c, s)
             if let plan = try await timed(timeoutMs, s, { try await s.explain(stmt, analyze: false) }),
                let why = Rules.prodVerdict(plan, schema: sc, maxCost: Double(b.store.setting("prod_guard_cost") ?? "") ?? 1e6, maxRows: Double(b.store.setting("prod_guard_rows") ?? "") ?? 1e6) {
-                throw ToolError("BLOCKED_BY_PROD_GUARD", why, status: "blocked")
+                let hash = Self.hash(asked)
+                if try !b.store.consumeAllowance(agent: agent, connection: c.id, hash: hash) { // ALLOW ONCE: this exact statement, once
+                    try b.store.requestOverride(agent: agent, connection: c.id, hash: hash, payload: Self.json(
+                        ["sql": .string(asked), "reason": .string(why), "tool": "query.run", "connection_name": .string(c.name), "timeout_ms": .int(timeoutMs)]))
+                    throw ToolError("BLOCKED_BY_PROD_GUARD", "\(why); DBMan asked the human to allow it: retry this exact statement after approval, or add a filter on an indexed column", status: "blocked")
+                }
             }
         }
         let n = min(max(a["limit"]?.intValue ?? cap, 1), cap)
@@ -316,6 +346,12 @@ extension MCPService {
         }
         if !views.isEmpty { extra["views"] = .array(views.map { .string($0) }) }
         return try await rows(r.columns, page, truncated: more, cursor: more ? Cursor(sql: asked, offset: offset + n).token : nil, ms: r.elapsedMs, sql: stmt, c, trace, extra: extra)
+    }
+
+    /// Statement identity for ALLOW ONCE: whitespace and a trailing `;` don't matter.
+    static func hash(_ sql: String) -> String {
+        let n = sql.split(whereSeparator: \.isWhitespace).joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: "; "))
+        return SHA256.hash(data: Data(n.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
     /// The layers this read sees (SPEC §1.10): DATABASE + MINE + own. `layer` may only narrow that.

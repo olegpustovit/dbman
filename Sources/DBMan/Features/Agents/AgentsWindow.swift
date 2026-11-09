@@ -54,6 +54,7 @@ struct AgentsWindow: View {
                 }
                 HStack(spacing: 6) {
                     Button("RESCAN") { m.rescan(); m.reload(app.store) }.buttonStyle(.htOutline).help("Rescan for agents")
+                    PauseButton()
                     Spacer()
                     Text("SCANNED // \(m.scannedAt.formatted(date: .omitted, time: .standard))").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                 }

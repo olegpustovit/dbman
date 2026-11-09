@@ -7,6 +7,8 @@ import UniformTypeIdentifiers
 struct DBManCommands: Commands {
     @FocusedValue(\.workspace) private var ws
     @Environment(\.openWindow) private var openWindow
+    private let app = AppModel.shared
+    private let approvals = ApprovalCenter.shared
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -39,7 +41,12 @@ struct DBManCommands: Commands {
             Button("Command Palette") { ws?.paletteOpen.toggle() }.keyboardShortcut("k")
         }
         CommandMenu("Agents") {
+            if !approvals.pending.isEmpty { Button("\(approvals.pending.count) Pending Approvals") { approvals.review() }; Divider() }
             Button("Connect an Agent…") { openWindow(id: "agents") }.keyboardShortcut("a", modifiers: [.shift, .command])
+            Button("Show Agent Activity") { AgentsModel.shared.section = .activity; openWindow(id: "agents") }
+            Button("Permissions…") { AgentsModel.shared.section = .permissions; openWindow(id: "agents") }
+            Divider()
+            Button(app.agentsPaused ? "Resume Agents" : "Pause All Agents") { app.agentsPaused.toggle() }
         }
         CommandMenu("Navigate") {
             Button("Back") { ws?.back() }.keyboardShortcut("[").disabled(ws?.history.isEmpty ?? true)

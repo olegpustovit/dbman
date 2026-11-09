@@ -270,12 +270,7 @@ struct ConnectionEditor: View {
         Task {
             defer { testing = false }
             do {
-                let t0 = Date()
-                let session = try await DatabaseSession.connect(p, password: pw)
-                let ms = Int(Date().timeIntervalSince(t0) * 1000)
-                let version = (try? await session.schema().serverVersion) ?? ""
-                await session.close()
-                reached = "IN \(ms) MS · \(version)"
+                reached = try await ConnectionTest.run(p, password: pw)
             } catch {
                 problem = "Connection failed: \(error.localizedDescription)"
             }
@@ -297,3 +292,15 @@ struct ConnectionEditor: View {
     }
 }
 
+
+/// TEST: connect, read the server version, close. Shared by this editor and the agent credential sheet.
+enum ConnectionTest {
+    static func run(_ p: ConnectionProfile, password: String?) async throws -> String {
+        let t0 = Date()
+        let session = try await DatabaseSession.connect(p, password: password)
+        let ms = Int(Date().timeIntervalSince(t0) * 1000)
+        let version = (try? await session.schema().serverVersion) ?? ""
+        await session.close()
+        return "IN \(ms) MS · \(version)"
+    }
+}
