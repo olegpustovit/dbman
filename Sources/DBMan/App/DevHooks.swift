@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Dev/CI hooks for scripted screenshots and smoke tests. Env vars, DEBUG builds only (release gets inert stubs).
 ///   DBMAN_STORE=<path> (use this store file, not the real one)   DBMAN_OPEN=internal|sample|/path.sqlite|postgres://…|mysql://…   DBMAN_ENV=production|staging  (tags the opened profile)
-///   DBMAN_ROUTE=table:<name>|query:<sql>   DBMAN_VIEW=<rail index>   DBMAN_AUTORUN=1   DBMAN_SELECT=<row>
+///   DBMAN_ROUTE=table:<name>|query:<sql>|schema-map (+ DBMAN_MAP=<layout>[:<table>[:<hops>]] DBMAN_MAP_PATH=a>b DBMAN_MAP_DETAIL=names|keys|all)   DBMAN_VIEW=<rail index>   DBMAN_AUTORUN=1   DBMAN_SELECT=<row>
 ///   DBMAN_STAGE=<table>.<column>=<value> (stages an update of the first row by id)   DBMAN_REVIEW=1   DBMAN_COMMIT=1   DBMAN_PALETTE=1
 ///   DBMAN_APPEARANCE=dark   DBMAN_WINDOW=settings|min (min: resize the database window to its 1100x700 minimum)
 ///   DBMAN_CONNECT_TEST=<url> (Connections editor: fill the URL and press TEST)
@@ -43,6 +43,7 @@ import SwiftUI
 
     /// Called after the workspace connects.
     static func connected(_ ws: WorkspaceModel) async {
+        if env("DBMAN_ROUTE") == "schema-map" { ws.go(.schemaMap); ws.map.applyDevHook() }
         if let r = env("DBMAN_ROUTE"), let i = r.firstIndex(of: ":") {
             let arg = String(r[r.index(after: i)...])
             if r.hasPrefix("table:") { ws.go(.table(arg)) } else if r.hasPrefix("query:") { ws.newQuery(sql: arg) }

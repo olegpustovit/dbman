@@ -7,6 +7,7 @@ import SwiftUI
 /// Where the main area points.
 enum Route: Hashable {
     case overview
+    case schemaMap
     case table(String)
     case query(UUID)
 }
@@ -50,6 +51,7 @@ final class WorkspaceModel {
     var session: DatabaseSession?
     var state: ConnectionState = .connecting
     var schema: SchemaSnapshot?
+    let map = SchemaMapState()
 
     var route: Route = .overview
     var history: [Route] = []

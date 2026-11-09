@@ -120,7 +120,10 @@ struct RelationsView: View {
             .frame(width: size.width, height: size.height, alignment: .topLeading)
         }
         .overlay(alignment: .bottomLeading) {
-            Text("\(parents.count + kids.count + 1) tables // click a box to open it").ht(.labelSmall).foregroundStyle(HT.C.ink3).padding(8)
+            HStack(spacing: 8) {
+                Text("\(parents.count + kids.count + 1) tables // click a box to open it").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                Button("Open in schema map") { ws.map.selection = info.name; ws.map.focusOn = info.name; ws.go(.schemaMap) }.buttonStyle(.htOutline)
+            }.padding(8)
         }
     }
 

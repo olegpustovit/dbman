@@ -61,6 +61,7 @@ struct WorkspaceView: View {
         default:
             switch ws.route {
             case .overview: OverviewView(ws: ws)
+            case .schemaMap: SchemaMapView(ws: ws)
             case .table(let name): TableBrowserView(ws: ws, tableName: name)
             case .query(let id):
                 if let tab = ws.queryTab(id) { QueryView(ws: ws, tab: tab) } else { OverviewView(ws: ws) }
