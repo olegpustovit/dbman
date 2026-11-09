@@ -6,6 +6,7 @@ extension WorkspaceModel {
     func title(of r: Route) -> String {
         switch r {
         case .overview: "Overview"
+        case .schemaMap: "Schema map"
         case .table(let n): n
         case .query(let id): queryTab(id)?.title ?? "Query"
         }

@@ -30,6 +30,8 @@ struct DBManCommands: Commands {
         }
         CommandGroup(after: .sidebar) {
             Button("Overview") { ws?.go(.overview) }.keyboardShortcut("0")
+            // A table's own rail owns ⌘4 (Stats) while one is open; everywhere else ⌘4 is the schema map.
+            Button("Schema Map") { ws?.go(.schemaMap) }.keyboardShortcut("4").disabled(ws == nil || { if case .table = ws?.route { true } else { false } }())
             Button("Toggle Inspector") { ws?.showInspector.toggle() }.keyboardShortcut("i", modifiers: [.option, .command])
             Button("Toggle Console") { ws?.showConsole.toggle() }.keyboardShortcut("j")
             Button("Relative Dates") { ws?.relativeDates.toggle() }.keyboardShortcut("r", modifiers: [.control, .command])

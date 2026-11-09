@@ -24,6 +24,7 @@ struct NavigatorView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         section("Workspace")
                         row("Overview", selected: ws.route == .overview) { ws.go(.overview) }
+                        row("Schema map", trailing: "⌘4", selected: ws.route == .schemaMap) { ws.go(.schemaMap) }
                         ForEach(ws.queryTabs) { t in
                             row(t.title, edited: t.isEdited, selected: ws.route == .query(t.id)) { ws.go(.query(t.id)) }
                         }

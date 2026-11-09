@@ -240,6 +240,40 @@ public final class Store: @unchecked Sendable {
         try h.query("INSERT OR IGNORE INTO layers(id, connection_id, owner, name) VALUES (?, ?, 'human', 'MINE')", ["mine:" + connectionID, connectionID])
     }
 
+    // MARK: schema map
+
+    /// Saved FREE-layout positions (JSON text) for a connection.
+    public func mapLayout(_ connectionID: String, _ layout: String) -> String? {
+        lock.lock(); defer { lock.unlock() }
+        return (try? h.scalar("SELECT positions FROM map_layouts WHERE connection_id = ? AND layout = ?", [connectionID, layout])) as? String
+    }
+    public func setMapLayout(_ connectionID: String, _ layout: String, positions: String) throws {
+        try transaction {
+            try h.query("""
+                INSERT INTO map_layouts(connection_id, layout, positions) VALUES (?, ?, ?)
+                ON CONFLICT(connection_id, layout) DO UPDATE SET positions = excluded.positions, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+                """, [connectionID, layout, positions])
+        }
+    }
+
+    /// An accepted inferred relation: an `overlay_items` row (kind `relation`) in the connection's MINE layer. P3 builds the rest of the overlay engine.
+    public func addRelation(_ connectionID: String, name: String, payload: String) throws {
+        try transaction {
+            try ensureMine(connectionID)
+            try h.query("INSERT INTO overlay_items(id, layer_id, kind, name, payload) VALUES (?, ?, 'relation', ?, ?)",
+                        [UUID().uuidString, "mine:" + connectionID, name, payload])
+        }
+    }
+    /// Payloads of the connection's live relation items, oldest first.
+    public func relations(_ connectionID: String) -> [String] {
+        lock.lock(); defer { lock.unlock() }
+        let rows = (try? h.query("""
+            SELECT i.payload FROM overlay_items i JOIN layers l ON l.id = i.layer_id
+            WHERE l.connection_id = ? AND l.visible = 1 AND i.kind = 'relation' AND i.status IN ('active', 'stale') ORDER BY i.rowid
+            """, [connectionID])) ?? []
+        return rows.compactMap { $0[0] as? String }
+    }
+
     // MARK: change notification
 
     private func notify() {

@@ -116,6 +116,20 @@ final class DBStoreTests: XCTestCase {
         XCTAssertEqual(try raw("SELECT count(*) FROM layers WHERE connection_id = 'A'")[0][0] as? Int64, 0)
     }
 
+    func testMapLayoutAndRelations() throws {
+        let s = try Store.open(at: url)
+        try s.upsert(ConnectionRow(id: "A", name: "a", engine: "sqlite"))
+        XCTAssertNil(s.mapLayout("A", "free"))
+        try s.setMapLayout("A", "free", positions: #"{"orders":[1,2]}"#)
+        try s.setMapLayout("A", "free", positions: #"{"orders":[3,4]}"#) // upsert, not a second row
+        XCTAssertEqual(s.mapLayout("A", "free"), #"{"orders":[3,4]}"#)
+        XCTAssertThrowsError(try s.setMapLayout("A", "free", positions: "{bad"))
+        try s.addRelation("A", name: "events.customer_id -> customers.id", payload: #"{"from_table":"events"}"#)
+        XCTAssertEqual(s.relations("A"), [#"{"from_table":"events"}"#])
+        XCTAssertEqual(try raw("SELECT layer_id, kind FROM overlay_items")[0].map { $0 as? String }, ["mine:A", "relation"])
+        XCTAssertTrue(s.relations("B").isEmpty)
+    }
+
     func testBackupKeepsSeven() throws {
         let s = try Store.open(at: url)
         let backups = dir.appendingPathComponent("backups")
