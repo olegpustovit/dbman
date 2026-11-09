@@ -9,6 +9,7 @@ enum DashFmt {
                                    : v.formatted(.number.precision(.fractionLength(d ?? (v == v.rounded() ? 0 : 2))).grouping(.automatic))
         switch f?.unit ?? "" {
         case "": return s
+        case "B": return ByteCountFormatter.string(fromByteCount: Int64(v), countStyle: .file)
         case "USD": return "$" + s
         case "EUR": return "€" + s
         case "%", "percent": return s + " %"

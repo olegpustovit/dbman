@@ -71,8 +71,8 @@ enum Catalogue {
                 "ops": ["type": "array", "description": "e.g. [{\"op\":\"replace\",\"path\":\"/widgets/0/query\",\"value\":\"select ...\"}]",
                         "items": ["type": "object", "required": ["op", "path"], "properties": ["op": ["enum": ["add", "remove", "replace"]], "path": ["type": "string"], "value": [:]]]]]],
              annotations: .init(readOnlyHint: false)),
-        tool("ui.open", "Show the human something in DBMan: brings the app to front at a table or a query.",
-             [("route", "string", "table | query"), ("selection", "string", "Table name for table, SQL text for query")], required: ["route"]),
+        tool("ui.open", "Show the human something in DBMan: brings the app to front at a table, a query or a dashboard.",
+             [("route", "string", "table | query | dashboard"), ("selection", "string", "Table name for table, SQL text for query, id or title for dashboard (none: the default Overview)")], required: ["route"]),
     ]
 }
 
@@ -145,7 +145,7 @@ extension MCPService {
             throw ToolError("NEEDS_APPROVAL", "pending in DBMan", status: "blocked")
         case "ui.open":
             guard let route = a["route"]?.stringValue else { throw ToolError("INVALID_ARGUMENT", "route is required") }
-            guard ["table", "query"].contains(route) else { throw ToolError("UNSUPPORTED", "route \(route) is not available yet; use table or query") }
+            guard ["table", "query", "dashboard"].contains(route) else { throw ToolError("UNSUPPORTED", "route \(route) is not available; use table, query or dashboard") }
             await b.openUI(c, route, a["selection"]?.stringValue)
             return ["opened": true]
         default: break

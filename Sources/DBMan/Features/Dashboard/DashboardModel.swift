@@ -39,6 +39,8 @@ final class DashboardModel {
     var notice: String?
     var updated: Date?
     private var conn = ""
+    private var insightBase: DefaultDashboard.Base?
+    private var rates: [String: (n: Double, at: Date, series: [Double])] = [:]
     private var store: Store { AppModel.shared.store }
 
     var entry: Entry? { entries.first { $0.id == itemID } }
@@ -77,7 +79,7 @@ final class DashboardModel {
         guard let e = id.flatMap({ id in entries.first { $0.id == id } }) ?? defaultEntry else { itemID = nil; spec = nil; return }
         guard e.id != itemID else { return }
         itemID = e.id; spec = e.spec
-        edit = false; selected = nil; data = [:]; asTable = []; costs = [:]; notice = nil
+        edit = false; selected = nil; data = [:]; asTable = []; costs = [:]; rates = [:]; insightBase = nil; notice = nil
         accepted = Set(e.spec?.widgets.map(\.id) ?? [])
         values = Dictionary(uniqueKeysWithValues: (e.spec?.variables ?? []).compactMap { v in (v.default ?? (v.type == "enum" ? "all" : "30d")).isEmpty ? nil : (v.name, v.default ?? (v.type == "enum" ? "all" : "30d")) })
         await loadOptions(ws)
@@ -99,17 +101,64 @@ final class DashboardModel {
             (w, ws.layers.expand(DashSQL.bind(w.query ?? "", variables: spec.variables, values: values, engine: e), mysql: e == .mysql))
         }
         for (w, _) in jobs { if only != nil || data[w.id] == nil { data[w.id] = .loading } }
-        await withTaskGroup(of: (String, Result<WTable, Error>).self) { g in
-            for (w, sql) in jobs { g.addTask { (w.id, await Self.fetch(s, w, sql)) } }
-            for await (wid, r) in g where id == itemID {
-                switch r {
-                case .success(let t): data[wid] = .ready(t, stale: false)
-                case .failure(let err):
-                    if case .ready(let t, _)? = data[wid] { data[wid] = .ready(t, stale: true) } else { data[wid] = .failed(err.localizedDescription) }
-                }
+        func store(_ wid: String, _ r: Result<WTable, Error>) {
+            guard id == itemID else { return }
+            switch r {
+            case .success(let t): data[wid] = .ready(t, stale: false)
+            case .failure(let err):
+                if case .ready(let t, _)? = data[wid] { data[wid] = .ready(t, stale: true) } else { data[wid] = .failed(err.localizedDescription) }
             }
         }
+        await withTaskGroup(of: (String, Result<WTable, Error>).self) { g in
+            for (w, sql) in jobs {
+                if let src = DashSource.split(w.query ?? "") { store(w.id, await local(w, src, ws, s)) } else { g.addTask { (w.id, await Self.fetch(s, w, sql)) } }
+            }
+            for await (wid, r) in g { store(wid, r) }
+        }
         updated = Date()
+    }
+
+    /// DashSource queries: snapshot estimates, the console, a per-second rate. Nothing here scans a table.
+    private func local(_ w: DashWidget, _ src: (kind: String, arg: String), _ ws: WorkspaceModel, _ s: DatabaseSession) async -> Result<WTable, Error> {
+        let t0 = Date()
+        func table(_ cols: [String], _ rows: [[Cell]]) -> Result<WTable, Error> { .success(WTable(columns: cols, rows: rows, ms: Date().timeIntervalSince(t0) * 1000)) }
+        switch src.kind {
+        case "schema":
+            let all = (ws.schema?.tables ?? []).filter { $0.kind == .table }
+            if src.arg == "*" { return table(["rows", "bytes"], [[.integer(ws.schema?.totalRows ?? 0), .integer(ws.schema?.sizeBytes ?? 0)]]) }
+            let ts = src.arg.isEmpty ? all.sorted { ($0.sizeBytes ?? $0.rowCount) > ($1.sizeBytes ?? $1.rowCount) } : all.filter { $0.name == src.arg }
+            return table(["label", "rows", "bytes"], ts.map { [.text($0.name), .integer($0.rowCount), .integer($0.sizeBytes ?? 0)] })
+        case "activity":
+            let f = DateFormatter(); f.dateFormat = "HH:mm:ss"
+            return table(["ts", "title", "status", "body"], ws.console.prefix(30).map { e in
+                let kw = SQLClassifier.firstKeyword(e.sql)
+                return [.text(f.string(from: e.at)), .text(e.isError ? "ERROR" : kw.isEmpty ? "EVENT" : kw), .text(e.isError ? "error" : ""),
+                        .text(e.isError ? "\(e.summary) — \(e.sql)" : e.sql.replacingOccurrences(of: "\n", with: " "))]
+            })
+        case "insights":
+            let base: DefaultDashboard.Base
+            if let b = insightBase { base = b } else { base = await DefaultDashboard.detect(ws); insightBase = base } // detection samples columns: once per open
+            let items = await DefaultDashboard.insights(ws, base), f = DateFormatter(); f.dateFormat = "HH:mm:ss"
+            return table(["ts", "title", "status", "body"], items.isEmpty ? [[.text(""), .text("Nothing new"), .text(""), .text("")]]
+                         : items.map { [.text(f.string(from: Date())), .text($0.title), .text($0.warn ? "warn" : ""), .text($0.detail)] })
+        default:
+            let now = Date(), prev = rates[w.id]
+            var counter = 0.0
+            if src.arg != "console" {
+                do { counter = DashData.num(try await s.run(src.arg, limit: 1).rows.first?.first) } catch { return .failure(DashError(message: Self.drift(error.localizedDescription))) }
+            }
+            var series = prev?.series ?? []
+            if let p = prev, now.timeIntervalSince(p.at) < 1 { /* a refresh right behind another: keep the sample */ }
+            else {
+                if let p = prev {
+                    let d = src.arg == "console" ? Double(ws.console.filter { $0.at > p.at }.count) : counter - p.n // a counter reset (restart) skips one sample
+                    if d >= 0 { series = Array((series + [d / now.timeIntervalSince(p.at)]).suffix(60)) }
+                }
+                rates[w.id] = (counter, now, series)
+            }
+            if series.isEmpty { series = [0] } // first sample: nothing to difference yet
+            return table(["x", "y", "value"], series.enumerated().map { [.integer(Int64($0)), .real($1), .real(series.last ?? 0)] })
+        }
     }
 
     private nonisolated static func fetch(_ s: DatabaseSession, _ w: DashWidget, _ sql: String) async -> Result<WTable, Error> {
@@ -145,8 +194,8 @@ final class DashboardModel {
         guard let s = ws.session, let spec else { return }
         let e = ws.profile.engine
         for w in spec.widgets {
-            guard let q = w.query, let plan = try? await s.explain(DashSQL.bind(q, variables: spec.variables, values: values, engine: e), analyze: false) else { continue }
-            costs[w.id] = plan.cost < 1000 ? String(Int(plan.cost.rounded())) : String(format: "%.1e", plan.cost).replacingOccurrences(of: "e+0", with: "e").replacingOccurrences(of: "e+", with: "e")
+            guard let q = w.query, DashSource.split(q) == nil, let plan = try? await s.explain(DashSQL.bind(q, variables: spec.variables, values: values, engine: e), analyze: false) else { continue }
+            costs[w.id] = plan.cost <= 0 ? "—" : plan.cost < 1000 ? String(Int(plan.cost.rounded())) : String(format: "%.1e", plan.cost).replacingOccurrences(of: "e+0", with: "e").replacingOccurrences(of: "e+", with: "e")
         }
     }
 

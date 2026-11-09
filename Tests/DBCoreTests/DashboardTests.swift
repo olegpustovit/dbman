@@ -109,4 +109,24 @@ final class DashboardTests: XCTestCase {
         XCTAssertTrue(DashGrid.nextFree(ws, w: 12, h: 1) == (0, 4))
         XCTAssertTrue(DashGrid.nextFree([], w: 3, h: 2) == (0, 0))
     }
+
+    func testLocalSourcesValidateWithoutTouchingTheDatabase() {
+        XCTAssertEqual(DashSource.split("schema:orders")?.arg, "orders")
+        XCTAssertEqual(DashSource.split(" activity: ")?.kind, "activity")
+        XCTAssertNil(DashSource.split("select 'schema:x'"))
+        for q in ["schema:", "activity:", "insights:", "rate:console", "rate:SELECT 1 AS value"] { var x = w("a"); x.query = q; XCTAssertEqual(issues([x]), [], q) }
+        var bad = w("a"); bad.query = "rate:DELETE FROM t"
+        XCTAssertTrue(issues([bad]).contains { $0.contains("read-only") })
+    }
+
+    func testInsightsFromV1() {
+        let big = TableInfo(schema: "", name: "orders", kind: .table, rowCount: 700), small = TableInfo(schema: "", name: "other", kind: .table, rowCount: 300)
+        let ins = DashInsights.make(tables: [big, small], table: "orders", column: "status", growth: [("pending", 20, 10), ("paid", 5, 5)], nulls: [("orders", "shipped_at", 0.6)],
+                                    unusedIndexes: [("orders", "ix")], attention: { $0 == "pending" })
+        XCTAssertEqual(ins.count, 4)
+        XCTAssertTrue(ins[0].title == "orders holds 70 % of rows" && !ins[0].warn)
+        XCTAssertEqual(ins[1].title, "status pending up 100 %"); XCTAssertTrue(ins[1].warn)
+        XCTAssertTrue(ins[2].title == "orders.shipped_at is 60 % null" && ins[3].title == "1 unused index")
+        XCTAssertTrue(DashInsights.make(tables: [], table: "", column: "", growth: [], nulls: [], unusedIndexes: [], attention: { _ in false }).isEmpty)
+    }
 }

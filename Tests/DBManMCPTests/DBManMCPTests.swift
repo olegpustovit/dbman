@@ -256,7 +256,9 @@ final class DBManMCPTests: XCTestCase {
         same(try await json("connections.test", ["connection": "shop"])["ok"] as? Bool, true)
         _ = try await call("ui.open", ["connection": "shop", "route": "table", "selection": "orders"])
         same(await opened.routes, ["shop:table:orders"])
-        yes(try await call("ui.open", ["connection": "shop", "route": "dashboard"]).text.hasPrefix("UNSUPPORTED"))
+        _ = try await call("ui.open", ["connection": "shop", "route": "dashboard", "selection": "Overview // default"])
+        same(await opened.routes, ["shop:table:orders", "shop:dashboard:Overview // default"])
+        yes(try await call("ui.open", ["connection": "shop", "route": "chart"]).text.hasPrefix("UNSUPPORTED"))
     }
 
     // MARK: approvals

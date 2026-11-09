@@ -47,7 +47,14 @@ import Observation
         NSApp.activate(ignoringOtherApps: true)
         for _ in 0..<10 where app.openWindow == nil { try? await Task.sleep(for: .milliseconds(200)) } // launched hidden: scenes install openWindow a moment later
         app.openWindow?(id)
-        guard let ws = app.workspace(for: id), let selection else { return }
-        if route == "table" { ws.go(.table(selection)) } else { ws.newQuery(sql: selection) }
+        guard let ws = app.workspace(for: id) else { return }
+        switch (route, selection) {
+        case ("dashboard", _):
+            ws.dash.reload(ws)
+            ws.go(ws.dash.entries.first { $0.id == selection || $0.title == selection }.map { .dashboard($0.id) } ?? .overview)
+        case ("table", let t?): ws.go(.table(t))
+        case (_, let sql?): ws.newQuery(sql: sql)
+        default: break
+        }
     }
 }

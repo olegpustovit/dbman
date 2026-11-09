@@ -244,7 +244,7 @@ public extension DashboardSpec {
             if w.w < t.minW || w.h < t.minH { bad(w, "\(t.id) needs at least \(t.minW)x\(t.minH)") }
             for n in t.needs where n.required && w.encoding?[n.key] == nil && !(t.id.hasPrefix("kpi") && n.key == "value") { bad(w, "missing encoding \"\(n.key)\" (\(n.kind))") }
             if t.hasQuery {
-                if let q = w.query, !["SELECT", "WITH", "VALUES"].contains(SQLClassifier.firstKeyword(q)) { bad(w, "query must be a read-only SELECT") }
+                if let q = w.query, !DashSource.isValid(q) { bad(w, "query must be a read-only SELECT") }
                 if w.query?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true { bad(w, "query is required") }
             }
             if let c = w.compare, !["previous_period", "none"].contains(c) { bad(w, "compare must be previous_period or none") }
@@ -391,5 +391,49 @@ public enum JSONPatch {
         let out = try apply(ops, to: doc)
         guard JSONSerialization.isValidJSONObject(out), let d = try? JSONSerialization.data(withJSONObject: out) else { throw DashError(message: "patch produced invalid JSON") }
         return try DashboardSpec.parse(String(decoding: d, as: UTF8.self))
+    }
+}
+
+// MARK: local sources
+
+/// Queries the app answers itself instead of the database: `schema:` (label, rows, bytes per table from the snapshot's estimates, so no COUNT(*)),
+/// `schema:NAME` (one table), `schema:*` (rows, bytes totals), `activity:` (ts, title, status, body from this app's console), `insights:` (same columns: v1's Overview insights, computed per refresh),
+/// `rate:console` or `rate:SELECT <counter>` (x, y, value: per-second change between refreshes).
+public enum DashSource {
+    public static func split(_ q: String) -> (kind: String, arg: String)? {
+        let t = q.trimmingCharacters(in: .whitespacesAndNewlines)
+        for k in ["schema", "activity", "insights", "rate"] where t.hasPrefix(k + ":") { return (k, String(t.dropFirst(k.count + 1)).trimmingCharacters(in: .whitespacesAndNewlines)) }
+        return nil
+    }
+    public static func isValid(_ q: String) -> Bool {
+        guard let s = split(q) else { return readOnly(q) }
+        return s.kind == "rate" && s.arg != "console" ? readOnly(s.arg) : true
+    }
+    private static func readOnly(_ q: String) -> Bool { ["SELECT", "WITH", "VALUES"].contains(SQLClassifier.firstKeyword(q)) }
+}
+
+/// What v1's Overview called Insights, from data the seeding already holds. Pure.
+public enum DashInsights {
+    public struct Item: Equatable, Sendable { public var title: String, detail: String; public var warn: Bool }
+    public static func make(tables: [TableInfo], table: String, column: String, growth: [(value: String, last: Double, prior: Double)],
+                            nulls: [(table: String, column: String, fraction: Double)], unusedIndexes: [(table: String, index: String)], attention: (String) -> Bool) -> [Item] {
+        var out: [Item] = []
+        let total = tables.reduce(Int64(0)) { $0 + $1.rowCount }
+        if let top = tables.max(by: { $0.rowCount < $1.rowCount }), total > 0, Double(top.rowCount) / Double(total) >= 0.4 {
+            out.append(Item(title: "\(top.name) holds \(Int((Double(top.rowCount) / Double(total) * 100).rounded())) % of rows",
+                            detail: "\(top.rowCount.formatted()) of \(total.formatted()) rows live in one table.", warn: false))
+        }
+        let up = growth.filter { $0.prior > 0 }.map { ($0.value, $0.last / $0.prior - 1) }
+        if let g = up.max(by: { $0.1 < $1.1 }), g.1 >= 0.25 {
+            out.append(Item(title: "\(column) \(g.0) up \(Int((g.1 * 100).rounded())) %",
+                            detail: "\(table) rows with \(column) = \(g.0): last 7 days vs prior 7.", warn: attention(g.0)))
+        }
+        for n in nulls.sorted(by: { $0.fraction > $1.fraction }).prefix(1) where n.fraction > 0.4 {
+            out.append(Item(title: "\(n.table).\(n.column) is \(Int((n.fraction * 100).rounded())) % null", detail: "More than 40% of sampled rows have no value.", warn: true))
+        }
+        if let u = unusedIndexes.first {
+            out.append(Item(title: "\(unusedIndexes.count) unused index\(unusedIndexes.count == 1 ? "" : "es")", detail: "\(u.index) on \(u.table) has never been scanned.", warn: true))
+        }
+        return Array(out.prefix(4))
     }
 }

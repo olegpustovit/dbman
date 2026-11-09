@@ -88,7 +88,7 @@ extension MCPService {
             var o: [String: Value] = ["id": .string(w.id)]
             func fail(_ m: String) { o["ok"] = false; o["error"] = .string(m); failed += 1 }
             if let why = issues[w.id]?.first?.message { fail("INVALID_WIDGET (\(why))") }
-            else if let q = w.query {
+            else if let q = w.query, DashSource.split(q) == nil { // local sources never reach the database
                 let sql = DashSQL.bind(q, variables: spec.variables, engine: engine)
                 do {
                     let r = try await query(["sql": .string(sql), "limit": .int(min(cap, 100))], c, s, perm: perm, cap: cap, timeoutMs: timeoutMs, agent: agent, trace: trace)

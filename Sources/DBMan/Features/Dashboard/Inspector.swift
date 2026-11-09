@@ -83,9 +83,9 @@ private struct WidgetInspector: View {
         section("Data")
         HTSegmented(selection: $mode, options: [("sql", "SQL"), ("table", "TABLE + AGGREGATION")])
         if mode == "sql" {
-            TextEditor(text: $sql).ht(.dataSmall).scrollContentBackground(.hidden).frame(height: 120).clipped().htInput().padding(.top, 4)
+            TextField("SELECT …", text: $sql, axis: .vertical).textFieldStyle(.plain).ht(.dataSmall).lineLimit(4...8).htInput() // 4 to 8 lines, then scrolls inside
             HStack {
-                Button("RUN ⌘⏎") { m.update(w.id, ws, refetch: true) { $0.query = sql } }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)
+                Button("RUN ⌘⏎") { run() }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)
                 if let t = result { Text("\(t.rows.count) ROWS // \(Int(t.ms)) MS").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
             }
             if case .failed(let e)? = m.data[w.id] { Text(e).ht(.dataSmall).foregroundStyle(HT.C.alert) }
@@ -98,6 +98,8 @@ private struct WidgetInspector: View {
             Button("APPLY") { apply() }.buttonStyle(.htPrimary).disabled(table.isEmpty || (agg != "count" && aggCol.isEmpty))
         }
     }
+
+    private func run() { m.update(w.id, ws, refetch: true) { $0.query = sql } }
 
     private func apply() {
         let e = ws.profile.engine, a = agg == "count" ? "COUNT(*)" : "\(agg.uppercased())(\(quoteIdent(aggCol, e)))", t = quoteIdent(table, e)
