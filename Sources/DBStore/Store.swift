@@ -149,6 +149,10 @@ public final class Store: @unchecked Sendable {
                 INSERT INTO connections(id, name, engine, env, file_path, read_only) VALUES (?, ?, 'sqlite', 'system', ?, 1)
                 ON CONFLICT(id) DO UPDATE SET file_path = excluded.file_path WHERE file_path IS NOT excluded.file_path
                 """, [Self.internalID, Self.internalName, url.path])
+            try ensureMine(Self.internalID)
+            if try h.scalar("SELECT 1 FROM overlay_items WHERE layer_id = ? AND kind = 'dashboard'", ["mine:" + Self.internalID]) == nil { // once: a deleted default stays deleted
+                try h.query("INSERT INTO overlay_items(id, layer_id, kind, name, payload) VALUES (?, ?, 'dashboard', ?, ?)", [UUID().uuidString, "mine:" + Self.internalID, Seeds.agentActivityTitle, Seeds.agentActivity])
+            }
         }
     }
 

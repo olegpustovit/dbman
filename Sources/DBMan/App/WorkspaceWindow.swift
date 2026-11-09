@@ -51,7 +51,7 @@ struct WorkspaceView: View {
         .background(DotGridBackground())
         .overlay { if ws.paletteOpen { PaletteView(ws: ws) } }
         .sheet(isPresented: $ws.reviewOpen) { ReviewSheet(ws: ws) }
-        .task(id: AppModel.shared.storeRev) { ws.layers.reload(ws) } // own writes, agents over MCP, sqlite3
+        .task(id: AppModel.shared.storeRev) { ws.layers.reload(ws); ws.dash.reload(ws) } // own writes, agents over MCP, sqlite3
         .background(Button("") { ws.layers.open.toggle(); if !ws.layers.open { ws.layers.compare = false } }.keyboardShortcut("l", modifiers: [.option, .command]).opacity(0).accessibilityHidden(true))
     }
 
@@ -63,11 +63,12 @@ struct WorkspaceView: View {
             ConnectFailedView(ws: ws, message: message)
         default:
             switch ws.route {
-            case .overview: OverviewView(ws: ws)
+            case .overview: DashboardView(ws: ws, id: nil)
+            case .dashboard(let id): DashboardView(ws: ws, id: id)
             case .schemaMap: SchemaMapView(ws: ws)
             case .table(let name): TableBrowserView(ws: ws, tableName: name)
             case .query(let id):
-                if let tab = ws.queryTab(id) { QueryView(ws: ws, tab: tab) } else { OverviewView(ws: ws) }
+                if let tab = ws.queryTab(id) { QueryView(ws: ws, tab: tab) } else { DashboardView(ws: ws, id: nil) }
             }
         }
     }

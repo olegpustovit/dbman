@@ -15,7 +15,7 @@ enum Catalogue {
     }
 
     /// Tools that write into the agent's own overlay layer (never the database); they need OVERLAY.
-    static let writers: Set = ["overlay.patch_rows", "overlay.reset", "views.create", "views.replace", "views.drop", "relations.add", "notes.set", "saved.save"]
+    static let writers: Set = ["overlay.patch_rows", "overlay.reset", "views.create", "views.replace", "views.drop", "relations.add", "notes.set", "saved.save", "dashboard.create", "dashboard.update"]
 
     static let tools: [Tool] = [
         tool("connections.list", "List the databases DBMan lets you use: name, engine, env tag (production is guarded), status and YOUR permission level on each.", connection: false),
@@ -57,6 +57,20 @@ enum Catalogue {
              [("table", "string", "Table name"), ("column", "string", "Optional column"), ("text", "string", "The note")], required: ["table", "text"]),
         tool("saved.list", "Saved queries visible to you."),
         tool("saved.save", "Save a query by name in your layer.", [("name", "string", "Name"), ("sql", "string", "A single read statement")], required: ["name", "sql"]),
+        tool("dashboard.components", "The dashboard component catalog (19 types, required encodings, minimum sizes) and the JSON Schema of a dashboard spec. Read it before dashboard.create.", connection: false),
+        tool("dashboard.list", "Dashboards visible to you on this connection: the human's (MINE) and your own."),
+        tool("dashboard.get", "One dashboard's spec. `connection` may be omitted.", [("id", "string", "Dashboard id from dashboard.list")], required: ["id"]),
+        Tool(name: "dashboard.create", description: "Propose a dashboard. It lands in YOUR layer as NEW; the human reviews it widget by widget and adopts it into MINE. Every widget query is validated and run read-only (redaction and the prod guard apply); the reply lists per-widget errors, which the human also sees. Needs OVERLAY. A dashboard with the same title in your layer is replaced.",
+             inputSchema: ["type": "object", "required": ["connection", "spec"], "properties": [
+                "connection": ["type": "string", "description": "Connection name or id"],
+                "spec": ["type": "object", "description": "Dashboard spec; schema and component catalog from dashboard.components"]]],
+             annotations: .init(readOnlyHint: false)),
+        Tool(name: "dashboard.update", description: "Change one of your own dashboards with a JSON patch (RFC 6902 subset: add, remove, replace). The result is validated and re-run like dashboard.create. Needs OVERLAY.",
+             inputSchema: ["type": "object", "required": ["id", "ops"], "properties": [
+                "connection": ["type": "string", "description": "Connection name or id (optional)"], "id": ["type": "string", "description": "Dashboard id"],
+                "ops": ["type": "array", "description": "e.g. [{\"op\":\"replace\",\"path\":\"/widgets/0/query\",\"value\":\"select ...\"}]",
+                        "items": ["type": "object", "required": ["op", "path"], "properties": ["op": ["enum": ["add", "remove", "replace"]], "path": ["type": "string"], "value": [:]]]]]],
+             annotations: .init(readOnlyHint: false)),
         tool("ui.open", "Show the human something in DBMan: brings the app to front at a table or a query.",
              [("route", "string", "table | query"), ("selection", "string", "Table name for table, SQL text for query")], required: ["route"]),
     ]
@@ -107,15 +121,23 @@ extension MCPService {
         return p
     }
 
+    /// Row cap and statement timeout for this agent on this connection.
+    func limits(_ c: ConnectionRow, _ perm: Permission) -> (cap: Int, timeoutMs: Int) {
+        (perm.rowCap ?? b.store.setting("row_cap").flatMap(Int.init) ?? 500,
+         perm.timeoutMs ?? (c.env == "production" ? 5000 : b.store.setting("timeout_ms").flatMap(Int.init) ?? 15000)) // shortcut: prod 5 s is a constant, make it a setting when asked
+    }
+
     private func run(_ name: String, _ a: [String: Value], agent: String, trace: Trace) async throws -> Value {
         if name.hasPrefix("connections."), name != "connections.test", name != "connections.remove" {
             return name == "connections.list" ? try await list(agent) : try add(a, agent: agent)
         }
+        if name == "dashboard.components" { return try Self.components() }
+        var a = a
+        if ["dashboard.get", "dashboard.update"].contains(name), a["connection"] == nil, let id = a["id"]?.stringValue, let hit = try b.store.item(id) { a["connection"] = .string(hit.connection) }
         let c = try resolve(a)
         trace.connection = c.id
         let perm = try gate(c, agent: agent)
-        let cap = perm.rowCap ?? b.store.setting("row_cap").flatMap(Int.init) ?? 500
-        let timeoutMs = perm.timeoutMs ?? (c.env == "production" ? 5000 : b.store.setting("timeout_ms").flatMap(Int.init) ?? 15000) // shortcut: prod 5 s is a constant, make it a setting when asked
+        let (cap, timeoutMs) = limits(c, perm)
 
         switch name {
         case "connections.remove":
@@ -181,6 +203,7 @@ extension MCPService {
             out["top_values"] = .array(st.topValues.map { ["value": .string($0.value), "share": .double($0.share)] })
             return .object(out)
         default:
+            if name.hasPrefix("dashboard.") { return try await dashboardTool(name, a, c, s, perm: perm, agent: agent, trace: trace) }
             return try await overlayTool(name, a, c, s, perm: perm, agent: agent, trace: trace)
         }
     }
@@ -265,7 +288,7 @@ extension MCPService {
         }
     }
 
-    private func query(_ a: [String: Value], _ c: ConnectionRow, _ s: DatabaseSession, perm: Permission, cap: Int, timeoutMs: Int, agent: String, trace: Trace) async throws -> Value {
+    func query(_ a: [String: Value], _ c: ConnectionRow, _ s: DatabaseSession, perm: Permission, cap: Int, timeoutMs: Int, agent: String, trace: Trace) async throws -> Value {
         var sql = a["sql"]?.stringValue, start = 0
         if let tok = a["cursor"]?.stringValue {
             guard let cur = Cursor(token: tok) else { throw ToolError("INVALID_ARGUMENT", "unknown cursor") }

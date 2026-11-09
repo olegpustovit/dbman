@@ -6,7 +6,8 @@ import SwiftUI
 
 /// Where the main area points.
 enum Route: Hashable {
-    case overview
+    case overview            // the connection's default dashboard
+    case dashboard(String)   // any other dashboard, by overlay item id
     case schemaMap
     case table(String)
     case query(UUID)
@@ -66,6 +67,7 @@ final class WorkspaceModel {
     var writesUnlocked = false
     var staged = ChangeSet()
     let layers = LayerModel()
+    let dash = DashboardModel()
     /// Shown in the review sheet when the staged changes come from a layer (APPLY TO DATABASE).
     var reviewNote: String?
     var console: [ConsoleEntry] = []
@@ -87,6 +89,7 @@ final class WorkspaceModel {
             if writesUnlocked { await s.unlockWrites() } // unlocked before the session existed (internal store, ⌥-click)
             session = s
             schema = try await s.schema()
+            await dash.ensureDefault(self) // needs the schema
             state = .connected(latencyMs: Date().timeIntervalSince(start) * 1000)
             log("connect \(profile.engine.displayName) \(profile.database.isEmpty ? (profile.filePath ?? "") : profile.database)", "ok")
         } catch {

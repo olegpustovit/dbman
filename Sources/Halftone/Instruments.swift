@@ -4,7 +4,7 @@ import SwiftUI
 // marks are accumulated into one Path per colour bucket, then painted once.
 
 public enum LineStyle: Equatable, Hashable { case solid, ink55, ink30, amber, accent
-    var color: Color {
+    public var color: Color {
         switch self {
         case .solid: HT.C.ink
         case .ink55: HT.C.ink.opacity(0.55)

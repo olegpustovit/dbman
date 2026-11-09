@@ -177,6 +177,29 @@ public extension Store {
         }
     }
 
+    /// One item of any status with the connection its layer belongs to (dashboards are addressed by item id).
+    func item(_ id: String) throws -> (item: OverlayItem, connection: String)? {
+        try locked {
+            try h.query("""
+                SELECT i.id, i.layer_id, i.kind, i.name, i.payload, i.base_hash, i.status, i.updated_at, l.connection_id
+                FROM overlay_items i JOIN layers l ON l.id = i.layer_id WHERE i.id = ?
+                """, [id]).first.map { r in
+                (OverlayItem(id: r[0] as! String, layer: r[1] as! String, kind: r[2] as! String, name: r[3] as? String, payload: r[4] as! String, baseHash: r[5] as? String,
+                             status: r[6] as! String, updated: (r[7] as! Int64).ms), r[8] as! String)
+            }
+        }
+    }
+
+    /// Rewrites a live item in place (dashboard.update, the editor); the id stays, so links and the layer's NEW mark survive.
+    func setPayload(_ id: String, name: String? = nil, _ payload: String) throws {
+        try locked {
+            try h.transaction {
+                try h.query("UPDATE overlay_items SET payload = ?, name = COALESCE(?, name), updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE id = ?", [payload, name, id])
+                try h.query("UPDATE layers SET updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE id = (SELECT layer_id FROM overlay_items WHERE id = ?)", [id])
+            }
+        }
+    }
+
     private func touch(_ layer: String) throws { try h.query("UPDATE layers SET updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE id = ?", [layer]) }
     @discardableResult private func locked<T>(_ body: () throws -> T) rethrows -> T { lock.lock(); defer { lock.unlock() }; return try body() }
 }

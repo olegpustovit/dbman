@@ -64,7 +64,7 @@ final class DBStoreTests: XCTestCase {
         XCTAssertNil(c[1].secretRef); XCTAssertTrue(c[1].readOnly); XCTAssertNotNil(c[0].lastOpened)
         XCTAssertEqual(s.setting("page_size"), "1000"); XCTAssertEqual(s.setting("relative_dates"), "true")
         XCTAssertEqual(s.setting("row_cap"), "500") // defaults still seeded
-        XCTAssertEqual(try raw("SELECT count(*) FROM layers WHERE name = 'MINE'")[0][0] as? Int64, 2)
+        XCTAssertEqual(try raw("SELECT count(*) FROM layers WHERE name = 'MINE'")[0][0] as? Int64, 3) // two connections + the internal store
         XCTAssertFalse(FileManager.default.fileExists(atPath: dir.appendingPathComponent("connections.json").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: dir.appendingPathComponent("connections.json.v1-backup").path))
         XCTAssertEqual(try raw("SELECT value FROM meta WHERE key = 'migrated_from'")[0][0] as? String, "v1")
@@ -126,7 +126,7 @@ final class DBStoreTests: XCTestCase {
         XCTAssertThrowsError(try s.setMapLayout("A", "free", positions: "{bad"))
         try s.addRelation("A", name: "events.customer_id -> customers.id", payload: #"{"from_table":"events"}"#)
         XCTAssertEqual(s.relations("A"), [#"{"from_table":"events"}"#])
-        XCTAssertEqual(try raw("SELECT layer_id, kind FROM overlay_items")[0].map { $0 as? String }, ["mine:A", "relation"])
+        XCTAssertEqual(try raw("SELECT layer_id, kind FROM overlay_items WHERE kind <> 'dashboard'")[0].map { $0 as? String }, ["mine:A", "relation"])
         XCTAssertTrue(s.relations("B").isEmpty)
     }
 

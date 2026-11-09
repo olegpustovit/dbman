@@ -4,10 +4,10 @@ import SwiftUI
 
 /// Dev/CI hooks for scripted screenshots and smoke tests. Env vars, DEBUG builds only (release gets inert stubs).
 ///   DBMAN_STORE=<path> (use this store file, not the real one)   DBMAN_OPEN=internal|sample|/path.sqlite|postgres://…|mysql://…   DBMAN_ENV=production|staging  (tags the opened profile)
-///   DBMAN_ROUTE=table:<name>|query:<sql>|schema-map (+ DBMAN_MAP=<layout>[:<table>[:<hops>]] DBMAN_MAP_PATH=a>b DBMAN_MAP_DETAIL=names|keys|all)   DBMAN_VIEW=<rail index>   DBMAN_AUTORUN=1   DBMAN_SELECT=<row>
+///   DBMAN_ROUTE=table:<name>|query:<sql>|dashboard:<id or title part>[:edit[:<widget id>]]|schema-map (+ DBMAN_MAP=<layout>[:<table>[:<hops>]] DBMAN_MAP_PATH=a>b DBMAN_MAP_DETAIL=names|keys|all)   DBMAN_VIEW=<rail index>   DBMAN_AUTORUN=1   DBMAN_SELECT=<row>
 ///   DBMAN_STAGE=<table>.<column>=<value> (stages an update of the first row by id)   DBMAN_REVIEW=1   DBMAN_COMMIT=1   DBMAN_PALETTE=1
 ///   DBMAN_APPEARANCE=dark   DBMAN_WINDOW=settings|min (min: resize the database window to its 1100x700 minimum)
-///   DBMAN_LAYER=<agent>[:diff|:apply] (open the Store panel on that agent's layer; :diff = compare view, :apply = the review sheet)   DBMAN_SNAPSHOT=<png> (render this window's own view to a file after 4 s; used where screencapture is not permitted)
+///   DBMAN_LAYER=<agent>[:diff|:apply] (open the Store panel on that agent's layer; :diff = compare view, :apply = the review sheet)   DBMAN_SNAPSHOT=<png>[+DBMAN_SNAPSHOT_WINDOW=<title>] (render the key window's own view to a file after 6 s; used where screencapture is not permitted)
 ///   DBMAN_CONNECT_TEST=<url> (Connections editor: fill the URL and press TEST)
 @MainActor enum DevHooks {
     /// Passwords from DBMAN_OPEN URLs, so scripted runs never touch the Keychain (a rebuilt binary triggers an access prompt).
@@ -22,25 +22,33 @@ import SwiftUI
     /// DBMAN_AGENTS=<platform id>|perms|activity|agentpack|other opens the Agents window there. DBMAN_AGENT_HOME=<dir> is the fake HOME for detection (AgentsModel).
     static var agentsSection: String? { env("DBMAN_AGENTS") }
 
-    /// DBMAN_SHOT=<dir>: after 6 s write the Agents window's own pixels, one PNG per DBMAN_SHOT_SECTIONS entry (e.g. cursor,perms,activity), to <dir>/agents-<section>.png.
-    /// In-process, so no screen capture is involved.
-    private static func shoot() {
-        guard let dir = env("DBMAN_SHOT") else { return }
+    /// DBMAN_SNAPSHOT=<png>: after 6 s write the key window's own pixels (DBMAN_SNAPSHOT_WINDOW=<title> picks another, e.g. Agents). In-process, so no screen capture is involved.
+    /// A sheet on that window is composited on top, since it is a separate window.
+    private static func snapshot() {
+        guard let path = env("DBMAN_SNAPSHOT") else { return }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(6))
-            for s in (env("DBMAN_SHOT_SECTIONS") ?? "").split(separator: ",").map(String.init) {
-                AgentsModel.shared.section = AgentsWindow.section(s)
-                try? await Task.sleep(for: .seconds(1))
-                guard let v = NSApp.windows.first(where: { $0.title == "Agents" })?.contentView?.superview, let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) else { continue }
-                v.cacheDisplay(in: v.bounds, to: rep)
-                try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "\(dir)/agents-\(s).png"))
+            let title = env("DBMAN_SNAPSHOT_WINDOW")
+            let idle = ["", "Connections", "Database"] // a restored workspace window without a connection is titled "Database"
+            let win = NSApp.windows.first { title != nil ? $0.title == title : ($0 == NSApp.keyWindow && !idle.contains($0.title)) }
+                ?? NSApp.windows.first { title == nil && $0.isVisible && !idle.contains($0.title) }
+            guard let v = win?.contentView?.superview, let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) else { return }
+            v.cacheDisplay(in: v.bounds, to: rep)
+            let img = NSImage(size: v.bounds.size)
+            img.addRepresentation(rep)
+            if let s = win?.sheets.first?.contentView, let srep = s.bitmapImageRepForCachingDisplay(in: s.bounds) {
+                s.cacheDisplay(in: s.bounds, to: srep)
+                img.lockFocus(); NSGraphicsContext.current?.cgContext.setFillColor(NSColor.black.withAlphaComponent(0.25).cgColor)
+                NSRect(origin: .zero, size: v.bounds.size).fill(using: .sourceOver)
+                srep.draw(in: NSRect(x: (v.bounds.width - s.bounds.width) / 2, y: v.bounds.height - s.bounds.height - 30, width: s.bounds.width, height: s.bounds.height)); img.unlockFocus()
             }
+            if let tiff = img.tiffRepresentation, let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: path)) }
         }
     }
 
     /// Called once at launch.
     static func launch() {
-        shoot()
+        snapshot()
         if env("DBMAN_APPEARANCE") == "dark" { NSApp.appearance = NSAppearance(named: .darkAqua) }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(300)) // let the scene install openWindow
@@ -61,12 +69,29 @@ import SwiftUI
         }
     }
 
+    /// Waits (an agent may still be creating it) for the dashboard whose id or title matches, opens it, optionally in edit mode with a widget selected.
+    private static func dashboard(_ ws: WorkspaceModel, _ arg: String) async {
+        let p = arg.split(separator: ":").map(String.init)
+        for _ in 0..<30 {
+            ws.dash.reload(ws)
+            if let e = ws.dash.entries.first(where: { $0.id == p[0] || $0.title.localizedCaseInsensitiveContains(p[0]) }) {
+                ws.go(e.id == ws.dash.defaultEntry?.id ? .overview : .dashboard(e.id))
+                if p.count > 1, p[1] == "edit" {
+                    while ws.dash.itemID != e.id { try? await Task.sleep(for: .milliseconds(100)) }
+                    ws.dash.edit = true; ws.dash.selected = p.count > 2 ? p[2] : nil
+                }
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+    }
+
     /// Called after the workspace connects.
     static func connected(_ ws: WorkspaceModel) async {
         if env("DBMAN_ROUTE") == "schema-map" { ws.go(.schemaMap); ws.map.applyDevHook() }
         if let r = env("DBMAN_ROUTE"), let i = r.firstIndex(of: ":") {
             let arg = String(r[r.index(after: i)...])
-            if r.hasPrefix("table:") { ws.go(.table(arg)) } else if r.hasPrefix("query:") { ws.newQuery(sql: arg) }
+            if r.hasPrefix("table:") { ws.go(.table(arg)) } else if r.hasPrefix("query:") { ws.newQuery(sql: arg) } else if r.hasPrefix("dashboard:") { await dashboard(ws, arg) }
         }
         if let s = env("DBMAN_STAGE"), let session = ws.session, let dot = s.firstIndex(of: "."), let eq = s.firstIndex(of: "=") {
             let table = String(s[..<dot]), col = String(s[s.index(after: dot)..<eq]), new = String(s[s.index(after: eq)...])
@@ -78,24 +103,6 @@ import SwiftUI
         if env("DBMAN_WINDOW") == "min" { NSApp.windows.first { $0.title == ws.profile.name }?.setContentSize(NSSize(width: 1100, height: 700)) }
         if env("DBMAN_PALETTE") != nil { ws.paletteOpen = true }
         if let l = env("DBMAN_LAYER") { ws.layers.devSelect(l, ws) }
-        if let path = env("DBMAN_SNAPSHOT") {
-            try? await Task.sleep(for: .seconds(4))
-            guard let v = NSApp.windows.first(where: { $0.title == ws.profile.name })?.contentView else { return }
-            // the sheet is a separate window: render it on top of the main one when open
-            let sheet = NSApp.windows.first { $0.sheetParent != nil }?.contentView
-            let img = NSImage(size: v.bounds.size)
-            if let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) {
-                v.cacheDisplay(in: v.bounds, to: rep)
-                img.addRepresentation(rep)
-            }
-            if let s = sheet, let rep = s.bitmapImageRepForCachingDisplay(in: s.bounds) {
-                s.cacheDisplay(in: s.bounds, to: rep)
-                img.lockFocus(); NSGraphicsContext.current?.cgContext.setFillColor(NSColor.black.withAlphaComponent(0.25).cgColor)
-                NSRect(origin: .zero, size: v.bounds.size).fill(using: .sourceOver)
-                rep.draw(in: NSRect(x: (v.bounds.width - s.bounds.width) / 2, y: v.bounds.height - s.bounds.height - 30, width: s.bounds.width, height: s.bounds.height)); img.unlockFocus()
-            }
-            if let tiff = img.tiffRepresentation, let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: path)) }
-        }
     }
     #else
     static var view: Int { 0 }

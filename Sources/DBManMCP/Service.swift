@@ -29,7 +29,8 @@ public final class MCPService: @unchecked Sendable {
             return .init(resources: r)
         }
         await server.withMethodHandler(ListResourceTemplates.self) { _ in
-            .init(templates: [.init(uriTemplate: "dbman://{conn}/tables/{t}", name: "table", description: "Columns, keys and indexes of one table", mimeType: "application/json")])
+            .init(templates: [.init(uriTemplate: "dbman://{conn}/tables/{t}", name: "table", description: "Columns, keys and indexes of one table", mimeType: "application/json"),
+                              .init(uriTemplate: "dbman://dashboards/{id}", name: "dashboard", description: "A dashboard spec (yours or the human's)", mimeType: "application/json")])
         }
         await server.withMethodHandler(ReadResource.self) { [self] p in
             let (tool, args) = try Self.route(p.uri)
@@ -74,8 +75,15 @@ public final class MCPService: @unchecked Sendable {
         case 1 where parts[0] == "connections": return ("connections.list", [:])
         case 2 where parts[1] == "schema": return ("schema.tables", ["connection": .string(parts[0])])
         case 3 where parts[1] == "tables": return ("schema.describe", ["connection": .string(parts[0]), "table": .string(parts[2])])
+        case 2 where parts[0] == "dashboards": return ("dashboard.get", ["id": .string(parts[1])])
         default: throw MCPError.invalidParams("unknown resource \(uri)")
         }
+    }
+
+
+    /// The `build-dashboard` prompt; the app's GENERATE WITH AGENT copies the same text.
+    public static func buildDashboardPrompt(connection: String, goal: String?) -> String {
+        "Build a dashboard for the \(connection) database\(goal.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? "") and propose it to the human. Steps: 1) call dashboard.components for the catalog and JSON Schema; 2) call schema.tables, schema.graph and schema.describe to learn the data; 3) write 6-9 widgets: KPIs on top (kpi / kpi.spark), one or two time charts, a ranking, a table; 4) test every query with query.run before using it, read-only and with a LIMIT or aggregation; 5) call dashboard.create with the spec (12 columns, no overlap, every required encoding set to a result column, variables :range for time filters). The reply lists per-widget errors: fix them with dashboard.update. Sensitive columns come back as «redacted»; do not build widgets on them. The human sees your dashboard as NEW in your layer, accepts widgets one by one and adopts them into MINE; if they discard it, read the note in overlay.status."
     }
 
     static let prompts: [(Prompt, @Sendable ([String: String]) -> String)] = [
@@ -83,5 +91,7 @@ public final class MCPService: @unchecked Sendable {
          { "Explain the data model of the \($0["connection"] ?? "?") database in plain language. Call schema.tables, then schema.graph, then schema.describe on the central tables. Group tables into domains, name the key relationships, and point out anything surprising (isolated tables, missing keys). Do not guess at data: use query.sample only if names are unclear." }),
         (Prompt(name: "investigate-table", description: "Profile a table and report what is notable", arguments: [.init(name: "connection", description: "Connection name", required: true), .init(name: "table", description: "Table name", required: true)]),
          { "Investigate the \($0["table"] ?? "?") table in \($0["connection"] ?? "?"). Call schema.describe, query.sample, and stats.column on the columns that look important. Report row volume, keys, null-heavy or constant columns, suspicious values, and which tables reference it. Keep queries small: production connections are guarded." }),
+        (Prompt(name: "build-dashboard", description: "Build a dashboard for a connection and propose it with dashboard.create", arguments: [.init(name: "connection", description: "Connection name", required: true), .init(name: "goal", description: "What the dashboard is for", required: false)]),
+         { buildDashboardPrompt(connection: $0["connection"] ?? "?", goal: $0["goal"]) }),
     ]
 }

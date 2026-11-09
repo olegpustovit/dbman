@@ -105,7 +105,7 @@ struct PermissionsPane: View {
                 Text("NONE YET // COLUMNS MATCHING email, phone, ssn, address, name, token, password, iban, dob ARE MARKED ON THE FIRST SCHEMA LOAD").ht(.labelSmall).foregroundStyle(HT.C.ink3)
             }
             ForEach(sens) { s in sensRow(s) }
-            Text("Agents get «redacted» (COUNT / GROUP BY still work on a hashed form). Unmark per column; redaction happens in DBMan before rows leave the socket.").ht(.bodySmall).foregroundStyle(HT.C.ink3)
+            Text("Agents get «redacted» (COUNT and other numeric aggregates still work). Unmark per column; redaction happens in DBMan before rows leave the socket.").ht(.bodySmall).foregroundStyle(HT.C.ink3)
         }
     }
 

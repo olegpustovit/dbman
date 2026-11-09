@@ -81,8 +81,9 @@ final class DBManMCPTests: XCTestCase {
         let names = try await client.listTools().tools.map(\.name)
         same(names, ["connections.list", "connections.add", "connections.test", "connections.remove", "schema.tables", "schema.describe", "schema.graph", "schema.search",
                                "query.run", "query.explain", "query.sample", "stats.column", "overlay.status", "overlay.patch_rows", "overlay.diff", "overlay.reset", "views.list", "views.create",
-                     "views.replace", "views.drop", "relations.add", "notes.set", "saved.list", "saved.save", "ui.open"])
-        same(try await client.listPrompts().prompts.map(\.name), ["explain-schema", "investigate-table"])
+                     "views.replace", "views.drop", "relations.add", "notes.set", "saved.list", "saved.save", "dashboard.components", "dashboard.list", "dashboard.get", "dashboard.create",
+                     "dashboard.update", "ui.open"])
+        same(try await client.listPrompts().prompts.map(\.name), ["explain-schema", "investigate-table", "build-dashboard"])
         let uris = try await client.listResources().resources.map(\.uri)
         same(uris, ["dbman://connections", "dbman://shop/schema", "dbman://analytics/schema"]) // never the internal store
         let desc = try await client.readResource(uri: "dbman://shop/tables/orders")

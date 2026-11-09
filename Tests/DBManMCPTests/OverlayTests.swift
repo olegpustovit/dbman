@@ -104,7 +104,7 @@ extension DBManMCPTests {
         try await fails([["op": "update", "pk": ["customer_id": 1], "values": ["total": 1]]], "INVALID_ARGUMENT (patch 0: pk must be exactly id")
         try await fails([["op": "drop", "pk": ["id": 1]]], "INVALID_ARGUMENT (patch 0: op must be")
         try await fails([], "INVALID_ARGUMENT (patches must hold")
-        same(try raw("SELECT count(*) FROM overlay_items")[0][0] as? Int64, 0) // all-or-nothing is per call: nothing was written
+        same(try raw("SELECT count(*) FROM overlay_items WHERE kind <> 'dashboard'")[0][0] as? Int64, 0) // all-or-nothing is per call: nothing was written
     }
 
     func testStaleWhenTheDatabaseMovesOn() async throws {
@@ -113,7 +113,7 @@ extension DBManMCPTests {
         try await dbWrite("UPDATE orders SET total = 500 WHERE id = 1; DELETE FROM orders WHERE id = 3; INSERT INTO orders VALUES (10, 1, 1)")
         let st = try await json("overlay.status", shop)
         same((st["stale"] as! [Any]).count, 3) // updated row changed, deleted row vanished, inserted key now exists
-        same(try raw("SELECT status, count(*) FROM overlay_items GROUP BY status").map { "\($0[0]!) \($0[1]!)" }, ["stale 3"])
+        same(try raw("SELECT status, count(*) FROM overlay_items WHERE kind <> 'dashboard' GROUP BY status").map { "\($0[0]!) \($0[1]!)" }, ["stale 3"])
         let d = try await json("overlay.diff", args(["table": "orders"]))
         let up = (d["patches"] as! [[String: Any]]).first { $0["op"] as? String == "update" }!
         same(up["status"] as? String, "stale")
@@ -246,17 +246,18 @@ extension DBManMCPTests {
 
     // MARK: through the stdio helper
 
-    func testHelperRoundTripWithScratchStore() async throws {
+    /// Starts the socket listener and the stdio helper against the scratch store, handshakes as `name`, and returns a tool caller. Call `stop` when done.
+    func startHelper(agent name: String) throws -> (tool: (String, [String: Any]) throws -> [String: Any], stop: () -> Void) {
         let bundle = Bundle(for: DBManMCPTests.self).bundleURL.deletingLastPathComponent()
         let helper = bundle.appendingPathComponent("dbman-mcp")
         try XCTSkipUnless(FileManager.default.isExecutableFile(atPath: helper.path), "dbman-mcp not built next to the tests")
         let l = MCPListener(service: service, path: UnixSocket.path(storeDir: dir.path))
-        try l.start(); defer { l.stop() }
+        try l.start()
         let p = Process(), inp = Pipe(), out = Pipe()
         p.executableURL = helper; p.arguments = ["--stdio"]
         p.environment = ["DBMAN_STORE": store.url.path, "PATH": "/usr/bin:/bin"]
         p.standardInput = inp; p.standardOutput = out
-        try p.run(); defer { p.terminate() }
+        try p.run()
         func send(_ id: Int, _ method: String, _ params: [String: Any]) throws -> [String: Any] {
             inp.fileHandleForWriting.write(try JSONSerialization.data(withJSONObject: ["jsonrpc": "2.0", "id": id, "method": method, "params": params]) + Data("\n".utf8))
             var buf = Data()
@@ -269,13 +270,17 @@ extension DBManMCPTests {
                 }
             }
         }
-        func tool(_ name: String, _ a: [String: Any]) throws -> [String: Any] {
-            let r = try send(100 + Int.random(in: 0..<9000), "tools/call", ["name": name, "arguments": a])
-            let text = ((r["result"] as! [String: Any])["content"] as! [[String: Any]])[0]["text"] as! String
-            return try JSONSerialization.jsonObject(with: Data(text.utf8)) as! [String: Any]
-        }
-        _ = try send(1, "initialize", ["protocolVersion": "2025-06-18", "capabilities": [:], "clientInfo": ["name": "helper-agent", "version": "9"]])
+        _ = try send(1, "initialize", ["protocolVersion": "2025-06-18", "capabilities": [:], "clientInfo": ["name": name, "version": "9"]])
         inp.fileHandleForWriting.write(Data((#"{"jsonrpc":"2.0","method":"notifications/initialized"}"# + "\n").utf8))
+        return ({ tool, a in
+            let r = try send(100 + Int.random(in: 0..<9000), "tools/call", ["name": tool, "arguments": a])
+            let text = ((r["result"] as! [String: Any])["content"] as! [[String: Any]])[0]["text"] as! String
+            return (try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any]) ?? ["text": text]
+        }, { p.terminate(); l.stop() })
+    }
+
+    func testHelperRoundTripWithScratchStore() async throws {
+        let (tool, stop) = try startHelper(agent: "helper-agent"); defer { stop() }
         let patched = try tool("overlay.patch_rows", ["connection": "shop", "table": "orders", "patches": [
             ["op": "update", "pk": ["id": 1], "values": ["total": 1]], ["op": "update", "pk": ["id": 2], "values": ["total": 2]], ["op": "delete", "pk": ["id": 3]]]])
         XCTAssertEqual(patched["patched"] as? Int, 3)

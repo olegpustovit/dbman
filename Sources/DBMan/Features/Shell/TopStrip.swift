@@ -6,6 +6,7 @@ extension WorkspaceModel {
     func title(of r: Route) -> String {
         switch r {
         case .overview: "Overview"
+        case .dashboard(let id): dash.title(of: id)
         case .schemaMap: "Schema map"
         case .table(let n): n
         case .query(let id): queryTab(id)?.title ?? "Query"
@@ -22,7 +23,7 @@ struct TopStrip: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            HTNavButton("Overview", systemImage: "square.grid.2x2", isActive: ws.route == .overview) { ws.go(.overview) }
+            HTNavButton("Overview", systemImage: "square.grid.2x2", isActive: ws.route == .overview || { if case .dashboard = ws.route { true } else { false } }()) { ws.go(.overview) }
             HTNavButton("Tables", systemImage: "tablecells", isActive: isTable, action: openTables)
             HTNavButton("Query", systemImage: "terminal", isActive: currentQuery != nil && currentQuery?.plan == nil, action: openQuery)
             HTNavButton("Explain", systemImage: "point.3.connected.trianglepath.dotted", isActive: currentQuery?.plan != nil, action: openExplain)

@@ -27,7 +27,7 @@ Add for the schema map: `categories` (18) products.category_id→categories.id, 
    Defaults: every connection → OVERLAY, PRODUCTION → READ (OVERLAY opt-in). There is no WRITE or DDL level for agents; only a human
    can promote overlay items to the real database (APPLY TO DATABASE → the v1 Review sheet → COMMIT ⌘↩), or export them as a migration .sql.
    **Sensitive columns are hidden from agents by default** (user decision): columns matching email/phone/ssn/address/name/token/password/iban/dob
-   are auto-marked on first schema load, agents get `«redacted»` (still can COUNT / GROUP BY a hashed form), the human can unmark per column;
+   are auto-marked on first schema load, agents get `«redacted»` (COUNT and other numeric aggregates still work), the human can unmark per column;
    the Permissions pane lists them as "AUTO // 7 COLUMNS HIDDEN". statement timeout (default 15 s; PROD 5 s), row cap (default 500 rows per call, cursor for more),
    and a prod guard: on PRODUCTION every agent query is EXPLAINed first; estimated cost > 1e6 or seq scan on >1M rows → blocked with reason.
 5. **Agent activity** — a live feed inside the workspace (right inspector tab "AGENTS") and in the Agents window: every tool call with

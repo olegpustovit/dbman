@@ -23,11 +23,12 @@ struct NavigatorView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         section("Workspace")
-                        row("Overview", selected: ws.route == .overview) { ws.go(.overview) }
+                        row(ws.profile.environment == .system ? "Agent activity" : "Overview", trailing: "⌘0", selected: ws.route == .overview) { ws.go(.overview) }
                         row("Schema map", trailing: "⌘4", selected: ws.route == .schemaMap) { ws.go(.schemaMap) }
                         ForEach(ws.queryTabs) { t in
                             row(t.title, edited: t.isEdited, selected: ws.route == .query(t.id)) { ws.go(.query(t.id)) }
                         }
+                        dashboards
                         tableSection("Tables", shown(.table))
                         tableSection("Views", shown(.view))
                         virtualViews
@@ -36,6 +37,16 @@ struct NavigatorView: View {
             }
             .padding(8)
         }
+    }
+
+    /// The connection's other dashboards: MINE first, then each agent's layer with its monogram; NEW marks an agent's proposal.
+    @ViewBuilder private var dashboards: some View {
+        let list = ws.dash.entries.filter { $0.id != ws.dash.defaultEntry?.id && (filter.isEmpty || $0.title.localizedCaseInsensitiveContains(filter)) }
+        section("Dashboards", count: list.count)
+        ForEach(list) { e in
+            row(e.title, trailing: e.mine ? nil : "NEW · " + layerMono(e.layer), selected: ws.route == .dashboard(e.id)) { ws.go(.dashboard(e.id)) }
+        }
+        row("+ New dashboard", trailing: "⌥⌘N", selected: false) { ws.dash.create(ws) }
     }
 
     /// Virtual views from visible store layers: a query tab on the view (expanded as a CTE when it runs).
