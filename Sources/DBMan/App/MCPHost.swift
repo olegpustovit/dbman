@@ -3,11 +3,15 @@ import DBCore
 import DBManMCP
 import DBStore
 import Foundation
+import Observation
 
 /// Hosts the MCP server inside the app: listens on `mcp.sock`, hands agents sessions and routes `ui.open` (SPEC §1.1).
-@MainActor final class MCPHost {
+@MainActor @Observable final class MCPHost {
     static let shared = MCPHost()
-    private var listener: MCPListener?
+    @ObservationIgnored private var listener: MCPListener?
+    /// MCP clients connected now / every `initialize` since launch (Agents window: "N LIVE", VERIFY).
+    private(set) var live: [Handshake] = []
+    private(set) var handshakes: [Handshake] = []
 
     /// Call once after the store is open. A second DBMan on the same store simply doesn't listen.
     func start(_ app: AppModel) {
@@ -27,11 +31,15 @@ import Foundation
             },
             openUI: { row, route, selection in await MCPHost.open(app, row, route, selection) })
         try? store.pruneActivity()
-        let l = MCPListener(service: MCPService(backend), path: UnixSocket.path(storeDir: store.url.deletingLastPathComponent().path))
+        let service = MCPService(backend)
+        service.live.onChange = { [weak self] in Task { @MainActor in self?.syncLive(service.live) } }
+        let l = MCPListener(service: service, path: UnixSocket.path(storeDir: store.url.deletingLastPathComponent().path))
         do { try l.start(); listener = l } catch { NSLog("DBMan MCP: %@", error.localizedDescription) }
     }
 
     func stop() { listener?.stop() }
+
+    private func syncLive(_ s: LiveSessions) { live = s.clients; handshakes = s.handshakes }
 
     private static func open(_ app: AppModel, _ row: ConnectionRow, _ route: String, _ selection: String?) async {
         guard let id = UUID(uuidString: row.id) else { return }

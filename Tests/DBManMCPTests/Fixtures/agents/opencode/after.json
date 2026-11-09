@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "dbman": {
+      "command": [
+        "/Applications/DBMan.app/Contents/Helpers/dbman-mcp",
+        "--stdio"
+      ],
+      "enabled": true,
+      "type": "local"
+    }
+  },
+  "theme": "opencode"
+}

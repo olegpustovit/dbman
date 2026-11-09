@@ -33,6 +33,7 @@ public final class MCPListener: @unchecked Sendable {
         if let server = try? await service.start(transport: t) {
             await server.waitUntilCompleted()
             await server.stop()
+            service.ended(server)
         }
         close(c)
     }

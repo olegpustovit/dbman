@@ -43,6 +43,7 @@ final class AppModel {
         profiles = ((try? store.connections()) ?? []).map(Self.profile)
         pageSize = store.setting("page_size").flatMap(Int.init) ?? 500
         relativeDates = store.setting("relative_dates") == "true"
+        AgentsModel.shared.reload(store) // activity, permissions and the roster live in the same file
     }
 
     private func save(_ key: String, _ json: String) { write { try store.setSetting(key, json: json) } }

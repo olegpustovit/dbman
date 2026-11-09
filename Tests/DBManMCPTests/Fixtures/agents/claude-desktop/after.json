@@ -1,0 +1,11 @@
+{
+  "globalShortcut": "Cmd+Shift+Space",
+  "mcpServers": {
+    "dbman": {
+      "args": [
+        "--stdio"
+      ],
+      "command": "/Applications/DBMan.app/Contents/Helpers/dbman-mcp"
+    }
+  }
+}

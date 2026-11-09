@@ -1,0 +1,9 @@
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+enabled = true
+
+[mcp_servers.dbman]
+command = "/Applications/DBMan.app/Contents/Helpers/dbman-mcp"
+args = ["--stdio"]
+startup_timeout_sec = 20

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "dbman": {
+      "args": [
+        "--stdio"
+      ],
+      "command": "/Applications/DBMan.app/Contents/Helpers/dbman-mcp",
+      "env": {},
+      "type": "stdio"
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }
+  },
+  "numStartups": 12
+}

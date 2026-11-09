@@ -33,6 +33,7 @@ struct TopStrip: View {
             }.scrollIndicators(.hidden)
             Spacer(minLength: 0)
             readout
+            AgentsChip()
             Button { ws.paletteOpen = true } label: {
                 HStack(spacing: 5) { Text("Jump_to"); Text("⌘K").foregroundStyle(HT.C.ink3) }
                     .ht(.labelSmall).padding(.horizontal, 8).frame(height: 22)
