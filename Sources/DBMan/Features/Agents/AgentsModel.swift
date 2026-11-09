@@ -19,6 +19,8 @@ final class AgentsModel {
     var error: String?
     var scannedAt = Date()
     private(set) var statuses: [String: AgentStatus] = [:]
+    /// The `agentpack` CLI, re-detected on every RESCAN (nil: not installed; the pane still shows copyable commands).
+    private(set) var agentpack: URL?
 
     // store cache (reload())
     var agents: [AgentRow] = []
@@ -49,6 +51,7 @@ final class AgentsModel {
 
     func rescan() {
         for p in AgentPlatform.all { statuses[p.id] = AgentConfig.status(p, scope: scope(p), home: home, project: projectURL, helper: helper) }
+        agentpack = Self.agentpackCLI(home: home)
         scannedAt = Date()
     }
 
@@ -116,18 +119,47 @@ final class AgentsModel {
 
     // MARK: agentpack
 
-    /// `agentpack` from PATH or the usual install dirs.
+    /// `agentpack` from PATH or the usual install dirs (a Finder-launched app gets a bare PATH, so shell and Nix profiles are listed too).
     static func agentpackCLI(home: URL) -> URL? {
         let dirs = (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map(String.init)
-            + ["/opt/homebrew/bin", "/usr/local/bin", home.appendingPathComponent(".local/bin").path, home.appendingPathComponent(".cargo/bin").path]
-        return dirs.map { URL(fileURLWithPath: $0).appendingPathComponent("agentpack") }.first { FileManager.default.isExecutableFile(atPath: $0.path) }
+            + ["/opt/homebrew/bin", "/usr/local/bin", "/run/current-system/sw/bin", "/etc/profiles/per-user/\(NSUserName())/bin", "/nix/var/nix/profiles/default/bin"]
+            + [".local/bin", ".cargo/bin", "go/bin", ".nix-profile/bin", ".bun/bin", ".npm-global/bin"].map { home.appendingPathComponent($0).path }
+        // The CLI ships as `ap` (agentpack ≥ 0.13) or `agentpack`; `ap` is a short name other tools use too, so it must say it is agentpack.
+        for name in ["agentpack", "ap"] {
+            for d in dirs {
+                let u = URL(fileURLWithPath: d).appendingPathComponent(name)
+                guard FileManager.default.isExecutableFile(atPath: u.path) else { continue }
+                if name == "agentpack" || isAgentpack(u) { return u }
+            }
+        }
+        return nil
     }
 
+    /// `<exe> --version` prints `agentpack x.y.z`; cached per path so RESCAN stays instant.
+    private static func isAgentpack(_ u: URL) -> Bool {
+        if let v = verified[u.path] { return v }
+        let v = (try? AgentConfig.run(u, ["--version"]))?.output.hasPrefix("agentpack") ?? false
+        verified[u.path] = v
+        return v
+    }
+    nonisolated(unsafe) private static var verified: [String: Bool] = [:]
+
+    /// The name to type in a terminal: `ap` or `agentpack` (whichever was found; `ap` when none).
+    var agentpackName: String { agentpack?.lastPathComponent ?? "ap" }
+
+    /// Single-quotes for zsh/bash/fish when the string needs it.
+    static func sh(_ s: String) -> String {
+        s.allSatisfy { $0.isLetter || $0.isNumber || "/._-+=:@~".contains($0) } ? s : "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
+    /// The Claude Code CLI line that registers DBMan at a scope.
+    func claudeCommand(_ scope: AgentScope) -> String { "claude mcp add dbman -s \(scope == .project ? "project" : "user") -- \(Self.sh(helper)) --stdio" }
+
     /// Opens Terminal at the project running `agentpack <agent>` (a .command file: no Apple Events permission needed).
-    static func launch(agent: String, in project: URL) {
+    static func launch(cli: URL, agent: String, in project: URL) {
         let f = FileManager.default.temporaryDirectory.appendingPathComponent("dbman-agentpack-\(agent).command")
         let q = "'" + project.path.replacingOccurrences(of: "'", with: "'\\''") + "'"
-        try? "#!/bin/zsh\ncd \(q) && agentpack \(agent)\n".write(to: f, atomically: true, encoding: .utf8)
+        try? "#!/bin/zsh\ncd \(q) && \(sh(cli.path)) \(agent)\n".write(to: f, atomically: true, encoding: .utf8)
         try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: f.path)
         NSWorkspace.shared.open(f)
     }

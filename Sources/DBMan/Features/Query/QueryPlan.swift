@@ -47,10 +47,10 @@ struct PlanDiagram: View {
             HStack(spacing: 4) {
                 Text(n.operation).ht(.label).lineLimit(1)
                 Spacer(minLength: 0)
-                if hot { Text("HOTSPOT // \(Int((it.share * 100).rounded()))%").ht(.labelSmall).foregroundStyle(HT.C.amber) }
+                if hot { Text("HOTSPOT · \(Int((it.share * 100).rounded()))%").ht(.labelSmall).foregroundStyle(HT.C.amber) }
             }
             Text(rel.isEmpty ? " " : rel).ht(.dataSmall).foregroundStyle(dim).lineLimit(1)
-            Text("EST \(Int(n.estimatedRows))" + (n.actualRows.map { " // ACT \(Int($0))" } ?? "") + (n.selfMs.map { " // \(String(format: "%.1f", $0)) MS" } ?? ""))
+            Text("EST \(Int(n.estimatedRows))" + (n.actualRows.map { " · ACT \(Int($0))" } ?? "") + (n.selfMs.map { " · \(String(format: "%.1f", $0)) MS" } ?? ""))
                 .ht(.labelSmall).foregroundStyle(dim).lineLimit(1)
             Spacer(minLength: 0)
             SegmentedMeter(value: it.share, segments: 20, tint: hot ? .amber : .solid, accessibilityLabel: "Time share")

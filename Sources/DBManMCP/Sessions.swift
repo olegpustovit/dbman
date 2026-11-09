@@ -21,7 +21,8 @@ public extension ConnectionRow {
     var profile: ConnectionProfile {
         ConnectionProfile(id: UUID(uuidString: id) ?? UUID(), name: name, engine: Engine(rawValue: engine) ?? .sqlite, host: host, port: port, database: database, user: user,
                           filePath: filePath, sslMode: SSLMode(rawValue: sslMode) ?? .prefer, environment: EnvironmentTag(rawValue: env) ?? .local,
-                          openReadOnly: readOnly, stageWrites: stageWrites, lastOpened: lastOpened, sslRootCert: sslRootCert)
+                          openReadOnly: readOnly, stageWrites: stageWrites, lastOpened: lastOpened, sslRootCert: sslRootCert,
+                          ssh: sshHost.flatMap { $0.isEmpty ? nil : SSHTunnel(host: $0, user: sshUser, port: sshPort, identityFile: sshIdentity) })
     }
     /// Agent sessions always start locked, so `DatabaseSession` refuses writes even before the engine does.
     var agentProfile: ConnectionProfile { var p = profile; p.openReadOnly = true; return p }
@@ -33,11 +34,11 @@ public actor HeadlessSessions {
     private let password: @Sendable (ConnectionRow) -> String?
     public init(password: @escaping @Sendable (ConnectionRow) -> String?) { self.password = password }
 
-    public func isOpen(_ c: ConnectionRow) -> Bool { open[c.id]?.row == c }
+    public func isOpen(_ c: ConnectionRow) -> Bool { open[c.id].map { $0.row == c && $0.session.isHealthy } ?? false }
 
     public func session(_ c: ConnectionRow) async throws -> DatabaseSession {
-        if let hit = open[c.id], hit.row == c { return hit.session }
-        if let old = open[c.id] { await old.session.close() } // the human edited the connection
+        if let hit = open[c.id], hit.row == c, hit.session.isHealthy { return hit.session }
+        if let old = open[c.id] { open[c.id] = nil; await old.session.close() } // the human edited the connection, or its SSH tunnel dropped
         let profile = c.agentProfile
         let s = try await DatabaseSession.connect(profile, password: password(c))
         open[c.id] = (c, s)

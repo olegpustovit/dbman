@@ -1,5 +1,6 @@
 # DBMan — build, run, install.
 #   make run        debug build, launch it (ad-hoc signed; passwords kept in a dev file, no Keychain prompts)
+#   make dev        same, incremental (~10 s after a small change), and quits the running dev DBMan first
 #   make install    release build signed with your code-signing identity → /Applications (or ~/Applications)
 #   make test       unit + integration tests (integration needs: make db-up)
 #   SIGN_IDENTITY="Apple Development: …" make install   to pick a specific identity
@@ -12,12 +13,17 @@ SIGN_IDENTITY ?= $(shell security find-identity -v -p codesigning 2>/dev/null | 
 # DBMan's own store; DBMAN_STORE=<path> points every store-* target (and a DEBUG app) at a scratch file.
 STORE ?= $(or $(DBMAN_STORE),$(HOME)/Library/Application Support/DBMan/dbman.sqlite)
 
-.PHONY: build run install uninstall test check-signing db-up db-down clean icon store-open store-sql store-reset mcp mcp-inspect mcp-smoke
+.PHONY: build run dev install uninstall test check-signing db-up db-down clean icon store-open store-sql store-reset mcp mcp-inspect mcp-smoke
 
 build:
 	scripts/bundle.sh debug
 
 run: build
+	open -n $(APP)
+
+# Quits only the dist/ dev build (matched by its full path), never the installed /Applications/DBMan.app.
+dev: build
+	-@pkill -f "$(CURDIR)/$(APP)/Contents/MacOS/DBMan" && sleep 0.5 || true
 	open -n $(APP)
 
 check-signing:

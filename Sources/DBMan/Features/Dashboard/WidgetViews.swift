@@ -35,17 +35,23 @@ struct WidgetCard: View {
         VStack(spacing: 0) {
             HStack(spacing: 6) {
                 lead
-                Text(w.title).ht(.labelSmall).lineLimit(1)
-                Text("// \(w.type)").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
+                Text(DashText.title(w.title)).ht(.labelSmall).lineLimit(1)
+                Text("\(w.type)").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
                 Spacer(minLength: 4)
+                if let since = m.inflight[w.id] {
+                    // refreshing: the last result stays readable; the header says the query is running and for how long
+                    LateReveal { HStack(spacing: 5) { DotSpinner(dot: 3, gap: 1, tint: HT.C.accent); ElapsedText(since: since, tint: HT.C.accent) } }
+                        .accessibilityLabel("\(w.title) refreshing")
+                }
                 trail
                 menu
             }
-            .padding(.horizontal, 8).frame(height: 22)
-            Rectangle().fill(HT.C.line).frame(height: 1)
-            content.frame(maxWidth: .infinity, maxHeight: .infinity).padding(8)
+            .padding(.horizontal, 14).frame(height: 32)
+            content.frame(maxWidth: .infinity, maxHeight: .infinity).padding(.horizontal, 14).padding(.bottom, 12).padding(.top, 2)
         }
-        .background(HT.C.paper, in: RoundedRectangle(cornerRadius: HT.M.radius))
+        .background(HT.C.paper)
+        .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: HT.M.radius))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(w.title)
     }
@@ -67,14 +73,14 @@ struct WidgetCard: View {
         else if (w.query ?? "").isEmpty { notice("NO_QUERY", "Open the inspector to add one.") }
         else {
             switch m.data[w.id] {
-            case nil, .loading?: Skeleton().accessibilityLabel("\(w.title), loading")
+            case nil, .loading?: WidgetSkeleton(type: w.type, since: m.inflight[w.id] ?? m.refreshStarted ?? Date()).accessibilityLabel("\(w.title), loading")
             case .failed(let msg)?: failure(msg)
             case .ready(let t, let stale)?:
                 if t.rows.isEmpty { notice("NO ROWS FOR RANGE", m.values.isEmpty ? "The query returned nothing." : m.values.sorted { $0.key < $1.key }.map { ":\($0.key) = \($0.value)" }.joined(separator: " · ")) }
                 else {
                     ZStack(alignment: .bottomTrailing) {
                         if table { TableGrid(t: t, columns: nil) } else { WidgetBody(ws: ws, w: w, t: t).opacity(stale ? 0.55 : 1).accessibilityElement(children: .ignore).accessibilityLabel(Summary.text(w, t)) } // stale: last good result stays, dimmed (Components 04)
-                        if stale { Text("STALE // REFRESH FAILED").ht(.labelSmall).foregroundStyle(HT.C.amber).padding(2).background(HT.C.paper) }
+                        if stale { Text("STALE · REFRESH FAILED").ht(.labelSmall).foregroundStyle(HT.C.amber).padding(2).background(HT.C.paper) }
                     }
                 }
             }
@@ -91,7 +97,7 @@ struct WidgetCard: View {
             Image(systemName: "exclamationmark.triangle").foregroundStyle(HT.C.alert)
             VStack(alignment: .leading, spacing: 6) {
                 Text(msg).ht(.data).foregroundStyle(HT.C.alert).fixedSize(horizontal: false, vertical: true)
-                if m.isProposal { Text("VALIDATION FAILED // NOT ADOPTED").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
+                if m.isProposal { Text("VALIDATION FAILED · NOT ADOPTED").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
                 else {
                     HStack {
                         Button("ASK AGENT TO FIX") { m.copyFixPrompt(w, error: msg, ws) }.buttonStyle(.htOutline)
@@ -106,13 +112,58 @@ struct WidgetCard: View {
     }
 }
 
-/// Loading state (Components 01): a skeleton of bars, shown only after 400 ms so fast queries never flash it (Doherty).
-private struct Skeleton: View {
-    @State private var late = false
+/// Old stored titles used `//` as a separator; show them with the current one.
+enum DashText {
+    static func title(_ t: String) -> String { t.replacingOccurrences(of: " // ", with: " · ") }
+}
+
+/// Loading state (Components 01), shaped like the card it stands in for: a big figure for KPIs, a line for series, bars,
+/// or rows for feeds and tables. Silent for 400 ms (Doherty), then the shape plus how long the query has run.
+struct WidgetSkeleton: View {
+    let type: String
+    let since: Date
     var body: some View {
-        HStack(alignment: .bottom, spacing: 3) { ForEach(0..<18, id: \.self) { i in Rectangle().fill(HT.C.line).frame(height: CGFloat(14 + (i * 7) % 30)) } }
-            .frame(maxHeight: .infinity, alignment: .bottom).opacity(late ? 1 : 0)
-            .task { try? await Task.sleep(for: .milliseconds(400)); late = true }
+        LateReveal {
+            VStack(alignment: .leading, spacing: 8) {
+                shape.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                HStack(spacing: 6) { DotSpinner(dot: 3, gap: 1, tint: HT.C.ink3); Text("QUERYING").ht(.labelSmall).foregroundStyle(HT.C.ink3); ElapsedText(since: since) }
+            }
+        }
+    }
+    @ViewBuilder private var shape: some View {
+        switch type {
+        case "kpi", "kpi.spark", "meter", "kpi.target", "gauge":
+            VStack(alignment: .leading, spacing: 10) {
+                SkeletonBar(fraction: 1, height: 34).frame(width: 170)
+                if type != "kpi" { SkeletonBars(count: 20).frame(height: 26).opacity(0.7) }
+            }.frame(maxHeight: .infinity, alignment: .top)
+        case "line", "area.stacked", "sparkline.grid":
+            SkeletonLine()
+        case "donut", "waffle":
+            HStack(spacing: 12) { Circle().strokeBorder(HT.C.fill12, lineWidth: 12).aspectRatio(1, contentMode: .fit); SkeletonLines(count: 4, keyWidth: 60) }
+        case "status.feed", "table", "leaderboard", "stat.list", "progress.list", "status.grid":
+            SkeletonLines(count: 6, keyWidth: 70)
+        default:
+            SkeletonBars(count: 22)
+        }
+    }
+}
+
+/// A gentle wave where a line chart will be.
+private struct SkeletonLine: View {
+    var body: some View {
+        Canvas { ctx, size in
+            var p = Path()
+            for i in 0...40 {
+                let x = size.width * CGFloat(i) / 40
+                let y = size.height * (0.55 - 0.22 * sin(Double(i) / 5) - 0.1 * sin(Double(i) / 2.3))
+                if i == 0 { p.move(to: CGPoint(x: x, y: y)) } else { p.addLine(to: CGPoint(x: x, y: y)) }
+            }
+            ctx.stroke(p, with: .color(HT.C.fill30), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+            var base = Path(); base.move(to: CGPoint(x: 0, y: size.height - 1)); base.addLine(to: CGPoint(x: size.width, y: size.height - 1))
+            ctx.stroke(base, with: .color(HT.C.line), lineWidth: 1)
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -191,6 +242,15 @@ struct WidgetBody: View {
         case "radar": radar
         case "text": Text((try? AttributedString(markdown: w.enc("markdown") ?? "", options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(w.enc("markdown") ?? "")).ht(.body).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         case "er.mini": ERMini(ws: ws, table: w.enc("table") ?? "")
+        case "kpi.target": KpiTargetCard(d: CardData(w: w, t: t))
+        case "gauge": GaugeCard(d: CardData(w: w, t: t))
+        case "stat.list": StatListCard(d: CardData(w: w, t: t))
+        case "sparkline.grid": SparklineGridCard(d: CardData(w: w, t: t))
+        case "leaderboard": LeaderboardCard(d: CardData(w: w, t: t))
+        case "donut": DonutCard(d: CardData(w: w, t: t))
+        case "waffle": WaffleCard(d: CardData(w: w, t: t))
+        case "status.grid": StatusGridCard(d: CardData(w: w, t: t))
+        case "progress.list": ProgressListCard(d: CardData(w: w, t: t))
         default: EmptyView()
         }
     }
@@ -203,7 +263,7 @@ struct WidgetBody: View {
             Text(DashFmt.number(value, w.format)).ht(.readoutL).foregroundStyle(tone ?? HT.C.ink).lineLimit(1).minimumScaleFactor(0.5)
             if let p = prev, p != 0 {
                 let d = (value - p) / abs(p) * 100
-                cap("\(d >= 0 ? "▲" : "▼") \(Int(abs(d).rounded())) %  VS PREVIOUS // \(DashFmt.number(p, w.format))")
+                cap("\(d >= 0 ? "▲" : "▼") \(Int(abs(d).rounded())) %  VS PREVIOUS · \(DashFmt.number(p, w.format))")
             }
             if w.type == "kpi.spark" {
                 Sparkline(values: t.nums(col("y")), style: tone == nil ? .accent : (tone == HT.C.alert ? .solid : .amber), accessibilityLabel: w.title).frame(maxHeight: .infinity)
@@ -216,7 +276,7 @@ struct WidgetBody: View {
         return VStack(alignment: .leading, spacing: 6) {
             Text(DashFmt.number(value, w.format)).ht(.readoutM).foregroundStyle(tone ?? HT.C.ink)
             SegmentedMeter(value: f, segments: 24, tint: tone == nil ? .solid : (tone == HT.C.alert ? .solid : .amber), accessibilityLabel: w.title, accessibilityValue: "\(DashFmt.number(value, w.format)) of \(DashFmt.number(mx, w.format))")
-            cap("OF \(DashFmt.number(mx, w.format)) // \(Int((f * 100).rounded())) %")
+            cap("OF \(DashFmt.number(mx, w.format)) · \(Int((f * 100).rounded())) %")
             Spacer(minLength: 0)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -289,7 +349,7 @@ struct WidgetBody: View {
         let med = xs[xs.count / 2], p95 = xs[min(Int(Double(xs.count) * 0.95), xs.count - 1)]
         return AnyView(VStack(alignment: .leading, spacing: 4) {
             BarSpectrum(values: bins, highlight: bins.indices.max { bins[$0] < bins[$1] }, accessibilityLabel: w.title).frame(maxHeight: .infinity)
-            HStack { cap(DashFmt.number(lo, w.format)); Spacer(); cap("MEDIAN \(DashFmt.number(med, w.format)) // P95 \(DashFmt.number(p95, w.format))"); Spacer(); cap(DashFmt.number(hi, w.format)) }
+            HStack { cap(DashFmt.number(lo, w.format)); Spacer(); cap("MEDIAN \(DashFmt.number(med, w.format)) · P95 \(DashFmt.number(p95, w.format))"); Spacer(); cap(DashFmt.number(hi, w.format)) }
         })
     }
 
@@ -310,8 +370,8 @@ struct WidgetBody: View {
         let mx = max(sums.flatMap { $0 }.max() ?? 0, .ulpOfOne)
         var hot: (Int, Int)?
         for (r, row) in sums.enumerated() { for (c, v) in row.enumerated() where v == mx && hot == nil { hot = (r, c) } }
-        if let (r, c) = hot, isWeek { peak = "PEAK // \(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][r]) \(String(format: "%02d", c)):00" }
-        else if let (r, c) = hot { peak = "PEAK // WEEK \(c + 1) \(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][r])" }
+        if let (r, c) = hot, isWeek { peak = "PEAK · \(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][r]) \(String(format: "%02d", c)):00" }
+        else if let (r, c) = hot { peak = "PEAK · WEEK \(c + 1) \(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][r])" }
         let levels = sums.map { $0.map { UInt8($0 <= 0 ? 0 : min(4, max(1, Int(ceil($0 / mx * 4))))) } }
         return VStack(alignment: .leading, spacing: 4) {
             Halftone(levels: levels, highlight: hot, accessibilityLabel: w.title, accessibilityValue: peak).frame(maxHeight: .infinity)

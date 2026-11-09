@@ -13,7 +13,12 @@ struct ConnectFailedView: View {
     private var details: [(String, String)] {
         let p = ws.profile
         if p.engine == .sqlite { return [("FILE", p.filePath ?? "—")] }
-        return [("HOST", p.host), ("PORT", String(p.port)), ("USER", p.user.isEmpty ? "—" : p.user), ("SSL", p.sslMode.rawValue)]
+        return [("HOST", p.host), ("PORT", String(p.port)), ("USER", p.user.isEmpty ? "—" : p.user), ("SSL", p.sslMode.rawValue)] + (p.ssh.map { [("SSH", $0.display)] } ?? [])
+    }
+
+    /// A tunnel failure is about SSH, not the database password: don't ask for one.
+    private var failedAtTunnel: Bool {
+        ws.connectSteps.contains { s in if case .failed = s.state { return s.id == ConnectStage.tunnel.rawValue } else { return false } }
     }
 
     var body: some View {
@@ -21,7 +26,12 @@ struct ConnectFailedView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text(message.uppercased()).ht(.label).foregroundStyle(HT.C.alert).textSelection(.enabled)
                 HStack(spacing: 18) { ForEach(details, id: \.0) { StatusText(label: $0.0, value: $0.1) } }
-                if ws.profile.engine != .sqlite {
+                if ws.connectSteps.contains(where: { if case .failed = $0.state { return true } else { return false } }) {
+                    HTStepList(ws.connectSteps)
+                        .padding(.horizontal, 10).frame(maxWidth: 600)
+                        .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
+                }
+                if ws.profile.engine != .sqlite && !failedAtTunnel {
                     SecureField("Password", text: $password).textFieldStyle(.plain).ht(.bodySmall)
                         .padding(.horizontal, 6).frame(height: 22).frame(maxWidth: 320)
                         .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
@@ -29,7 +39,7 @@ struct ConnectFailedView: View {
                     HTToggleChip("Save to Keychain", isOn: $save).fixedSize()
                 }
                 HStack(spacing: 8) {
-                    Button("Retry // ⏎", action: retry).buttonStyle(.htPrimary).keyboardShortcut(.defaultAction)
+                    Button("Retry  ⏎", action: retry).buttonStyle(.htPrimary).keyboardShortcut(.defaultAction)
                     Button("Edit connection") { openWindow(id: "connections") }.buttonStyle(.htOutline)
                 }
             }

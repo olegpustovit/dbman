@@ -91,7 +91,7 @@ struct MapInspector: View {
 
     private func inferred(_ e: MapEdge) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text("inferred // \(e.from).\(e.fromColumn) → \(e.to).\(e.toColumn)").ht(.labelSmall).foregroundStyle(HT.C.accent)
+            Text("inferred · \(e.from).\(e.fromColumn) → \(e.to).\(e.toColumn)").ht(.labelSmall).foregroundStyle(HT.C.accent)
             Text("name   \(e.fromColumn) ~ \(e.to).\(e.toColumn)   ✓\ntype   \(map.full?.table(e.from)?.columns.first { $0.name == e.fromColumn }?.type.lowercased() ?? "") compatible   ✓")
                 .font(.system(size: 10.5, design: .monospaced)).foregroundStyle(HT.C.ink2)
             Button("Accept as relation") { map.accept(e) }.buttonStyle(.htOutline).foregroundStyle(HT.C.accent)
@@ -245,11 +245,11 @@ struct AgentPopover: View {
         let g = map.full ?? map.scene.graph
         PopoverChrome(width: 340) {
             VStack(alignment: .leading, spacing: 6) {
-                HStack { CapsLabel("explain this schema"); Spacer(); Text("mcp // dbman").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
+                HStack { CapsLabel("explain this schema"); Spacer(); Text("mcp · dbman").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
                 Text("Copies a prompt for your agent: \(g.tables.count) tables, \(g.edges.filter { !$0.manyToMany }.count) relations incl. \(g.edges.filter { $0.kind == .inferred }.count) inferred. It names the schema.graph tool; no row data is included.")
                     .ht(.bodySmall).foregroundStyle(HT.C.ink2).fixedSize(horizontal: false, vertical: true)
                 HStack {
-                    Text(copied ? "copied // paste it into your agent" : "agents never see row data").ht(.labelSmall).foregroundStyle(copied ? HT.C.accent : HT.C.ink3)
+                    Text(copied ? "copied · paste it into your agent" : "agents never see row data").ht(.labelSmall).foregroundStyle(copied ? HT.C.accent : HT.C.ink3)
                     Spacer()
                     Button("Close") { map.agentOpen = false }.buttonStyle(.htOutline)
                     Button("Copy prompt") {

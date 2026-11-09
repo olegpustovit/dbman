@@ -141,30 +141,39 @@ public struct DashType: Sendable {
 
 public enum DashCatalog {
     public static let cols = 12
-    /// The 19 components, in library order (7 groups).
+    /// The 28 components, in library order (8 groups). Agents read this catalog through `dashboard.components`.
     public static let types: [DashType] = [
         DashType("kpi", "numbers", (2, 2), "value:number", "One headline number and its change against the previous period."),
         DashType("kpi.spark", "numbers", (3, 2), "value:number x:time y:number", "A live count where the shape of the day matters as much as the total."),
         DashType("meter", "numbers", (3, 2), "value:number max:number", "Capacity against a known limit, read in one glance."),
+        DashType("kpi.target", "numbers", (3, 2), "value:number target:number", "Progress toward a goal: the number, percent of target and what is left. One row with both columns."),
+        DashType("gauge", "numbers", (3, 3), "value:number max:number", "A dial for a bounded rate (utilisation, SLA, error budget). Colour follows `thresholds`."),
+        DashType("stat.list", "numbers", (3, 3), "label:text value:number delta?:number", "Several headline numbers in one card, one row each; `delta` is a percent change shown as ▲/▼."),
         DashType("line", "time", (4, 3), "x:time y:number+ series?:category", "Trends over time, up to 4 series, one highlighted in cobalt."),
         DashType("area.stacked", "time", (4, 3), "x:time y:number series:category", "Part-to-whole over time when the total also matters."),
         DashType("heatmap.hour_week", "time", (6, 3), "t:time value:number", "When things happen: staffing, batch windows, campaign timing."),
         DashType("heatmap.calendar", "time", (6, 2), "day:date value:number", "Daily rhythm and one-off anomalies across months."),
+        DashType("sparkline.grid", "time", (6, 3), "label:text x:time y:number", "Small multiples: one trend per label (per table, region, customer), each with its latest value."),
         DashType("bars", "compare", (3, 3), "x:time|category y:number", "Discrete periods or categories compared at a glance."),
         DashType("bars.stacked", "compare", (4, 3), "x:time|category y:number series:category", "Composition per period, at most 4 segments."),
         DashType("bars.horizontal", "compare", (3, 3), "label:text value:number", "Top-N rankings with long labels that need to stay readable."),
         DashType("radar", "compare", (3, 3), "axis:text value:number series?:category", "One entity profiled across 3-8 normalised scores."),
         DashType("funnel", "compare", (3, 3), "step:text value:number order?:int", "Ordered conversion steps and where people drop out."),
+        DashType("leaderboard", "compare", (3, 3), "label:text value:number delta?:number", "A ranked top list with each entry's share of the total and, with `delta`, its percent change."),
+        DashType("donut", "compare", (3, 3), "label:text value:number", "Part-to-whole for up to 6 categories (the rest fold into OTHER), total in the middle."),
+        DashType("waffle", "compare", (3, 3), "label:text value:number", "Share drawn as a 10×10 halftone grid: one dot is 1 % of the total. Up to 5 categories."),
         DashType("histogram", "distribution", (4, 3), "value:number bins?:int", "The shape of one numeric column: skew, outliers, median."),
         DashType("halftone.distribution", "distribution", (4, 2), "x:time y:number dot?:number", "Volume over a long range, drawn as the v1 instrument."),
         DashType("scatter", "distribution", (4, 4), "x:number y:number size?:number label?:text", "The relationship between two measures, and its outliers."),
         DashType("table", "records", (4, 3), "columns?:any+", "Exact values and drill-down. All columns unless `columns` lists some."),
         DashType("status.feed", "records", (3, 4), "ts:time title:text status?:text body?:text", "The newest rows as they land, newest on top."),
+        DashType("status.grid", "status", (4, 2), "label:text value:number status?:text", "Health tiles: one per row, coloured by `status` (ok / warn / alert) or by the widget's `thresholds`."),
+        DashType("progress.list", "status", (3, 3), "label:text value:number max:number", "Items against their own limit (quotas, backfills, migrations), each with a bar and percent."),
         DashType("er.mini", "schema", (4, 3), "table:name hops?:int", "Where a widget's data lives, right next to its numbers. Literal encodings."),
         DashType("text", "notes", (2, 1), "markdown:text", "Context, definitions and the why behind a dashboard. Literal encoding, no query."),
     ]
     public static func type(_ id: String) -> DashType? { types.first { $0.id == id } }
-    public static let groups = ["numbers", "time", "compare", "distribution", "records", "schema", "notes"]
+    public static let groups = ["numbers", "time", "compare", "distribution", "records", "status", "schema", "notes"]
 
     /// JSON Schema of a dashboard spec plus the catalog (what `dashboard.components` returns).
     public static func schema() -> [String: Any] {

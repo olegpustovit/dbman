@@ -21,7 +21,7 @@ final class DBStoreTests: XCTestCase {
     func testMigrateEmptyToLatest() throws {
         let s = try Store.open(at: url)
         _ = s
-        XCTAssertEqual(try raw("PRAGMA user_version")[0][0] as? Int64, 2)
+        XCTAssertEqual(try raw("PRAGMA user_version")[0][0] as? Int64, 3)
         XCTAssertEqual(try raw("PRAGMA application_id")[0][0] as? Int64, 0x44424D4E)
         XCTAssertEqual(try raw("PRAGMA journal_mode")[0][0] as? String, "wal")
         let names = Set(try raw("SELECT name FROM sqlite_master WHERE type IN ('table','view')").map { $0[0] as! String })
@@ -115,6 +115,31 @@ final class DBStoreTests: XCTestCase {
         XCTAssertEqual(try raw("SELECT count(*) FROM layers WHERE connection_id = 'A'")[0][0] as? Int64, 0)
     }
 
+    func testSSHFieldsRoundTrip() throws {
+        let s = try Store.open(at: url)
+        var c = ConnectionRow(id: "S", name: "satdb", engine: "postgres"); c.host = "127.0.0.1"; c.port = 5455
+        c.sshHost = "cx2-satdb"; c.sshUser = "ubuntu"; c.sshPort = 22; c.sshIdentity = "/k"
+        try s.upsert(c)
+        XCTAssertEqual(try s.connections().first { $0.id == "S" }, c)
+        c.sshHost = nil; c.sshUser = nil; c.sshPort = nil; c.sshIdentity = nil
+        try s.upsert(c)
+        XCTAssertEqual(try s.connections().first { $0.id == "S" }, c)
+    }
+
+    func testMigration0003KeepsApprovalsAndAllowsUpdate() throws {
+        let h = try Handle(path: url.path)
+        try h.exec(String(decoding: PackageResources._001_init_sql, as: UTF8.self))
+        try h.exec(String(decoding: PackageResources._002_approvals_sql, as: UTF8.self))
+        try h.exec("PRAGMA user_version = 2")
+        try h.exec("INSERT INTO agents(id, client_name, platform) VALUES ('cc','cc','cc'); INSERT INTO connections(id, name, engine, host, port) VALUES ('c1','pg','postgres','h',5432)")
+        try h.exec("INSERT INTO approvals(id, kind, connection_id, expires_at) VALUES ('old','remove','c1', 9999999999999)")
+        XCTAssertThrowsError(try h.exec("INSERT INTO approvals(id, kind, expires_at) VALUES ('u','update', 1)")) // v2 CHECK
+        let s = try Store.open(at: url)
+        XCTAssertEqual(try s.pendingApprovals().map(\.id), ["old"])
+        XCTAssertNil(try s.connections().first { $0.id == "c1" }?.sshHost)
+        XCTAssertNoThrow(try s.addApproval(kind: "update", agent: "cc", connection: "c1", payload: "{}"))
+    }
+
     func testMapLayoutAndRelations() throws {
         let s = try Store.open(at: url)
         try s.upsert(ConnectionRow(id: "A", name: "a", engine: "sqlite"))
@@ -202,7 +227,7 @@ extension DBStoreTests {
         try h.exec("INSERT INTO approvals(id, kind, agent_id, connection_id, expires_at) VALUES ('old','prod_guard','cc','c1', 9999999999999)")
         XCTAssertThrowsError(try h.exec("INSERT INTO approvals(id, kind, expires_at) VALUES ('r','remove', 1)")) // v1 CHECK
         let s = try Store.open(at: url)
-        XCTAssertEqual(try raw("PRAGMA user_version")[0][0] as? Int64, 2)
+        XCTAssertEqual(try raw("PRAGMA user_version")[0][0] as? Int64, 3)
         XCTAssertEqual(try s.pendingApprovals().map(\.id), ["old"])
         XCTAssertEqual(try raw("SELECT count(*) FROM v_pending_approvals")[0][0] as? Int64, 1)
         _ = try s.addApproval(kind: "remove", agent: "cc", connection: "c1", payload: "{}")

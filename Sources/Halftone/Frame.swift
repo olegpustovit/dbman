@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// White paper panel: 1pt line border, radius 3, 26pt header (caps title left, accessory right).
+/// Paper panel: square, 0.5 pt border (flush neighbours share one 1 px line), 26 pt header (caps title left, accessory right).
 public struct HTFrame<Accessory: View, Content: View>: View {
     let title: String, tail: String?
     let accessory: Accessory, content: Content
@@ -21,9 +21,9 @@ public struct HTFrame<Accessory: View, Content: View>: View {
             .accessibilityAddTraits(.isHeader)
             content.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .background(HT.C.paper, in: RoundedRectangle(cornerRadius: HT.M.radius))
-        .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: HT.M.radius))
+        .background(HT.C.paper)
+        .overlay(Rectangle().strokeBorder(HT.C.line, lineWidth: HT.M.hairline))
+        .clipped()
         .accessibilityElement(children: .contain)
         .accessibilityLabel(title)
     }

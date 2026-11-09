@@ -18,7 +18,7 @@ struct ReviewSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            CapsLabel("Review // commit_\(ws.staged.count)_changes", isProd ? "production // \(dbName)" : dbName)
+            CapsLabel("Review · commit_\(ws.staged.count)_changes", isProd ? "production · \(dbName)" : dbName)
             Text("One transaction. If any statement fails, nothing is written.").ht(.bodySmall).foregroundStyle(HT.C.ink3)
             if let note = ws.reviewNote { Text(note).ht(.bodySmall).foregroundStyle(HT.C.accent) }
             ScrollView {
@@ -41,7 +41,7 @@ struct ReviewSheet: View {
             HStack {
                 Button("Copy_SQL") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(sql, forType: .string) }.buttonStyle(.htOutline)
                 Spacer()
-                Button("Cancel // esc") { ws.reviewOpen = false }.buttonStyle(.htOutline).keyboardShortcut(.cancelAction)
+                Button("Cancel  esc") { ws.reviewOpen = false }.buttonStyle(.htOutline).keyboardShortcut(.cancelAction)
                 if ws.writesUnlocked {
                     Button("Commit_\(ws.staged.count)_changes ⌘⏎") { commit() }.buttonStyle(.htPrimary)
                         .keyboardShortcut(.return, modifiers: .command).disabled(!confirmed || committing || ws.staged.isEmpty)

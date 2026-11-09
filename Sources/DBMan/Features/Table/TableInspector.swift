@@ -10,10 +10,16 @@ struct TableInspector: View {
     let row: [Cell]?
     @Binding var focused: Int
     let stats: [ColumnStats]
+    var statsLoading = false
+    var statsStarted = Date()
     let staged: [StagedChange]
     let onFollow: (Int) -> Void
 
     @State private var children: [(table: String, column: String, count: Int, filter: String)] = []
+    @State private var childrenLoading = false
+    @State private var childrenStarted = Date()
+    @State private var childrenTotal = 0
+    @State private var childrenDone = 0
 
     private var pkLabel: String { info?.primaryKey.joined(separator: ",") ?? "" }
     private func value(_ name: String) -> Cell? { columns.firstIndex(of: name).flatMap { i in row.map { $0[i] } } }
@@ -26,7 +32,7 @@ struct TableInspector: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Readout(value: pkValue.isEmpty ? "—" : pkValue, label: pkLabel.isEmpty ? "no key" : pkLabel, size: .l)
                         fields(row)
-                        if !children.isEmpty { related }
+                        if childrenLoading { relatedSkeleton } else if !children.isEmpty { related }
                         distribution(row)
                     }.padding(8)
                 }
@@ -43,7 +49,7 @@ struct TableInspector: View {
                 let c = info?.columns.first { $0.name == name }, v = row[i]
                 let isStaged = staged.contains { if case .update(_, let k, name, _, _) = $0 { return k.allSatisfy { value($0.key) == $0.value } } else { return false } }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("\(name) //").ht(.labelSmall).foregroundStyle(i == focused ? HT.C.accent : HT.C.ink3).frame(width: 96, alignment: .leading).lineLimit(1)
+                    Text(name).ht(.labelSmall).foregroundStyle(i == focused ? HT.C.accent : HT.C.ink3).frame(width: 96, alignment: .leading).lineLimit(1)
                     if v.isNull {
                         Text("null").font(.system(size: 12, design: .serif)).italic().foregroundStyle(HT.C.ink3)
                     } else if c?.foreignKey != nil {
@@ -80,8 +86,26 @@ struct TableInspector: View {
         }
     }
 
+    /// While child tables are counted: which one we are on, out of how many.
+    private var relatedSkeleton: some View {
+        LateReveal {
+            VStack(alignment: .leading, spacing: 6) {
+                SkeletonHeader("Related", detail: childrenTotal > 0 ? "counting \(min(childrenDone + 1, childrenTotal))/\(childrenTotal)" : "counting", since: childrenStarted)
+                SkeletonLines(count: max(1, min(childrenTotal, 4)), keyWidth: 150)
+            }
+        }
+    }
+
     @ViewBuilder private func distribution(_ row: [Cell]) -> some View {
-        if columns.indices.contains(focused), let s = stats.first(where: { $0.column == columns[focused] }), s.histogram.count > 1 {
+        if statsLoading, columns.indices.contains(focused), !stats.contains(where: { $0.column == columns[focused] }) {
+            LateReveal {
+                VStack(alignment: .leading, spacing: 4) {
+                    SkeletonHeader("Distribution", detail: "profiling \(columns[focused]) · 5,000-row sample", since: statsStarted)
+                    SkeletonBars().frame(height: 48)
+                    HStack { SkeletonBar(fraction: 0.6, height: 6).frame(width: 50); Spacer(); SkeletonBar(fraction: 0.6, height: 6).frame(width: 70); Spacer(); SkeletonBar(fraction: 0.6, height: 6).frame(width: 50) }
+                }
+            }
+        } else if columns.indices.contains(focused), let s = stats.first(where: { $0.column == columns[focused] }), s.histogram.count > 1 {
             VStack(alignment: .leading, spacing: 4) {
                 CapsLabel("Distribution", columns[focused]).foregroundStyle(HT.C.ink3)
                 BarSpectrum(values: s.histogram, highlight: Self.bin(of: row[focused], in: s), accessibilityLabel: "Distribution of \(columns[focused])").frame(height: 48)
@@ -103,7 +127,12 @@ struct TableInspector: View {
         children = []
         guard let session = ws.session, let info, let schema = ws.schema, row != nil else { return }
         var out: [(String, String, Int, String)] = []
-        for (t, col) in info.referencedBy(in: schema) where t != info.name {
+        let refs = info.referencedBy(in: schema).filter { $0.0 != info.name }
+        childrenTotal = refs.count; childrenDone = 0; childrenStarted = Date(); childrenLoading = !refs.isEmpty
+        defer { childrenLoading = false }
+        for (t, col) in refs {
+            if Task.isCancelled { return }
+            defer { childrenDone += 1 }
             guard let refCol = schema.table(t)?.columns.first(where: { $0.name == col })?.foreignKey?.column, let v = value(refCol), !v.isNull else { continue }
             let clause = TableSQL.equals(col, v, engine: ws.profile.engine)
             let sql = "SELECT COUNT(*) FROM \(quoteIdent(t, ws.profile.engine)) WHERE \(clause)"

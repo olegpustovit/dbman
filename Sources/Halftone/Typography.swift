@@ -50,15 +50,21 @@ extension View {
 }
 
 /// `RECORDS // LIVE` — the label voice with an optional muted tail.
+/// The separator between a label and its value: a short hairline, quieter than any glyph.
+public struct HTDivider: View {
+    public init() {}
+    public var body: some View { Rectangle().fill(HT.C.fill30).frame(width: 1, height: 9).accessibilityHidden(true) }
+}
+
 public struct CapsLabel: View {
     let title: String
     let tail: String?
     public init(_ title: String, _ tail: String? = nil) { self.title = title; self.tail = tail }
     public var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             Text(title).foregroundStyle(HT.C.ink)
             if let tail {
-                Text("//").foregroundStyle(HT.C.ink3)
+                HTDivider()
                 Text(tail).foregroundStyle(HT.C.ink3)
             }
         }

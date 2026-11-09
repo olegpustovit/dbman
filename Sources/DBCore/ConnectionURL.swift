@@ -28,6 +28,10 @@ public enum ConnectionURL {
         var q: [URLQueryItem] = []
         if p.sslMode != .prefer { q.append(URLQueryItem(name: "sslmode", value: p.sslMode.rawValue)) }
         if let r = p.sslRootCert, !r.isEmpty { q.append(URLQueryItem(name: "sslrootcert", value: r)) }
+        if let t = p.ssh {
+            q.append(URLQueryItem(name: "ssh", value: t.display))
+            if let k = t.identityFile { q.append(URLQueryItem(name: "sshkey", value: k)) }
+        }
         if !q.isEmpty { c.queryItems = q }
         return c.string ?? ""
     }
@@ -67,7 +71,12 @@ public enum ConnectionURL {
         guard let c = URLComponents(string: t) else { return nil }
         let q = Dictionary(c.queryItems?.compactMap { i in i.value.map { (i.name.lowercased(), $0) } } ?? [], uniquingKeysWith: { a, _ in a })
         let db = String(c.path.dropFirst()).removingPercentEncoding
-        return (profile(engine, host: c.host, port: c.port, db: db, user: c.user, sslmode: q["sslmode"] ?? q["ssl-mode"] ?? q["ssl"], rootCert: q["sslrootcert"] ?? q["ssl-ca"]), c.password)
+        var p = profile(engine, host: c.host, port: c.port, db: db, user: c.user, sslmode: q["sslmode"] ?? q["ssl-mode"] ?? q["ssl"], rootCert: q["sslrootcert"] ?? q["ssl-ca"])
+        if let v = q["ssh"] {
+            guard let t = SSHTunnel(parsing: v, identityFile: q["sshkey"].map { ($0 as NSString).expandingTildeInPath }) else { return nil }
+            p.ssh = t
+        }
+        return (p, c.password)
     }
 
     private static func tokens(_ s: String) -> [String] {

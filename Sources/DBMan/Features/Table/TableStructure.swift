@@ -132,7 +132,7 @@ struct RelationsView: View {
         }
         .overlay(alignment: .bottomLeading) {
             HStack(spacing: 8) {
-                Text("\(parents.count + kids.count + 1) tables // click a box to open it").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                Text("\(parents.count + kids.count + 1) tables · click a box to open it").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                 Button("Open in schema map") { ws.map.selection = info.name; ws.map.focusOn = info.name; ws.go(.schemaMap) }.buttonStyle(.htOutline)
             }.padding(8)
         }
@@ -168,10 +168,33 @@ struct RelationsView: View {
 struct StatsView: View {
     let info: TableInfo?
     let stats: [ColumnStats]
+    var loading = false
+    var since = Date()
 
     var body: some View {
-        if stats.isEmpty {
-            Text("Profiling columns…").ht(.bodySmall).foregroundStyle(HT.C.ink3).padding(12)
+        if stats.isEmpty && loading {
+            // the cards' own footprint, so the grid does not jump when the profile lands
+            ScrollView {
+                VStack(alignment: .leading, spacing: HT.M.gap) {
+                    HTLoadingStrip("Profiling columns", detail: "\(info?.columns.count ?? 0) columns · 5,000-row sample", since: since)
+                    LateReveal {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: HT.M.gap)], spacing: HT.M.gap) {
+                            ForEach(info?.columns.map(\.name) ?? [], id: \.self) { name in
+                                HTFrame(title: name, tail: info?.columns.first { $0.name == name }?.type) {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        HStack(spacing: 16) { ForEach(0..<3, id: \.self) { _ in SkeletonBar(fraction: 0.8, height: 18).frame(width: 52) } }
+                                        SkeletonBars().frame(height: 36)
+                                        SkeletonLines(count: 3, keyWidth: 120)
+                                    }.padding(8)
+                                }
+                                .frame(height: 210)
+                            }
+                        }
+                    }
+                }.padding(HT.M.gap)
+            }
+        } else if stats.isEmpty {
+            Text("NO_PROFILE · the column sample could not be read; see the console").ht(.label).foregroundStyle(HT.C.ink3).padding(12)
         } else {
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: HT.M.gap)], spacing: HT.M.gap) {

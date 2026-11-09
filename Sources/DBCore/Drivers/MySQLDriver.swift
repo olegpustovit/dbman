@@ -6,8 +6,8 @@ import NIOSSL
 import MySQLNIO
 
 public enum MySQLDriver {
-    public static func connect(_ profile: ConnectionProfile, password: String?) async throws -> any DatabaseDriver {
-        let driver = MyDriver(profile: profile, password: password)
+    public static func connect(_ profile: ConnectionProfile, password: String?, serverName: String? = nil) async throws -> any DatabaseDriver {
+        let driver = MyDriver(profile: profile, password: password, serverName: serverName)
         try await driver.open()
         return driver
     }
@@ -21,12 +21,13 @@ final class MyDriver: DatabaseDriver, @unchecked Sendable {
     let engine: Engine = .mysql
     private let profile: ConnectionProfile
     private let password: String?
+    private let serverName: String?
     private let logger = Logger(label: "dbman.mysql")
     private var conn: MySQLConnection?
     private var connectionID: Int64 = 0
     private let gate = SerialGate()
 
-    init(profile: ConnectionProfile, password: String?) { self.profile = profile; self.password = password }
+    init(profile: ConnectionProfile, password: String?, serverName: String? = nil) { self.profile = profile; self.password = password; self.serverName = serverName }
 
     private func connectNew() async throws -> MySQLConnection {
         var tls: TLSConfiguration? = TLSConfiguration.makeClientConfiguration()
@@ -39,7 +40,7 @@ final class MyDriver: DatabaseDriver, @unchecked Sendable {
         do {
             let addr = try SocketAddress.makeAddressResolvingHost(profile.host, port: profile.port)
             return try await MySQLConnection.connect(to: addr, username: profile.user, database: profile.database, password: password,
-                                                     tlsConfiguration: tls, serverHostname: addr.ipAddress == nil ? profile.host : nil, logger: logger,
+                                                     tlsConfiguration: tls, serverHostname: serverName ?? (addr.ipAddress == nil ? profile.host : nil), logger: logger,
                                                      on: MultiThreadedEventLoopGroup.singleton.next()).get()
         } catch { throw DBError.connection(Self.message(error)) }
     }

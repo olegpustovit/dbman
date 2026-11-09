@@ -21,13 +21,14 @@ extension NSColor {
 extension HT {
     /// AppKit colours (grid, editor). Mirror of `HT.Color`.
     public enum NS {
-        public static let backdrop = NSColor.ht(.init(hex: 0xF3F3F1), .init(hex: 0x050506))
-        public static let paper    = NSColor.ht(.init(hex: 0xFFFFFF), .init(hex: 0x0B0B0C))
-        public static let sunken   = NSColor.ht(.init(hex: 0xF6F6F4), .init(hex: 0x121214))
+        // paper: neutral off-white (equal R, G, B: no yellow cast), a touch below pure white; near-black stock in dark (Halftone 0.8)
+        public static let backdrop = NSColor.ht(.init(hex: 0xF0F0F1), .init(hex: 0x060606))
+        public static let paper    = NSColor.ht(.init(hex: 0xFAFAFA), .init(hex: 0x0D0D0D))
+        public static let sunken   = NSColor.ht(.init(hex: 0xF3F3F4), .init(hex: 0x141414))
         public static let ink      = NSColor.ht(.init(hex: 0x0B0B0C), .init(hex: 0xF2F2F0))
         public static let ink2     = NSColor.ht(.init(hex: 0x3C3C40), .init(hex: 0xC4C4C8))
         public static let ink3     = NSColor.ht(.init(hex: 0x6A6A70), .init(hex: 0x8E8E94))
-        public static let line     = NSColor.ht(.init(hex: 0x0B0B0C, alpha: 0.14), .init(hex: 0xFFFFFF, alpha: 0.14))
+        public static let line     = NSColor.ht(.init(hex: 0x111114, alpha: 0.13), .init(hex: 0xFFFFFF, alpha: 0.14))
         public static let fill12   = NSColor.ht(.init(hex: 0x0B0B0C, alpha: 0.08), .init(hex: 0xFFFFFF, alpha: 0.08))
         public static let fill30   = NSColor.ht(.init(hex: 0x0B0B0C, alpha: 0.22), .init(hex: 0xFFFFFF, alpha: 0.22))
         public static let accent   = NSColor.ht(.init(hex: 0x2F2FE4), .init(hex: 0x8A8AFF))
@@ -56,8 +57,13 @@ extension HT {
 
     /// Density metrics (points).
     public enum M {
-        public static let windowPadding: CGFloat = 6
+        public static let windowPadding: CGFloat = 0
+        /// Between panels: none. Panels sit flush and their 0.5 pt borders meet as one 1 px line.
+        public static let seam: CGFloat = 0
+        /// Inside a panel (headers, card grids, rails).
         public static let gap: CGFloat = 4
+        /// A panel's border; two adjacent panels add up to one 1 px line.
+        public static let hairline: CGFloat = 0.5
         public static let radius: CGFloat = 3
         public static let topStrip: CGFloat = 30
         public static let rail: CGFloat = 28

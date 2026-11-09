@@ -25,12 +25,12 @@ final class SchemaMapState {
     var hideJunctions = false { didSet { if hideJunctions != oldValue { viewport = nil; rebuild() } } }
     var hideIsolated = false { didSet { if hideIsolated != oldValue { viewport = nil; rebuild() } } }
     var showInferred = true { didSet { if showInferred != oldValue { rebuild() } } }
-    var selection: String?
+    var selection: String? { didSet { if selection != oldValue { neighborsOfSelection = selection.map { Set(scene.graph.neighbors($0)) } ?? [] } } }
     var focusOn: String? { didSet { if kind == .focus, focusOn != oldValue { viewport = nil; rebuild() } } }
-    var filter = ""
+    var filter = "" { didSet { if filter != oldValue { refreshDimmed() } } }
     var filterOpen = false
     var pathMode = false { didSet { if !pathMode { pathPicks = [] } } }
-    var pathPicks: [String] = []
+    var pathPicks: [String] = [] { didSet { if pathPicks != oldValue { refreshPath() } } }
     var viewport: MapViewport?
     var exportOpen = false { didSet { if exportOpen { agentOpen = false } } }
     var exportFormat: MapExport = .mermaid
@@ -41,8 +41,49 @@ final class SchemaMapState {
     private(set) var clusterNames: [String: String] = [:]
     var renaming: String?
 
-    private(set) var scene = MapScene(graph: SchemaGraph(schema: SchemaSnapshot(serverVersion: "", databaseName: "", tables: [])), detail: .keys, layout: MapLayout())
-    private(set) var full: SchemaGraph?
+    private(set) var scene = MapScene(graph: SchemaGraph(schema: SchemaSnapshot(serverVersion: "", databaseName: "", tables: [])), detail: .keys, layout: MapLayout()) {
+        didSet { sceneRev &+= 1; refreshGeometry(); refreshDimmed() }
+    }
+    private(set) var full: SchemaGraph? { didSet { refreshPath() } }
+
+    // MARK: per-frame caches
+    // Pan / zoom must only transform: everything below is recomputed when the scene, filter, selection or path changes, never per frame.
+
+    /// Bumped on every scene change; the identity the equatable cards layer compares.
+    private(set) var sceneRev = 0
+    /// Edge geometry (curve + end marks) in world space.
+    private(set) var routes: [EdgeGeo] = []
+    private(set) var isolatedSet: Set<String> = []
+    private(set) var neighborsOfSelection: Set<String> = []
+    private(set) var dimmedSet: Set<String> = []
+    private(set) var path: JoinPath?
+    private(set) var pathEdgeKeys: Set<String> = []
+    /// Last canvas size (zoom buttons and the status line need it; not observed, so resizing does not re-render the toolbar).
+    @ObservationIgnored var canvasSize = CGSize(width: 900, height: 600)
+
+    struct EdgeGeo { let edge: MapEdge; let route: EdgeRoute; let lines: [(CGPoint, CGPoint)]; let rings: [CGPoint] }
+    nonisolated static func geometry(_ scene: MapScene) -> [EdgeGeo] {
+        scene.graph.edges.compactMap { e in scene.route(e).map { r in let m = r.marks(e); return EdgeGeo(edge: e, route: r, lines: m.lines, rings: m.rings) } }
+    }
+    /// The zoom the cards are drawn at right now (card drags divide by it); written by the canvas, never observed.
+    @ObservationIgnored var liveZoom: CGFloat = 1
+    nonisolated static func key(_ e: MapEdge) -> String { "\(e.from).\(e.fromColumn)>\(e.to)" }
+
+    private func refreshGeometry() {
+        routes = Self.geometry(scene)
+        isolatedSet = scene.graph.isolated
+        neighborsOfSelection = selection.map { Set(scene.graph.neighbors($0)) } ?? []
+    }
+    private func refreshPath() {
+        path = pathPicks.count == 2 ? full?.path(from: pathPicks[0], to: pathPicks[1]) : nil
+        pathEdgeKeys = Set(path?.steps.map { "\($0.from).\($0.fromColumn)>\($0.to)" } ?? [])
+        refreshDimmed()
+    }
+    private func refreshDimmed() {
+        let m = filter.isEmpty ? nil : scene.graph.matching(filter)
+        let onPath = pathPicks.count == 2 ? Set(path?.tables ?? []) : nil
+        dimmedSet = Set(scene.graph.tables.map(\.name).filter { t in (onPath.map { !$0.contains(t) } ?? false) || (m.map { !$0.contains(t) } ?? false) })
+    }
     private var virtual: [VirtualRelation] = []
     private var free: [String: CGPoint] = [:]
     private var schema: SchemaSnapshot?
@@ -98,12 +139,9 @@ final class SchemaMapState {
 
     // MARK: derived
 
-    var path: JoinPath? { pathPicks.count == 2 ? full?.path(from: pathPicks[0], to: pathPicks[1]) : nil }
     var matches: Set<String> { scene.graph.matching(filter) }
-    func dimmed(_ t: String) -> Bool {
-        (pathPicks.count == 2 && !(path?.tables.contains(t) ?? false)) || (!filter.isEmpty && !matches.contains(t))
-    }
-    func onPath(_ e: MapEdge) -> Bool { path?.steps.contains { $0.from == e.from && $0.fromColumn == e.fromColumn && $0.to == e.to } ?? false }
+    func dimmed(_ t: String) -> Bool { dimmedSet.contains(t) }
+    func onPath(_ e: MapEdge) -> Bool { pathEdgeKeys.contains(Self.key(e)) }
     var inferredFor: [MapEdge] { selection.map { s in scene.graph.edges.filter { $0.kind == .inferred && ($0.from == s || $0.to == s) } } ?? [] }
 
     // MARK: actions
@@ -113,6 +151,13 @@ final class SchemaMapState {
             pathPicks = pathPicks.count == 1 && pathPicks[0] != t ? pathPicks + [t] : [t]
             selection = t
         } else { selection = selection == t ? nil : t }
+    }
+    @ObservationIgnored private var lastClick: (table: String, at: Date)?
+    /// Card click: selects at once; a second click on the same card within 0.3 s focuses it.
+    func click(_ t: String) {
+        if let l = lastClick, l.table == t, Date().timeIntervalSince(l.at) < 0.3 { lastClick = nil; focus(t); return }
+        lastClick = (t, Date())
+        tap(t)
     }
     func focus(_ t: String?) {
         guard let t = t ?? selection else { return }

@@ -13,6 +13,7 @@ struct WorkspaceWindow: View {
         Group {
             if let id = profileID, let ws = app.workspace(for: id) {
                 WorkspaceView(ws: ws)
+                    .windowChrome(ws.profile.name, subtitle: ws.profile.environment.rawValue)
                     .focusedSceneValue(\.workspace, ws)
                     .navigationTitle(ws.profile.name)
                     .onChange(of: active, initial: true) { _, a in if a == .key { app.frontWorkspace = id } }
@@ -40,11 +41,11 @@ struct WorkspaceView: View {
     @Bindable var ws: WorkspaceModel
 
     var body: some View {
-        VStack(spacing: HT.M.gap) {
+        VStack(spacing: HT.M.seam) {
             TopStrip(ws: ws)
             if ws.profile.environment == .system, ws.writesUnlocked {
                 HStack(spacing: 10) {
-                    CapsLabel("Unlocked // internal store").foregroundStyle(HT.C.amber)
+                    CapsLabel("Unlocked · internal store").foregroundStyle(HT.C.amber)
                     Text("You are editing DBMan itself: permissions, layers and settings. Edits go through the review sheet and apply live to every window.").ht(.bodySmall).foregroundStyle(HT.C.ink2).lineLimit(1)
                     Spacer()
                     CapsLabel("Agents still see nothing").foregroundStyle(HT.C.ink3)
@@ -52,7 +53,7 @@ struct WorkspaceView: View {
                 }
                 .padding(.horizontal, 10).frame(height: 28).overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.amber, lineWidth: 1))
             }
-            HStack(spacing: HT.M.gap) {
+            HStack(spacing: HT.M.seam) {
                 NavigatorView(ws: ws)
                     .frame(width: HT.M.sidebar)
                 if ws.layers.compare && ws.layers.open { LayerDiffView(ws: ws) } else { content }
@@ -72,7 +73,7 @@ struct WorkspaceView: View {
     @ViewBuilder private var content: some View {
         switch ws.state {
         case .connecting:
-            StateFrame(title: "CONNECTING", tail: ws.profile.name, message: "Opening \(ws.profile.engine.displayName)…", running: true)
+            ConnectingView(ws: ws)
         case .failed(let message):
             ConnectFailedView(ws: ws, message: message)
         default:

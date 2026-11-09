@@ -7,7 +7,7 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var app = appModel
-        return VStack(spacing: HT.M.gap) {
+        return VStack(spacing: HT.M.seam) {
             HTFrame(title: "APPEARANCE", tail: "SYSTEM") {
                 note("Follows the macOS appearance (Light or Dark). Change it in System Settings.")
                     .padding(10)

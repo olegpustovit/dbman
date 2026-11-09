@@ -184,13 +184,43 @@ public struct ConnectionProfile: Codable, Hashable, Sendable, Identifiable {
     public var openReadOnly: Bool
     public var stageWrites: Bool
     public var lastOpened: Date?
-    public init(id: UUID = UUID(), name: String, engine: Engine, host: String = "localhost", port: Int? = nil, database: String = "", user: String = "", filePath: String? = nil, sslMode: SSLMode = .prefer, environment: EnvironmentTag = .local, openReadOnly: Bool = false, stageWrites: Bool = true, lastOpened: Date? = nil, sslRootCert: String? = nil) {
-        self.id = id; self.name = name; self.engine = engine; self.host = host; self.port = port ?? engine.defaultPort; self.database = database; self.user = user; self.filePath = filePath; self.sslMode = sslMode; self.environment = environment; self.openReadOnly = openReadOnly; self.stageWrites = stageWrites; self.lastOpened = lastOpened; self.sslRootCert = sslRootCert
+    /// Reach the database through an SSH tunnel; `host`/`port` are then the address as seen from the SSH host.
+    public var ssh: SSHTunnel?
+    public init(id: UUID = UUID(), name: String, engine: Engine, host: String = "localhost", port: Int? = nil, database: String = "", user: String = "", filePath: String? = nil, sslMode: SSLMode = .prefer, environment: EnvironmentTag = .local, openReadOnly: Bool = false, stageWrites: Bool = true, lastOpened: Date? = nil, sslRootCert: String? = nil, ssh: SSHTunnel? = nil) {
+        self.id = id; self.name = name; self.engine = engine; self.host = host; self.port = port ?? engine.defaultPort; self.database = database; self.user = user; self.filePath = filePath; self.sslMode = sslMode; self.environment = environment; self.openReadOnly = openReadOnly; self.stageWrites = stageWrites; self.lastOpened = lastOpened; self.sslRootCert = sslRootCert; self.ssh = ssh
     }
     /// DBMan's own store (a fixed id, so the window and its workspace survive relaunches).
     public static let internalID = UUID(uuidString: "00000000-0000-0000-0000-00000000DB01")!
     /// Production and the internal store always open read-only until unlocked for the session.
     public var startsReadOnly: Bool { openReadOnly || environment == .production || environment == .system }
+}
+
+/// An SSH hop in front of a database: DBMan runs the system `ssh`, so `~/.ssh/config` aliases, the agent, ProxyJump and Tailscale SSH all apply.
+public struct SSHTunnel: Codable, Hashable, Sendable {
+    public var host: String               // hostname or ~/.ssh/config alias
+    public var user: String?
+    public var port: Int?
+    public var identityFile: String?
+    public init(host: String, user: String? = nil, port: Int? = nil, identityFile: String? = nil) {
+        self.host = host; self.user = user.flatMap { $0.isEmpty ? nil : $0 }; self.port = port; self.identityFile = identityFile.flatMap { $0.isEmpty ? nil : $0 }
+    }
+    /// `[user@]host[:port]`; nil when there is no host or the text has spaces / a bad port.
+    public init?(parsing text: String, identityFile: String? = nil) {
+        var t = Substring(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        if t.hasPrefix("ssh://") { t = t.dropFirst(6) }
+        guard !t.isEmpty, !t.contains(where: { $0.isWhitespace || $0 == "/" }) else { return nil }
+        var user: String?
+        if let at = t.lastIndex(of: "@") { user = String(t[..<at]); t = t[t.index(after: at)...] }
+        var port: Int?
+        if let c = t.lastIndex(of: ":") {
+            guard let p = Int(t[t.index(after: c)...]), (1...65535).contains(p) else { return nil }
+            port = p; t = t[..<c]
+        }
+        guard !t.isEmpty, user?.isEmpty != true else { return nil }
+        self.init(host: String(t), user: user, port: port, identityFile: identityFile)
+    }
+    /// `user@host:port` (the form `init(parsing:)` reads back).
+    public var display: String { (user.map { $0 + "@" } ?? "") + host + (port.map { ":\($0)" } ?? "") }
 }
 
 public enum DBError: LocalizedError, Sendable {

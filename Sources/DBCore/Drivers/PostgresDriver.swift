@@ -5,7 +5,7 @@ import NIOSSL
 import PostgresNIO
 
 public enum PostgresDriver {
-    public static func connect(_ profile: ConnectionProfile, password: String?) async throws -> any DatabaseDriver {
+    public static func connect(_ profile: ConnectionProfile, password: String?, serverName: String? = nil) async throws -> any DatabaseDriver {
         var tls = TLSConfiguration.makeClientConfiguration()
         if let r = profile.sslRootCert { tls.trustRoots = .file(r) }
         let mode: PostgresConnection.Configuration.TLS
@@ -17,7 +17,8 @@ public enum PostgresDriver {
             case .verifyFull: mode = .require(try NIOSSLContext(configuration: tls))
             }
         } catch { throw DBError.connection("TLS setup failed: \(error)") }
-        let config = PostgresConnection.Configuration(host: profile.host, port: profile.port, username: profile.user, password: password, database: profile.database.isEmpty ? nil : profile.database, tls: mode)
+        var config = PostgresConnection.Configuration(host: profile.host, port: profile.port, username: profile.user, password: password, database: profile.database.isEmpty ? nil : profile.database, tls: mode)
+        if let serverName { config.options.tlsServerName = serverName } // through an SSH tunnel: verify the database's name, not 127.0.0.1
         let driver = PGDriver(config: config)
         try await driver.open()
         return driver
@@ -161,7 +162,11 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
 
     // MARK: schema
 
-    func schema() async throws -> SchemaSnapshot {
+    func schema() async throws -> SchemaSnapshot { try await schema(progress: nil) }
+
+    /// The catalogue is read in five queries; `progress` hears about each part as it lands.
+    func schema(progress: SchemaProgress?) async throws -> SchemaSnapshot {
+        progress?("reading tables (1/5)")
         func s(_ c: Cell?) -> String? { if case .text(let v)? = c { return v } else { return nil } }
         func n(_ c: Cell?) -> Int64? { if case .integer(let v)? = c { return v } else { return nil } }
         let ns = "n.nspname = current_schema()"
@@ -169,17 +174,20 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
             SELECT c.relname::text, c.relkind::text, c.reltuples::bigint, pg_total_relation_size(c.oid) FROM pg_class c
             JOIN pg_namespace n ON n.oid = c.relnamespace WHERE \(ns) AND c.relkind IN ('r','p','v','m') ORDER BY 1
             """, limit: 0).rows
+        progress?("\(tableRows.count.formatted()) tables · reading columns (2/5)")
         let colRows = try await run("""
             SELECT c.relname::text, a.attname::text, format_type(a.atttypid, a.atttypmod), NOT a.attnotnull, pg_get_expr(d.adbin, d.adrelid)
             FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid JOIN pg_namespace n ON n.oid = c.relnamespace
             LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
             WHERE \(ns) AND c.relkind IN ('r','p','v','m') AND a.attnum > 0 AND NOT a.attisdropped ORDER BY c.relname, a.attnum
             """, limit: 0).rows
+        progress?("\(tableRows.count.formatted()) tables · \(colRows.count.formatted()) columns · reading primary keys (3/5)")
         let pkRows = try await run("""
             SELECT c.relname::text, a.attname::text FROM pg_constraint con JOIN pg_class c ON c.oid = con.conrelid
             JOIN pg_namespace n ON n.oid = c.relnamespace CROSS JOIN LATERAL unnest(con.conkey) AS k(attnum)
             JOIN pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = k.attnum WHERE \(ns) AND con.contype = 'p'
             """, limit: 0).rows
+        progress?("\(tableRows.count.formatted()) tables · \(colRows.count.formatted()) columns · reading foreign keys (4/5)")
         let fkRows = try await run("""
             SELECT c.relname::text, a.attname::text, fc.relname::text, fa.attname::text, con.confdeltype::text
             FROM pg_constraint con JOIN pg_class c ON c.oid = con.conrelid JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -187,6 +195,7 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
             JOIN pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = k.attnum
             JOIN pg_attribute fa ON fa.attrelid = con.confrelid AND fa.attnum = k.fattnum WHERE \(ns) AND con.contype = 'f'
             """, limit: 0).rows
+        progress?("\(tableRows.count.formatted()) tables · \(colRows.count.formatted()) columns · \(fkRows.count.formatted()) foreign keys · reading indexes (5/5)")
         let idxRows = try await run("""
             SELECT t.relname::text, i.relname::text, ix.indisunique, pg_get_indexdef(ix.indexrelid), pg_relation_size(ix.indexrelid),
               (SELECT string_agg(a.attname::text, ',' ORDER BY k.ord) FROM unnest(ix.indkey) WITH ORDINALITY k(attnum, ord)
@@ -200,11 +209,16 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
         for r in fkRows { if let t = s(r[0]), let c = s(r[1]), let ft = s(r[2]), let fc = s(r[3]) { fks["\(t).\(c)"] = ForeignKey(table: ft, column: fc, onDelete: s(r[4]).flatMap { actions[$0] }) } }
 
         var tables: [TableInfo] = []
+        // never-analysed tables have no estimate (reltuples = -1): they are counted exactly, one by one, so say which
+        let uncounted = tableRows.filter { (n($0[2]) ?? -1) < 0 && s($0[1]) != "v" }.count
+        var counted = 0
         for r in tableRows {
             guard let name = s(r[0]) else { continue }
             let isView = s(r[1]) == "v"
             var rows = n(r[2]) ?? -1
             if rows < 0 && !isView {
+                counted += 1
+                progress?("\(tableRows.count.formatted()) tables · counting rows of \(name) (\(counted)/\(uncounted) never analysed)")
                 let q = quoteIdent(name, .postgres)
                 rows = n(try await run("SELECT count(*) FROM \(q)", limit: 1).rows.first?.first) ?? 0
             }
@@ -220,6 +234,7 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
             }
             tables.append(TableInfo(schema: "public", name: name, kind: isView ? .view : .table, rowCount: max(rows, 0), sizeBytes: n(r[3]), columns: cols, indexes: idx))
         }
+        progress?("\(tableRows.count.formatted()) tables · \(colRows.count.formatted()) columns · database size")
         let meta = try await run("SELECT current_database()::text, current_setting('server_version'), pg_database_size(current_database())", limit: 1).rows.first ?? []
         return SchemaSnapshot(serverVersion: "PostgreSQL " + (s(meta.dropFirst().first) ?? ""), databaseName: s(meta.first) ?? "", tables: tables, sizeBytes: n(meta.last))
     }

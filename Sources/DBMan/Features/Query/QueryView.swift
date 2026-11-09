@@ -21,10 +21,10 @@ struct QueryView: View {
     private static let readKeywords: Set<String> = ["SELECT", "WITH", "VALUES", "TABLE"]
 
     var body: some View {
-        HStack(spacing: HT.M.gap) {
+        HStack(spacing: HT.M.seam) {
             NumberRail(items: Self.rail.map { (number: $0.0, title: $0.1) }, selection: $view)
             schema.frame(width: 200)
-            VStack(spacing: HT.M.gap) {
+            VStack(spacing: HT.M.seam) {
                 editor.frame(height: 240)
                 results
             }
@@ -90,7 +90,7 @@ struct QueryView: View {
             Button("SAVE AS WIDGET") { Task { await ws.dash.saveQuery(currentStatement(), title: tab.title, ws) } }.buttonStyle(.htOutline).help("Add this query as a table widget to the default dashboard")
             Button("RUN ALL") { run(tab.sql, all: true) }.buttonStyle(.htOutline).keyboardShortcut(.return, modifiers: [.command, .shift])
             Button("STOP") { stop() }.buttonStyle(.htOutline).disabled(!tab.running)
-            Button("RUN // ⌘⏎") { run(currentStatement()) }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)
+            Button("RUN  ⌘⏎") { run(currentStatement()) }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)
         }) {
             SQLEditor(text: $t.sql, completions: completions, onRunStatement: { run($0) }, onRunAll: { run($0, all: true) })
         }
@@ -203,7 +203,7 @@ struct QueryView: View {
         if tab.running {
             TimelineView(.periodic(from: .now, by: 0.1)) { ctx in
                 let e = ctx.date.timeIntervalSince(tab.startedAt ?? ctx.date)
-                if e > 0.4 { StatusText(label: "RUNNING", value: "\((tab.result?.rows.count ?? 0).formatted()) ROWS // \(String(format: "%.1f", e)) S") }
+                if e > 0.4 { StatusText(label: "RUNNING", value: "\((tab.result?.rows.count ?? 0).formatted()) ROWS · \(String(format: "%.1f", e)) S") }
             }
         }
     }

@@ -12,17 +12,22 @@ enum Catalogue {
         for (k, type, d) in props { p[k] = ["type": .string(type), "description": .string(d)] }
         let req = (connection ? ["connection"] : []) + required
         return Tool(name: name, description: desc, inputSchema: ["type": "object", "properties": .object(p), "required": .array(req.map { .string($0) })],
-                    annotations: .init(readOnlyHint: !name.hasSuffix(".add") && !name.hasSuffix(".remove") && name != "ui.open" && !writers.contains(name)))
+                    annotations: .init(readOnlyHint: !name.hasSuffix(".add") && !name.hasSuffix(".remove") && name != "connections.update" && name != "ui.open" && !writers.contains(name)))
     }
 
     /// Tools that write into the agent's own overlay layer (never the database); they need OVERLAY.
     static let writers: Set = ["overlay.patch_rows", "overlay.reset", "views.create", "views.replace", "views.drop", "relations.add", "notes.set", "saved.save", "dashboard.create", "dashboard.update"]
 
+    static let sshArg = "Optional SSH hop: [user@]host[:port] or a ~/.ssh/config alias. DBMan runs the system ssh with the user's keys/agent (no passwords). Also accepted as ?ssh= in the url."
+
     static let tools: [Tool] = [
         tool("connections.list", "List the databases DBMan lets you use: name, engine, env tag (production is guarded), status and YOUR permission level on each.", connection: false),
-        tool("connections.add", "Ask the human to add a database. Never pass a password: DBMan shows a secure credential sheet and the call waits (up to 10 minutes) until they finish: you get the new id, REJECTED (note) or NEEDS_APPROVAL_TIMEOUT.",
+        tool("connections.add", "Ask the human to add a database. Never pass a password: DBMan shows a secure credential sheet and the call waits (up to 10 minutes) until they finish: you get the new id, REJECTED (note) or NEEDS_APPROVAL_TIMEOUT. If the database port is only reachable from a server (firewall, Docker port, tailnet ACL), pass ssh: DBMan opens and owns the SSH tunnel itself, and the url host/port are then as seen FROM that SSH host (often 127.0.0.1:<published port>).",
              [("url", "string", "postgres://user@host:5432/db, mysql://… or a path to a .sqlite file (no password)"), ("name", "string", "Display name"),
-              ("env", "string", "local | staging | production")], required: ["name"], connection: false),
+              ("env", "string", "local | staging | production"), ("ssh", "string", sshArg)], required: ["name"], connection: false),
+        tool("connections.update", "Ask the human to change a connection's settings (url, ssh tunnel, name, env). Same credential sheet as connections.add, prefilled; the id, layers and dashboards are kept. Waits up to 10 minutes.",
+             [("url", "string", "New postgres://user@host:port/db or mysql://… (no password); omitted = keep"), ("ssh", "string", sshArg + " Empty string or \"none\" removes the tunnel; omitted = keep."),
+              ("name", "string", "New display name"), ("env", "string", "local | staging | production")]),
         tool("connections.test", "Open the connection and run SELECT 1; returns ok and latency."),
         tool("connections.remove", "Ask the human to remove a connection; waits (up to 10 minutes) for their approval in DBMan.", connection: true),
         tool("schema.tables", "List tables and views with estimated row counts and column counts. Start here."),
@@ -130,7 +135,7 @@ extension MCPService {
     }
 
     private func run(_ name: String, _ a: [String: Value], agent: String, trace: Trace) async throws -> Value {
-        if name.hasPrefix("connections."), name != "connections.test", name != "connections.remove" {
+        if name.hasPrefix("connections."), !["connections.test", "connections.remove", "connections.update"].contains(name) {
             return name == "connections.list" ? try await list(agent) : try await add(a, agent: agent)
         }
         if name == "dashboard.components" { return try Self.components() }
@@ -142,6 +147,8 @@ extension MCPService {
         let (cap, timeoutMs) = limits(c, perm)
 
         switch name {
+        case "connections.update":
+            return try await update(a, c, agent: agent)
         case "connections.remove":
             let id = try b.store.addApproval(kind: "remove", agent: agent, connection: c.id, payload: Self.json(["name": .string(c.name), "env": .string(c.env)]))
             _ = try await awaitApproval(id)
@@ -220,8 +227,10 @@ extension MCPService {
         var out: [Value] = []
         for c in try b.store.agentVisibleConnections() {
             let p = try b.store.permission(agent: agent, connection: c)
-            out.append(["name": .string(c.name), "id": .string(c.id), "engine": .string(c.engine), "env": .string(c.env),
-                        "status": await b.isOpen(c) ? "open" : "idle", "permission": .string(p.level.uppercased())])
+            var row: [String: Value] = ["name": .string(c.name), "id": .string(c.id), "engine": .string(c.engine), "env": .string(c.env),
+                                        "status": await b.isOpen(c) ? "open" : "idle", "permission": .string(p.level.uppercased())]
+            if let t = c.profile.ssh { row["via_ssh"] = .string(t.display) } // only when tunnelled
+            out.append(.object(row))
         }
         return .array(out)
     }
@@ -245,24 +254,77 @@ extension MCPService {
     }
     nonisolated(unsafe) static var approvalPollMs = 200
 
+    /// A url plus the optional `ssh` argument as a profile (no password ever). `ssh` wins over `?ssh=` in the url.
+    private func parsed(_ url: String, ssh: Value?) throws -> ConnectionProfile {
+        guard let (p0, password) = ConnectionURL.parseWithPassword(url) else { throw ToolError("INVALID_ARGUMENT", "url is not recognised (postgres://user@host/db, mysql://…, or a .sqlite path; ?ssh= must be [user@]host[:port])") }
+        guard password == nil else { throw ToolError("INVALID_ARGUMENT", "passwords are never accepted over MCP; DBMan asks the human for it") }
+        var p = p0
+        if let ssh { p.ssh = try Self.ssh(ssh) }
+        if p.ssh != nil, p.engine == .sqlite { throw ToolError("INVALID_ARGUMENT", "ssh is for postgres/mysql, not SQLite files") }
+        return p
+    }
+
+    /// nil = remove the tunnel ("" / "none").
+    static func ssh(_ v: Value) throws -> SSHTunnel? {
+        guard let s = v.stringValue else { throw ToolError("INVALID_ARGUMENT", "ssh must be a string like user@host:22") }
+        let t = s.trimmingCharacters(in: .whitespaces)
+        if t.isEmpty || t.lowercased() == "none" { return nil }
+        guard let tunnel = SSHTunnel(parsing: t), !tunnel.host.hasPrefix("-") else { throw ToolError("INVALID_ARGUMENT", "ssh must be [user@]host[:port], got \"\(s)\"") }
+        return tunnel
+    }
+
+    static func payload(_ p: ConnectionProfile, name: String, env: String) -> [String: Value] {
+        ["name": .string(name), "engine": .string(p.engine.rawValue), "host": .string(p.host), "port": .int(p.port), "database": .string(p.database),
+         "user": .string(p.user), "ssl_mode": .string(p.sslMode.rawValue), "file_path": p.filePath.map { .string($0) } ?? .null, "env": .string(env),
+         "ssh_host": p.ssh.map { .string($0.host) } ?? .null, "ssh_user": p.ssh?.user.map { .string($0) } ?? .null,
+         "ssh_port": p.ssh?.port.map { .int($0) } ?? .null, "ssh_identity": p.ssh?.identityFile.map { .string($0) } ?? .null]
+    }
+
+    private func checkEnv(_ v: Value?, default d: String) throws -> String {
+        let env = v?.stringValue ?? d
+        guard ["local", "staging", "production"].contains(env) else { throw ToolError("INVALID_ARGUMENT", "env must be local, staging or production") }
+        return env
+    }
+
     private func add(_ a: [String: Value], agent: String) async throws -> Value {
         guard let name = a["name"]?.stringValue, !name.isEmpty else { throw ToolError("INVALID_ARGUMENT", "name is required") }
-        guard let url = a["url"]?.stringValue, let (p, password) = ConnectionURL.parseWithPassword(url) else { throw ToolError("INVALID_ARGUMENT", "url is required (postgres://user@host/db, mysql://…, or a .sqlite path)") }
-        guard password == nil else { throw ToolError("INVALID_ARGUMENT", "passwords are never accepted over MCP; DBMan asks the human for it") }
+        guard let url = a["url"]?.stringValue else { throw ToolError("INVALID_ARGUMENT", "url is required (postgres://user@host/db, mysql://…, or a .sqlite path)") }
+        let p = try parsed(url, ssh: a["ssh"])
         if let f = p.filePath {
             // the store holds approvals, permissions and layers: an agent must not be able to open it as a database (case-insensitive: default macOS volumes)
             let dir = b.store.url.deletingLastPathComponent().resolvingSymlinksInPath().path.lowercased()
             let file = URL(fileURLWithPath: (f as NSString).expandingTildeInPath).resolvingSymlinksInPath().path.lowercased()
             guard !file.hasPrefix(dir + "/") else { throw ToolError("INVALID_ARGUMENT", "that file lives in DBMan's own store folder; pick another database") }
         }
-        let env = a["env"]?.stringValue ?? "local"
-        guard ["local", "staging", "production"].contains(env) else { throw ToolError("INVALID_ARGUMENT", "env must be local, staging or production") }
-        let payload = Value.object(["name": .string(name), "engine": .string(p.engine.rawValue), "host": .string(p.host), "port": .int(p.port), "database": .string(p.database),
-                                    "user": .string(p.user), "ssl_mode": .string(p.sslMode.rawValue), "file_path": p.filePath.map { .string($0) } ?? .null, "env": .string(env)])
-        guard !(try b.store.connections().contains { $0.name.lowercased() == name.lowercased() }) else { throw ToolError("INVALID_ARGUMENT", "a connection named \"\(name)\" exists; see connections.list") }
-        let done = try await awaitApproval(try b.store.addApproval(kind: "credentials", agent: agent, connection: nil, payload: String(decoding: Self.encoder.encode(payload), as: UTF8.self)))
+        let env = try checkEnv(a["env"], default: "local")
+        guard !(try b.store.connections().contains { $0.name.lowercased() == name.lowercased() }) else { throw ToolError("INVALID_ARGUMENT", "a connection named \"\(name)\" exists; see connections.list (connections.update changes it)") }
+        let done = try await awaitApproval(try b.store.addApproval(kind: "credentials", agent: agent, connection: nil, payload: Self.json(Self.payload(p, name: name, env: env))))
         guard let id = done.field("connection_id") else { throw ToolError("ERROR", "approved without a connection") }
         return ["id": .string(id), "name": .string(done.field("name") ?? name)]
+    }
+
+    /// The proposed settings go to the same credential sheet, prefilled; the human's save upserts the same id.
+    private func update(_ a: [String: Value], _ c: ConnectionRow, agent: String) async throws -> Value {
+        guard c.engine != "sqlite" || a["url"] != nil || a["ssh"] == nil else { throw ToolError("INVALID_ARGUMENT", "ssh is for postgres/mysql, not SQLite files") }
+        let old = c.profile
+        var p = old
+        if let url = a["url"]?.stringValue {
+            p = try parsed(url, ssh: nil)
+            if !url.contains("ssh=") { p.ssh = old.ssh } // a new url alone keeps the tunnel
+            guard p.engine.rawValue == c.engine else { throw ToolError("INVALID_ARGUMENT", "the engine cannot change (\(c.engine)); add a new connection instead") }
+            if p.filePath != nil { throw ToolError("INVALID_ARGUMENT", "SQLite paths are changed in DBMan, not over MCP") }
+        }
+        if let s = a["ssh"] { p.ssh = try Self.ssh(s) }
+        if p.ssh != nil, p.engine == .sqlite { throw ToolError("INVALID_ARGUMENT", "ssh is for postgres/mysql, not SQLite files") }
+        let name = a["name"]?.stringValue.flatMap { $0.isEmpty ? nil : $0 } ?? c.name
+        if name.lowercased() != c.name.lowercased(), try b.store.connections().contains(where: { $0.name.lowercased() == name.lowercased() }) {
+            throw ToolError("INVALID_ARGUMENT", "a connection named \"\(name)\" exists")
+        }
+        let env = try checkEnv(a["env"], default: c.env)
+        var payload = Self.payload(p, name: name, env: env)
+        payload["connection_id"] = .string(c.id)
+        let done = try await awaitApproval(try b.store.addApproval(kind: "update", agent: agent, connection: c.id, payload: Self.json(payload)))
+        return ["id": .string(c.id), "name": .string(done.field("name") ?? name), "via_ssh": p.ssh.map { .string($0.display) } ?? .null]
     }
 
     // MARK: schema

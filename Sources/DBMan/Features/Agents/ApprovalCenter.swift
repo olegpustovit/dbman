@@ -17,6 +17,7 @@ extension ApprovalRow {
         switch kind {
         case "credentials": "\(who) wants to add \(field("name") ?? "a connection")"
         case "remove": "\(who) wants to remove \(field("name") ?? "a connection")"
+        case "update": "\(who) wants to change \(field("name") ?? "a connection")\(field("ssh_host").map { " (via SSH \($0))" } ?? "")"
         default: "\(who) hit the prod guard on \(connectionName) — allow once?"
         }
     }
@@ -71,7 +72,7 @@ final class ApprovalCenter: NSObject, UNUserNotificationCenterDelegate {
         guard sheetTarget == nil else { return } // WorkspaceView shows it as a sheet
         panel?.close()
         let w = NSWindow(contentViewController: NSHostingController(rootView: ApprovalDialog(a: a).environment(AppModel.shared)))
-        w.title = "DBMan // approval"; w.styleMask = [.titled, .closable]; w.isReleasedWhenClosed = false
+        w.title = "DBMan · approval"; w.styleMask = [.titled, .closable]; w.isReleasedWhenClosed = false
         w.center(); w.makeKeyAndOrderFront(nil)
         NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: w, queue: .main) { [weak self] _ in Task { @MainActor in if self?.panel === w { self?.panel = nil; self?.current = nil } } } // the red button = LATER
         panel = w

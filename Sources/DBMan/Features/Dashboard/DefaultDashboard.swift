@@ -27,7 +27,7 @@ enum DashData {
 /// The seeded "Overview // default" dashboard: what v1's fixed Overview showed, as widgets over this connection's own tables.
 /// Row counts and footprint come from the schema snapshot's estimates (DashSource), never COUNT(*); activity and the tx/s rate are DashSource too.
 @MainActor enum DefaultDashboard {
-    static let title = "Overview // default"
+    static let title = "Overview · default"
 
     private static func bucket(_ e: Engine, _ col: String) -> String {
         let c = quoteIdent(col, e)
@@ -61,10 +61,10 @@ enum DashData {
         func w(_ id: String, _ type: String, _ title: String, _ h: Int, query: String? = nil, enc: [String: DashEnc]? = nil) -> DashWidget {
             DashWidget(id: id, type: type, title: title, x: 0, y: 0, w: 4, h: h, query: query, encoding: enc)
         }
-        for (i, t) in tables.prefix(2).enumerated() { top.append(w("rows\(i + 1)", "kpi", "\(t.name) // rows", 2, query: "schema:\(t.name)", enc: ["value": DashEnc("rows")])) }
+        for (i, t) in tables.prefix(2).enumerated() { top.append(w("rows\(i + 1)", "kpi", "\(t.name) · rows", 2, query: "schema:\(t.name)", enc: ["value": DashEnc("rows")])) }
         // records added per day on the biggest table with a timestamp
         if let t = tables.first(where: { dateColumn($0) != nil }), let dc = dateColumn(t) {
-            top.append(w("growth", "kpi.spark", "\(t.name) // added per day", 2, query: """
+            top.append(w("growth", "kpi.spark", "\(t.name) · added per day", 2, query: """
                 SELECT x, y, (SELECT COUNT(*) FROM \(quoteIdent(t.name, e)) WHERE \(since(e, t.name, dc))) AS value FROM (SELECT \(bucket(e, dc)) AS x, COUNT(*) AS y FROM \(quoteIdent(t.name, e)) WHERE \(since(e, t.name, dc)) GROUP BY 1) d ORDER BY x
                 """, enc: ["x": DashEnc("x"), "y": DashEnc("y")]))
         }
@@ -79,13 +79,13 @@ enum DashData {
         }(), enc: ["x": DashEnc("x"), "y": DashEnc("y")]))
         top[top.count - 1].format = DashFormat(unit: nil, compact: nil, decimals: 1)
         let base = await detect(ws)
-        let line = base.sql.map { w("over_time", "line", "\(base.table) // over time", 4, query: $0, enc: ["x": DashEnc("day"), "y": DashEnc("n"), "series": DashEnc("category")]) }
+        let line = base.sql.map { w("over_time", "line", "\(base.table) · over time", 4, query: $0, enc: ["x": DashEnc("day"), "y": DashEnc("n"), "series": DashEnc("category")]) }
         var out: [DashWidget] = []
         let share = top.isEmpty ? 12 : 12 / top.count
         for (i, var t) in top.enumerated() { t.x = i * share; t.w = i == top.count - 1 ? 12 - i * share : share; out.append(t) }
         let y1 = top.isEmpty ? 0 : 2
         let bytes = tables.contains { $0.sizeBytes != nil }
-        var foot = w("footprint", "bars.horizontal", "Footprint // \(bytes ? "bytes" : "rows")", 4, query: "schema:", enc: ["label": DashEnc("label"), "value": DashEnc(bytes ? "bytes" : "rows")])
+        var foot = w("footprint", "bars.horizontal", "Footprint · \(bytes ? "bytes" : "rows")", 4, query: "schema:", enc: ["label": DashEnc("label"), "value": DashEnc(bytes ? "bytes" : "rows")])
         if bytes { foot.format = DashFormat(unit: "B", compact: nil, decimals: nil) }
         if var l = line { l.x = 0; l.y = y1; l.w = 8; out.append(l); foot.x = 8; foot.y = y1; foot.w = 4 } else { foot.x = 0; foot.y = y1; foot.w = 12 }
         out.append(foot)
@@ -121,7 +121,7 @@ enum DashData {
         ("Sales health", "revenue, orders, AOV, top products, refunds", ["rows1", "rows2", "growth", "over_time", "footprint"], [[3, 3, 6, 4], [10, 3, 6, 4], [17, 3, 6, 4], [24, 3, 7, 4], [3, 9, 19, 12], [24, 9, 7, 12]]),
         ("Ops health", "sessions, locks, slow queries, bloat", ["rate", "insights", "activity", "sessions"], [[3, 3, 13, 8], [18, 3, 13, 8], [3, 13, 28, 8]]),
         ("Product usage", "events by day, funnels, cohorts", ["growth", "over_time", "footprint"], [[3, 3, 28, 8], [3, 13, 9, 8], [14, 13, 8, 8], [24, 13, 7, 8]]),
-        ("Overview // default", "the v1 overview, as a dashboard", nil, [[3, 3, 8, 18], [13, 3, 18, 6], [13, 11, 18, 10]]),
+        ("Overview · default", "the v1 overview, as a dashboard", nil, [[3, 3, 8, 18], [13, 3, 18, 6], [13, 11, 18, 10]]),
     ]
 
     static func template(_ i: Int, _ ws: WorkspaceModel) async -> DashboardSpec {
@@ -135,7 +135,7 @@ enum DashData {
             for k in row.indices { row[k].x = k * (12 / row.count); row[k].w = k == row.count - 1 ? 12 - k * (12 / row.count) : 12 / row.count; row[k].y = y }
             y += row.map(\.h).max() ?? 0; out += row
         }
-        s.title = "\(templates[i].name) // \(ws.profile.name)"; s.widgets = out
+        s.title = "\(templates[i].name) · \(ws.profile.name)"; s.widgets = out
         return s
     }
 

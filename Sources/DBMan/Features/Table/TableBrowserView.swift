@@ -24,6 +24,10 @@ struct TableBrowserView: View {
     @State private var rows: [[Cell]] = []
     @State private var done = false
     @State private var loading = false
+    @State private var loadStarted = Date()
+    @State private var savedWidths: [String: CGFloat] = [:]
+    @State private var statsLoading = false
+    @State private var statsStarted = Date()
     @State private var gen = 0
     @State private var error: String?
     @State private var notice: String?
@@ -40,15 +44,15 @@ struct TableBrowserView: View {
 
     var body: some View {
         let d = display
-        HStack(spacing: HT.M.gap) {
+        HStack(spacing: HT.M.seam) {
             NumberRail(items: [("01", "Data"), ("02", "Structure"), ("03", "Relations"), ("04", "Stats")], selection: $tab)
-            VStack(spacing: HT.M.gap) {
-                HStack(spacing: HT.M.gap) {
+            VStack(spacing: HT.M.seam) {
+                HStack(spacing: HT.M.seam) {
                     mainFrame(d)
                     if ws.showInspector, tab == 0, !ws.layers.open {
                         AgentsInspector(ws: ws) {
                             TableInspector(ws: ws, info: info, columns: columnNames, row: selection.flatMap { $0 < d.rows.count ? d.rows[$0] : nil },
-                                           focused: $focused, stats: stats, staged: mine, onFollow: { follow($0, in: d.rows) })
+                                           focused: $focused, stats: stats, statsLoading: statsLoading, statsStarted: statsStarted, staged: mine, onFollow: { follow($0, in: d.rows) })
                         }
                         .frame(width: HT.M.inspector)
                     }
@@ -68,11 +72,12 @@ struct TableBrowserView: View {
     // MARK: layout
 
     private func mainFrame(_ d: Shown) -> some View {
-        HTFrame(title: tableName, tail: ([info?.schema] + [info?.sizeBytes.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }]).compactMap { $0 }.joined(separator: " · ")) {
+        HTFrame(title: tableName, tail: ([info?.schema] + [info?.sizeBytes.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }]).compactMap { $0 }.joined(separator: " · "),
+                accessory: { rowCount }) {
             switch tab {
             case 1: if let info { StructureView(info: info, notes: ws.layers.notes(tableName)) }
             case 2: if let info { RelationsView(ws: ws, info: info) }
-            case 3: StatsView(info: info, stats: stats)
+            case 3: StatsView(info: info, stats: stats, loading: statsLoading, since: statsStarted)
             default: dataView(d)
             }
         }
@@ -80,52 +85,99 @@ struct TableBrowserView: View {
 
     private func dataView(_ d: Shown) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                filterBar(d)
-                Readout(value: (info?.rowCount).map(HTFormat.grouped) ?? "–", label: "Rows",
-                        tail: "loaded \(rows.count)\(done ? "" : "+")" + (sort.map { " // sort \($0.column) \($0.descending ? "↓" : "↑")" } ?? ""), size: .l).padding(.horizontal, 10)
-            }
+            filterBar(d)
+                .frame(height: 34)
+            .overlay(alignment: .bottom) { Rectangle().fill(HT.C.line).frame(height: 1) }
             if !mine.isEmpty { stagedBar }
             if let m = error ?? notice { Text(m).ht(.bodySmall).foregroundStyle(error == nil ? HT.C.amber : HT.C.alert).padding(.horizontal, 8).padding(.vertical, 3).frame(maxWidth: .infinity, alignment: .leading) }
             DataGrid(columns: gridColumns, rows: d.rows, selection: $selection, focusedColumn: $focused, sparklines: sparklines,
                      onSort: toggleSort, onEdit: { r, c in beginEdit(src: d.src, row: r, col: c) },
                      onFilterValue: { c, v in whereText = TableSQL.and(whereText, TableSQL.equals(c, v, engine: engine)); applyFilter() },
                      onFollowFK: { r, c in follow(c, in: d.rows, row: r) },
-                     onReachEnd: { Task { await loadMore() } }, tableName: tableName, engine: engine, markedRows: markedRows(d.rows), layerCells: d.marks, staleRows: d.stale)
+                     onReachEnd: { Task { await loadMore() } }, tableName: tableName, engine: engine, markedRows: markedRows(d.rows), layerCells: d.marks, staleRows: d.stale,
+                     savedWidths: savedWidths, onColumnsResized: saveWidths)
                 .onKeyPress(.delete) { guard selection != nil else { return .ignored }; requestDelete(); return .handled }
+                .overlay(alignment: .top) { if loading && rows.isEmpty { firstLoadSkeleton } }
+                .overlay(alignment: .bottom) { if loading && !rows.isEmpty { loadingStrip.background(HT.C.paper).padding(8) } }
         }
+    }
+
+    /// First page: skeleton rows under the real header (no layout jump), with the strip saying what is being fetched.
+    private var firstLoadSkeleton: some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(height: 27).allowsHitTesting(false) // DataGrid's header stays visible
+            LateReveal {
+                VStack(spacing: 6) {
+                    loadingStrip.padding(.horizontal, 8).padding(.top, 8)
+                    SkeletonRows(columns: min(max(gridColumns.count, info?.columns.count ?? 4), 9), rows: 16)
+                }
+                .background(HT.C.paper)
+            }
+        }
+    }
+
+    /// Silent under 400 ms; then what is being fetched, how far in, and for how long.
+    private var loadingStrip: some View {
+        let from = rows.count
+        let label = from == 0 ? "Fetching rows" : "Loading more"
+        var detail: String = from == 0 ? "first \(pageSize.formatted())" : "rows \((from + 1).formatted())–\((from + pageSize).formatted())"
+        if let n = info?.rowCount, n > 0 { detail += " of ~" + HTFormat.grouped(n) }
+        if !applied.trimmingCharacters(in: .whitespaces).isEmpty { detail += " · filtered" }
+        if let c = sort?.column { detail += " · sorted by " + c }
+        return HTLoadingStrip(label, detail: detail, since: loadStarted).id(gen * 1_000_000 + from)
+    }
+
+    /// `1,253 ROWS │ LOADED 500+` in the frame's title line, right side.
+    private var rowCount: some View {
+        let tail = (loading && rows.isEmpty ? "loading…" : "loaded \(rows.count.formatted())\(done ? "" : "+")") + (sort.map { " · \($0.column) \($0.descending ? "↓" : "↑")" } ?? "")
+        return HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text((info?.rowCount).map(HTFormat.grouped) ?? "–").font(.system(size: 13, weight: .semibold).monospacedDigit()).foregroundStyle(HT.C.ink).contentTransition(.numericText())
+            CapsLabel("Rows", tail).foregroundStyle(HT.C.ink3)
+        }
+        .fixedSize()
+        .accessibilityElement(children: .combine)
     }
 
     private func filterBar(_ d: Shown) -> some View {
         HStack(spacing: 6) {
-            CapsLabel("Where").foregroundStyle(HT.C.ink3)
-            TextField("status = 'paid' AND total > 100", text: $whereText).textFieldStyle(.plain).ht(.data)
-                .padding(.horizontal, 6).frame(height: 22).frame(minWidth: 60, maxWidth: 380)
+            CapsLabel("Where").foregroundStyle(HT.C.ink3).fixedSize()
+            TextField("", text: $whereText, prompt: Text("status = 'paid' AND total > 100").foregroundStyle(HT.C.ink3)).textFieldStyle(.plain).ht(.data)
+                .padding(.horizontal, 6).frame(height: 24).frame(minWidth: 120, maxWidth: .infinity)
+                .layoutPriority(1)
                 .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
                 .onSubmit(applyFilter)
                 .accessibilityLabel("WHERE filter, press return to apply")
             Text("⏎").ht(.labelSmall).foregroundStyle(HT.C.ink3)
-            // Scrolls instead of widening the window's minimum content width.
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(chips, id: \.self) { v in
-                        let clause = TableSQL.equals(chipColumn ?? "", .text(v), engine: engine)
-                        HTToggleChip(v, isOn: Binding(get: { applied == clause }, set: { whereText = $0 ? clause : ""; applyFilter() }))
+            // quick-filter chips: scroll instead of widening the window's minimum content width
+            if !chips.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(chips, id: \.self) { v in
+                            let clause = TableSQL.equals(chipColumn ?? "", .text(v), engine: engine)
+                            HTToggleChip(v, isOn: Binding(get: { applied == clause }, set: { whereText = $0 ? clause : ""; applyFilter() }))
+                        }
                     }
-                }
+                }.frame(maxWidth: 320)
             }
-            SeeAsPicker(ws: ws).fixedSize()
-            Button("Delete row ⌫") { requestDelete() }.buttonStyle(.htOutline).disabled(selection == nil)
+            // SEE AS lives in the Store panel; here only a reminder while it changes what this grid shows
+            if let s = ws.layers.seeAs {
+                Button { ws.layers.seeAs = nil } label: {
+                    HStack(spacing: 5) { Text("SEEING AS \(s == "db" ? "DB" : ws.layers.name(s).uppercased())").ht(.labelSmall); Text("✕").ht(.labelSmall) }
+                        .foregroundStyle(HT.C.accent).padding(.horizontal, 6).frame(height: 20)
+                        .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.accent, lineWidth: 1))
+                }.buttonStyle(.plain).help("Back to everything you can see").fixedSize()
+            }
+            Button("Delete row ⌫") { requestDelete() }.buttonStyle(.htOutline).disabled(selection == nil).fixedSize()
                 .keyboardShortcut(.delete, modifiers: .command)
         }
-        .padding(.horizontal, 8).frame(height: 30)
+        .padding(.horizontal, 8)
     }
 
     private var stagedBar: some View {
         let s = ws.staged.summary
         return HStack(spacing: 8) {
-            Text("Staged // not_written").ht(.label).foregroundStyle(HT.C.amber)
-            Text("\(s.updates) updates // \(s.inserts) inserts // \(s.deletes) deletes").ht(.labelSmall).foregroundStyle(HT.C.ink2)
+            Text("Staged · not_written").ht(.label).foregroundStyle(HT.C.amber)
+            Text("\(s.updates) updates · \(s.inserts) inserts · \(s.deletes) deletes").ht(.labelSmall).foregroundStyle(HT.C.ink2)
             Spacer(minLength: 0)
             Button("Undo ⌘Z") { ws.undoStaged() }.buttonStyle(.htOutline).keyboardShortcut("z", modifiers: .command)
             Button("Discard") { ws.discardStaged() }.buttonStyle(.htOutline)
@@ -207,17 +259,34 @@ struct TableBrowserView: View {
 
     // MARK: loading
 
+    /// Column widths live in DBMan's own store, per connection and table (the same per-connection layout table the schema map uses).
+    private var widthsKey: String { "grid:" + tableName }
+    private func loadWidths() {
+        savedWidths = app.store.mapLayout(ws.storeID, widthsKey).flatMap { $0.data(using: .utf8) }
+            .flatMap { try? JSONDecoder().decode([String: Double].self, from: $0) }?.mapValues { CGFloat($0) } ?? [:]
+    }
+    private func saveWidths(_ w: [String: CGFloat]) {
+        savedWidths = w
+        guard let json = try? JSONEncoder().encode(w.mapValues(Double.init)), let s = String(data: json, encoding: .utf8) else { return }
+        try? app.store.setMapLayout(ws.storeID, widthsKey, positions: s)
+    }
+
+    /// The connection is one serial session: the first page goes first, the 5,000-row stats sample after it, the debug self-check last.
+    /// The loader shows from the moment the table opens, not from when the page query reaches the front of the queue.
     private func open() async {
+        loadWidths()
         whereText = ws.pendingFilter.removeValue(forKey: tableName) ?? ""
         applied = whereText; sort = nil; selection = nil; stats = []; focused = 0; error = nil; notice = nil
-        #if DEBUG
-        if let s = ws.session, let i = info { await TableSQL.selfCheck(session: s, engine: engine, table: i) }
-        #endif
-        async let st: Void = loadStats()
-        Task { await ws.layers.refresh(ws) } // stale marks for patched rows
+        rows = []; done = false; loading = true; loadStarted = Date() // skeleton + strip right away
+        statsLoading = true; statsStarted = Date()
+        Task { await ws.layers.refresh(ws) } // stale marks for patched rows (store only, no database query)
         await reload()
-        await st
         if selection == nil { selection = DevHooks.select }
+        guard !Task.isCancelled else { statsLoading = false; return } // switched tables: don't queue a sample nobody will see
+        await loadStats()
+        #if DEBUG
+        if !Task.isCancelled, let s = ws.session, let i = info { await TableSQL.selfCheck(session: s, engine: engine, table: i) }
+        #endif
     }
 
     private func applyFilter() {
@@ -233,13 +302,16 @@ struct TableBrowserView: View {
 
     private func reload() async {
         gen += 1; rows = []; done = false; loading = false; selection = nil; error = nil
+        loadStarted = Date()
+        // headers from the schema right away, so the first-load skeleton sits under real column names
+        if let cols = info?.columns.map(\.name), !cols.isEmpty, columnNames != cols, columnNames.isEmpty || !Set(columnNames).isSubset(of: Set(cols)) { columnNames = cols }
         await loadMore()
     }
 
     private func loadMore() async {
         guard let session = ws.session, !loading, !done else { return }
         let g = gen, name = tableName
-        loading = true
+        loading = true; if !rows.isEmpty { loadStarted = Date() } // the first page keeps the time from when the table opened
         let sql = TableSQL.select(table: name, engine: engine, filter: applied, sort: sort, pk: info?.primaryKey ?? [], limit: pageSize, offset: rows.count)
         let t0 = Date()
         do {
@@ -262,6 +334,8 @@ struct TableBrowserView: View {
 
     private func loadStats() async {
         guard let session = ws.session else { return }
+        statsLoading = true; statsStarted = Date()
+        defer { statsLoading = false }
         let name = tableName
         let sql = "SELECT * FROM \(quoteIdent(name, engine)) LIMIT 5000 -- column stats"
         do {
@@ -283,16 +357,16 @@ struct TableBrowserView: View {
     }
 
     private func readOnlyReason() -> String? {
-        if info?.kind == .view { return "READ-ONLY // views cannot be edited." }
-        if pk.isEmpty { return "READ-ONLY // \(tableName) has no primary key, so a single row cannot be targeted safely." }
+        if info?.kind == .view { return "READ-ONLY · views cannot be edited." }
+        if pk.isEmpty { return "READ-ONLY · \(tableName) has no primary key, so a single row cannot be targeted safely." }
         return nil
     }
 
     private func beginEdit(src: [Int], row: Int, col: Int) {
         if let why = readOnlyReason() { notice = why; return }
-        guard row < src.count, src[row] >= 0, col < columnNames.count else { notice = "READ-ONLY // this row exists only in a store layer."; return }
+        guard row < src.count, src[row] >= 0, col < columnNames.count else { notice = "READ-ONLY · this row exists only in a store layer."; return }
         let cell = display.rows[row][col]
-        if case .blob = cell { notice = "READ-ONLY // binary values cannot be edited here."; return }
+        if case .blob = cell { notice = "READ-ONLY · binary values cannot be edited here."; return }
         notice = nil
         edit = EditTarget(src: src[row], col: col, text: cell.isNull ? "" : cell.display, isNull: cell.isNull)
     }

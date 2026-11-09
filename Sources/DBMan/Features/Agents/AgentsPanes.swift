@@ -25,15 +25,15 @@ struct PermissionsPane: View {
                             Text("ONLY YOU APPLY TO DATABASE").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                         }
                         if m.agents.isEmpty || m.connections.isEmpty {
-                            Text(m.agents.isEmpty ? "NO AGENTS YET // CONNECT ONE UNDER PLATFORMS — IT APPEARS HERE AFTER ITS FIRST CALL" : "NO CONNECTIONS YET").ht(.label).foregroundStyle(HT.C.ink3).padding(.vertical, 16)
+                            Text(m.agents.isEmpty ? "NO AGENTS YET · CONNECT ONE UNDER PLATFORMS — IT APPEARS HERE AFTER ITS FIRST CALL" : "NO CONNECTIONS YET").ht(.label).foregroundStyle(HT.C.ink3).padding(.vertical, 16)
                         } else { matrix }
                         sensitive
                     }.padding(12)
                 }
                 HStack {
-                    Text("APPLIES TO THE NEXT CALL // AGENTS SEE THEIR LEVEL IN connections.list").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                    Text("APPLIES TO THE NEXT CALL · AGENTS SEE THEIR LEVEL IN connections.list").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                     Spacer()
-                    Text("PRODUCTION DEFAULTS TO READ // OVERLAY IS OPT-IN").ht(.labelSmall).foregroundStyle(HT.C.amber)
+                    Text("PRODUCTION DEFAULTS TO READ · OVERLAY IS OPT-IN").ht(.labelSmall).foregroundStyle(HT.C.amber)
                 }
                 .padding(8).overlay(alignment: .top) { Rectangle().fill(HT.C.line).frame(height: 1) }
             }
@@ -44,11 +44,11 @@ struct PermissionsPane: View {
     private var matrix: some View {
         Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 8) {
             GridRow {
-                CapsLabel("AGENT ↓ // CONNECTION →").foregroundStyle(HT.C.ink3)
+                CapsLabel("AGENT ↓ · CONNECTION →").foregroundStyle(HT.C.ink3)
                 ForEach(m.connections, id: \.id) { c in
                     VStack(alignment: .leading, spacing: 0) {
                         HStack(spacing: 5) { Text(c.name).ht(.label); Text(c.env.uppercased()).ht(.labelSmall).foregroundStyle(c.env == "production" ? HT.C.amber : HT.C.ink3) }
-                        Text(c.env == "production" ? "READ // OVERLAY OPT-IN" : "DEFAULT OVERLAY").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                        Text(c.env == "production" ? "READ · OVERLAY OPT-IN" : "DEFAULT OVERLAY").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                     }
                 }
             }
@@ -95,14 +95,14 @@ struct PermissionsPane: View {
     private var sensitive: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                CapsLabel("SENSITIVE COLUMNS", "AUTO // \(sens.filter(\.hidden).count) COLUMNS HIDDEN")
+                CapsLabel("SENSITIVE COLUMNS", "AUTO · \(sens.filter(\.hidden).count) COLUMNS HIDDEN")
                 Spacer()
                 if m.connections.count > 1 {
                     HTSegmented(selection: Binding(get: { conn?.id ?? "" }, set: { sensConn = $0; loadSens() }), options: m.connections.map { (value: $0.id, title: $0.name.uppercased()) })
                 } else if let c = conn { Text(c.name.uppercased()).ht(.labelSmall).foregroundStyle(HT.C.ink3) }
             }
             if sens.isEmpty {
-                Text("NONE YET // COLUMNS MATCHING email, phone, ssn, address, name, token, password, iban, dob ARE MARKED ON THE FIRST SCHEMA LOAD").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                Text("NONE YET · COLUMNS MATCHING email, phone, ssn, address, name, token, password, iban, dob ARE MARKED ON THE FIRST SCHEMA LOAD").ht(.labelSmall).foregroundStyle(HT.C.ink3)
             }
             ForEach(sens) { s in sensRow(s) }
             Text("Agents get «redacted» (COUNT and other numeric aggregates still work). Unmark per column; redaction happens in DBMan before rows leave the socket.").ht(.bodySmall).foregroundStyle(HT.C.ink3)
@@ -158,13 +158,13 @@ struct ActivityPane: View {
                     CapsLabel("CLIENT")
                     HTSegmented(selection: $client, options: [(String?.none, "ALL")] + m.agents.map { (value: String?.some($0.id), title: $0.id.uppercased()) })
                     Spacer()
-                    Text("LIVE // REFRESHES ON EVERY CALL").ht(.labelSmall).foregroundStyle(HT.C.accent)
+                    Text("LIVE · REFRESHES ON EVERY CALL").ht(.labelSmall).foregroundStyle(HT.C.accent)
                 }.padding(8)
                 ActivityFeed(rows: rows, approvals: ApprovalCenter.shared.pending.filter { client == nil || $0.agent == client }, showConnection: true, open: $open)
                 HStack(spacing: 14) {
                     ForEach(["ok", "overlay", "blocked", "denied", "error"], id: \.self) { s in
                         let n = rows.filter { $0.status == s }.count
-                        Text("\(s.uppercased()) // \(n)").ht(.labelSmall).foregroundStyle(n > 0 && ["blocked", "denied", "error"].contains(s) ? HT.C.alert : HT.C.ink3)
+                        Text("\(s.uppercased()) · \(n)").ht(.labelSmall).foregroundStyle(n > 0 && ["blocked", "denied", "error"].contains(s) ? HT.C.alert : HT.C.ink3)
                     }
                     Spacer()
                 }
@@ -233,12 +233,16 @@ struct AgentsInspector<Row: View>: View {
     @State private var open: Int64?
 
     var body: some View {
-        VStack(spacing: HT.M.gap) {
+        VStack(spacing: HT.M.seam) {
+            // the switcher is the panel's own header strip: same paper, flush, one shared hairline with the panel below
             HStack {
                 HTSegmented(selection: $tab, options: [(0, "ROW"), (1, "AGENTS")])
                 Spacer()
                 if tab == 1 { PauseButton() }
             }
+            .padding(.horizontal, 8).frame(height: 34)
+            .background(HT.C.paper)
+            .overlay(Rectangle().strokeBorder(HT.C.line, lineWidth: HT.M.hairline))
             if tab == 0 { row } else {
                 let rows = AgentsModel.shared.activity.filter { $0.connectionId == ws.profile.id.uuidString } // shortcut: newest 200 calls overall, page per connection if a busy agent pushes this one out
                 let waiting = ApprovalCenter.shared.pending.filter { $0.connection == nil || $0.connection == ws.profile.id.uuidString }
@@ -254,7 +258,7 @@ struct AgentsChip: View {
     var body: some View {
         let n = MCPHost.shared.live.count
         Button { openWindow(id: "agents") } label: {
-            HStack(spacing: 5) { Text("Agents"); Text("//").foregroundStyle(HT.C.ink3); Text("\(n) live").foregroundStyle(n > 0 ? HT.C.accent : HT.C.ink3) }
+            HStack(spacing: 5) { Text("Agents"); HTDivider(); Text("\(n) live").foregroundStyle(n > 0 ? HT.C.accent : HT.C.ink3) }
                 .ht(.labelSmall).padding(.horizontal, 8).frame(height: 22)
                 .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(n > 0 ? HT.C.accent : HT.C.line, lineWidth: 1))
                 .contentShape(Rectangle())

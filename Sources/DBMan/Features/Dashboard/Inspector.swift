@@ -8,7 +8,7 @@ struct Inspector: View {
     private var m: DashboardModel { ws.dash }
 
     var body: some View {
-        HTFrame(title: m.widget(m.selected).map { "\($0.id) // \($0.type)" } ?? "Dashboard", tail: m.widget(m.selected) == nil ? "Variables" : nil, accessory: {
+        HTFrame(title: m.widget(m.selected).map { "\($0.id) · \($0.type)" } ?? "Dashboard", tail: m.widget(m.selected) == nil ? "Variables" : nil, accessory: {
             if m.selected != nil { Button("DONE ⏎") { m.selected = nil }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: []) }
         }) {
             ScrollView {
@@ -88,7 +88,7 @@ private struct WidgetInspector: View {
                 .frame(height: 104).overlay(Rectangle().strokeBorder(HT.C.line, lineWidth: 1))
             HStack {
                 Button("RUN ⌘⏎") { run() }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)
-                if let t = result { Text("\(t.rows.count) ROWS // \(Int(t.ms)) MS").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
+                if let t = result { Text("\(t.rows.count) ROWS · \(Int(t.ms)) MS").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
             }
             if case .failed(let e)? = m.data[w.id] { Text(e).ht(.dataSmall).foregroundStyle(HT.C.alert) }
         } else {
@@ -161,7 +161,7 @@ private struct WidgetInspector: View {
     }
 
     @ViewBuilder private var thresholds: some View {
-        section("Thresholds // colour is a signal")
+        section("Thresholds · colour is a signal")
         ForEach(Array((w.thresholds ?? []).enumerated()), id: \.offset) { i, t in
             HStack(spacing: 6) {
                 Picker("", selection: Binding(get: { t.op }, set: { o in setThreshold(i) { $0.op = o } })) { ForEach(["<", "<=", ">", ">=", "=="], id: \.self) { Text($0).tag($0) } }.labelsHidden().frame(width: 56)
@@ -176,7 +176,7 @@ private struct WidgetInspector: View {
     private func setThreshold(_ i: Int, _ body: (inout DashThreshold) -> Void) { m.update(w.id, ws) { if $0.thresholds?.indices.contains(i) == true { body(&$0.thresholds![i]) } } }
 
     @ViewBuilder private var size: some View {
-        section("Size // 12 cols · row 72 pt")
+        section("Size · 12 cols · row 72 pt")
         HStack(spacing: 14) {
             stepper("W", w.w) { m.place(w.id, x: w.x, y: w.y, w: $0, h: w.h) }
             stepper("H", w.h) { m.place(w.id, x: w.x, y: w.y, w: w.w, h: $0) }

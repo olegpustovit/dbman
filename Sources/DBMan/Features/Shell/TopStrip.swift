@@ -47,8 +47,8 @@ struct TopStrip: View {
         }
         .padding(.horizontal, 8)
         .frame(height: HT.M.topStrip)
-        .background(HT.C.paper, in: RoundedRectangle(cornerRadius: HT.M.radius))
-        .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
+        .background(HT.C.paper)
+        // no own border: the panels below draw their 0.5 pt top edge, which is the one line between toolbar and content
     }
 
     /// Internal store only (Internal board): SYSTEM tag, lock state, and the ⌥-click unlock (unlockWrites refuses a plain click).
@@ -78,7 +78,7 @@ struct TopStrip: View {
     private var readout: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
             let ver = ws.schema?.serverVersion ?? ""
-            var parts = ["SESSION // \(ws.profile.name)"]
+            var parts = ["SESSION · \(ws.profile.name)"]
             if !ver.isEmpty { parts.append(ver) }
             if case .connected(let ms) = ws.state { parts.append("\(Int(ms.rounded())) MS") }
             parts.append(ctx.date.formatted(date: .omitted, time: .standard))

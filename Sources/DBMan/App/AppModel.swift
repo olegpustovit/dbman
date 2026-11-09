@@ -19,6 +19,8 @@ final class AppModel {
     var relativeDates = false { didSet { if relativeDates != oldValue && !reloading { save("relative_dates", String(relativeDates)) } } }
     /// PAUSE ALL AGENTS: every MCP call returns APP_LOCKED (the tool service reads the same setting).
     var agentsPaused = false { didSet { if agentsPaused != oldValue && !reloading { save("agents_paused", String(agentsPaused)) } } }
+    /// Navigator table order: name | rows | size (persisted, every connection).
+    var tableSort = "name" { didSet { if tableSort != oldValue && !reloading { save("table_sort", "\"\(tableSort)\"") } } }
     /// Open workspaces keyed by profile id (one window each).
     var workspaces: [UUID: WorkspaceModel] = [:]
     /// Set by the UI layer so model code can open windows.
@@ -51,6 +53,7 @@ final class AppModel {
         pageSize = store.setting("page_size").flatMap(Int.init) ?? 500
         relativeDates = store.setting("relative_dates") == "true"
         agentsPaused = store.setting("agents_paused") == "true"
+        tableSort = store.setting("table_sort").map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "\"")) }.flatMap { ["name", "rows", "size"].contains($0) ? $0 : nil } ?? "name"
         ApprovalCenter.shared.refresh(store)
         AgentsModel.shared.reload(store) // activity, permissions and the roster live in the same file
     }
@@ -74,6 +77,7 @@ final class AppModel {
         var r = ConnectionRow(id: p.id.uuidString, name: p.name, engine: p.engine.rawValue)
         r.host = p.host; r.port = p.port; r.database = p.database; r.user = p.user; r.sslMode = p.sslMode.rawValue; r.sslRootCert = p.sslRootCert
         r.env = p.environment.rawValue; r.filePath = p.filePath; r.readOnly = p.openReadOnly; r.stageWrites = p.stageWrites; r.lastOpened = p.lastOpened
+        r.sshHost = p.ssh?.host; r.sshUser = p.ssh?.user; r.sshPort = p.ssh?.port; r.sshIdentity = p.ssh?.identityFile
         return r
     }
 

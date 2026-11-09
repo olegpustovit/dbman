@@ -1,37 +1,84 @@
 import Foundation
 
+/// The stages `DatabaseSession.connect` reports while it works (the app adds schema / dashboard stages of its own).
+public enum ConnectStage: String, Sendable { case tunnel, handshake }
+public enum ConnectEvent: Sendable, Equatable {
+    case started(ConnectStage)
+    case finished(ConnectStage, String)
+}
+/// Called from whatever task runs `connect`; hop to your own actor before touching UI state.
+public typealias ConnectProgress = @Sendable (ConnectEvent) -> Void
+/// A short human line about the schema read in progress ("88 tables · reading columns (2/5)").
+public typealias SchemaProgress = @Sendable (String) -> Void
+
 /// One open connection. Owns the driver, the read-only lock and the staged ChangeSet.
 public actor DatabaseSession {
     public let profile: ConnectionProfile
     public let driver: any DatabaseDriver
     public private(set) var writesUnlocked: Bool
     public private(set) var changes = ChangeSet()
+    /// The SSH child this session owns when the profile has `ssh`; closed with the session.
+    public nonisolated let tunnel: SSHTunnelProcess?
 
-    public init(profile: ConnectionProfile, driver: any DatabaseDriver) {
+    public init(profile: ConnectionProfile, driver: any DatabaseDriver, tunnel: SSHTunnelProcess? = nil) {
         self.profile = profile
         self.driver = driver
+        self.tunnel = tunnel
         self.writesUnlocked = !profile.startsReadOnly
     }
 
+    /// False once the session's SSH tunnel has died (callers reopen the session).
+    public nonisolated var isHealthy: Bool { tunnel?.isAlive ?? true }
+
     /// Opens a session for a profile. Password comes from the caller (Keychain lives in the app).
-    public static func connect(_ profile: ConnectionProfile, password: String?) async throws -> DatabaseSession {
-        let driver: any DatabaseDriver
-        switch profile.engine {
-        case .sqlite:
-            guard let path = profile.filePath else { throw DBError.connection("No SQLite file path") }
-            driver = try SQLiteDriver(path: path, readOnly: profile.openReadOnly) // the session lock guards writes; opening the file read-write lets Unlock work
-        case .postgres:
-            driver = try await PostgresDriver.connect(profile, password: password)
-        case .mysql:
-            driver = try await MySQLDriver.connect(profile, password: password)
+    /// With `profile.ssh`, an SSH tunnel is opened first and the driver talks to its loopback end.
+    public static func connect(_ profile: ConnectionProfile, password: String?, progress: ConnectProgress? = nil) async throws -> DatabaseSession {
+        var target = profile
+        var tunnel: SSHTunnelProcess?
+        var serverName: String?
+        if let ssh = profile.ssh {
+            guard profile.engine != .sqlite else { throw DBError.unsupported("SSH tunnels are for server databases, not SQLite files") }
+            progress?(.started(.tunnel))
+            let t = try await SSHTunnelProcess.open(ssh, targetHost: profile.host.isEmpty ? "localhost" : profile.host, targetPort: profile.port)
+            tunnel = t
+            progress?(.finished(.tunnel, "127.0.0.1:\(t.localPort) ⇄ \(profile.host):\(profile.port) via \(ssh.display)"))
+            // TLS still checks the database's own name, not the loopback end
+            if !profile.host.isEmpty, !["localhost", "127.0.0.1", "::1"].contains(profile.host), profile.host.first?.isLetter == true { serverName = profile.host }
+            target.host = "127.0.0.1"; target.port = t.localPort; target.ssh = nil
         }
-        let session = DatabaseSession(profile: profile, driver: driver)
+        let driver: any DatabaseDriver
+        progress?(.started(.handshake))
+        do {
+            switch profile.engine {
+            case .sqlite:
+                guard let path = profile.filePath else { throw DBError.connection("No SQLite file path") }
+                driver = try SQLiteDriver(path: path, readOnly: profile.openReadOnly) // the session lock guards writes; opening the file read-write lets Unlock work
+            case .postgres:
+                driver = try await PostgresDriver.connect(target, password: password, serverName: serverName)
+            case .mysql:
+                driver = try await MySQLDriver.connect(target, password: password, serverName: serverName)
+            }
+        } catch {
+            tunnel?.close()
+            if let tunnel, case DBError.connection(let m) = error {
+                throw DBError.connection("\(m) (through SSH \(tunnel.tunnel.display) to \(profile.host):\(profile.port))")
+            }
+            throw error
+        }
+        progress?(.finished(.handshake, profile.engine == .sqlite ? "opened \((profile.filePath ?? "") as NSString).lastPathComponent)" : "authenticated as \(profile.user.isEmpty ? "default user" : profile.user)"))
+        let session = DatabaseSession(profile: profile, driver: driver, tunnel: tunnel)
         if profile.startsReadOnly { await session.lockWrites() }
         return session
     }
 
     // MARK: read
     public func schema() async throws -> SchemaSnapshot { try await driver.schema() }
+    /// Same, reporting each part of the catalogue read where the driver can (Postgres); others report once.
+    public func schema(progress: SchemaProgress?) async throws -> SchemaSnapshot {
+        if let pg = driver as? PGDriver { return try await pg.schema(progress: progress) }
+        progress?("reading catalogue")
+        return try await driver.schema()
+    }
 
     public func run(_ sql: String, limit: Int = 10_000) async throws -> QueryResult {
         if !writesUnlocked && SQLClassifier.isWrite(sql) { throw DBError.readOnly }
@@ -93,7 +140,7 @@ public actor DatabaseSession {
         changes = ChangeSet()
     }
 
-    public func close() async { await driver.close() }
+    public func close() async { await driver.close(); tunnel?.close() }
 }
 
 /// Very small SQL classifier (first keyword), enough to guard writes.

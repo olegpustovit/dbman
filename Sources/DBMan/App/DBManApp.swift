@@ -12,6 +12,7 @@ struct DBManApp: App {
         // Connections window (02 · Connections)
         Window("Connections", id: "connections") {
             ConnectionsView()
+                .windowChrome("Connections")
                 .environment(app)
                 .frame(minWidth: 860, minHeight: 560)
         }
@@ -20,6 +21,7 @@ struct DBManApp: App {
 
         Window("Agents", id: "agents") {
             AgentsWindow()
+                .windowChrome("Agents")
                 .environment(app)
                 .frame(minWidth: 960, minHeight: 600)
         }
@@ -61,7 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let wanted: NSApplication.ActivationPolicy = shown || !ApprovalCenter.shared.pending.isEmpty ? .regular : .accessory
         if NSApp.activationPolicy() != wanted { NSApp.setActivationPolicy(wanted) }
     }
-    func applicationWillTerminate(_ notification: Notification) { MCPHost.shared.stop() }
+    func applicationWillTerminate(_ notification: Notification) { MCPHost.shared.stop(); SSHTunnelProcess.closeAll() }
     func application(_ application: NSApplication, open urls: [URL]) {
         // Dropping a .sqlite on the Dock icon opens it.
         Task { @MainActor in for url in urls { AppModel.shared.openFile(url) } }

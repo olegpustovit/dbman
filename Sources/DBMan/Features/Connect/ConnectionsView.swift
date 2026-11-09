@@ -21,7 +21,7 @@ struct ConnectionsView: View {
     private var editorKey: String { isNew ? "new-\(newCount)" : (selectedID?.uuidString ?? "none") }
 
     var body: some View {
-        HStack(spacing: HT.M.gap) {
+        HStack(spacing: HT.M.seam) {
             HTFrame(title: "SAVED", tail: String(format: "%02d", app.profiles.count)) {
                 VStack(spacing: 0) {
                     ScrollView {
@@ -30,7 +30,7 @@ struct ConnectionsView: View {
                                 let items = app.profiles.filter { $0.environment == env }
                                 HStack(spacing: 6) {
                                     Text(env.rawValue.uppercased()).ht(.label).foregroundStyle(env == .production ? HT.C.amber : HT.C.ink)
-                                    Text("// \(String(format: "%02d", items.count))").ht(.label).foregroundStyle(HT.C.ink3)
+                                    Text("\(String(format: "%02d", items.count))").ht(.label).foregroundStyle(HT.C.ink3)
                                     Rectangle().fill(HT.C.line).frame(height: 1)
                                 }
                                 .padding(.top, 6)
@@ -40,7 +40,7 @@ struct ConnectionsView: View {
                                 Spacer(minLength: 12)
                                 HStack(spacing: 6) {
                                     Text("SYSTEM").ht(.label)
-                                    Text("// 01 · PINNED").ht(.label).foregroundStyle(HT.C.ink3)
+                                    Text("01 · PINNED").ht(.label).foregroundStyle(HT.C.ink3)
                                     Rectangle().fill(HT.C.line).frame(height: 1)
                                 }
                                 row(internalStore)
@@ -53,7 +53,7 @@ struct ConnectionsView: View {
             }
             .frame(width: 260)
 
-            VStack(spacing: HT.M.gap) {
+            VStack(spacing: HT.M.seam) {
                 if app.profiles.allSatisfy({ $0.environment == .system }) { firstRun }
                 Group {
                     if let p = selected, p.environment == .system { internalPane(p) } else {
@@ -95,10 +95,10 @@ struct ConnectionsView: View {
 
     /// First run (no connection yet): three ways in. The agent card is G16.
     private var firstRun: some View {
-        HStack(spacing: HT.M.gap) {
-            OptionTile(title: "NEW CONNECTION", subtitle: "POSTGRES // MYSQL // SQLITE", isSelected: false) { newCount += 1; isNew = true }
-            OptionTile(title: "TRY A SAMPLE DATABASE", subtitle: "SQLITE // NOTHING TO SET UP", isSelected: false) { if let id = app.ensureSampleDatabase() { openWindow(value: id) } }
-            OptionTile(title: "CONNECT AN AGENT", subtitle: "CLAUDE CODE // CODEX // CURSOR // ⌘⇧A", isSelected: false) { openWindow(id: "agents") }
+        HStack(spacing: HT.M.seam) {
+            OptionTile(title: "NEW CONNECTION", subtitle: "POSTGRES · MYSQL · SQLITE", isSelected: false, arrow: true) { newCount += 1; isNew = true }
+            OptionTile(title: "TRY A SAMPLE DATABASE", subtitle: "SQLITE · NOTHING TO SET UP", isSelected: false, arrow: true) { if let id = app.ensureSampleDatabase() { openWindow(value: id) } }
+            OptionTile(title: "CONNECT AN AGENT", subtitle: "CLAUDE CODE · CODEX · CURSOR  ⌘⇧A", isSelected: false, arrow: true) { openWindow(id: "agents") }
         }
     }
 
@@ -164,7 +164,7 @@ struct ConnectionsView: View {
     }
 
     private func internalPane(_ p: ConnectionProfile) -> some View {
-        HTFrame(title: "CONNECTION", tail: "\(p.name) // SYSTEM") {
+        HTFrame(title: "CONNECTION", tail: "\(p.name) · SYSTEM") {
             VStack(alignment: .leading, spacing: 10) {
                 Text("DBMan\u{2019}s own SQLite store: settings, connections, layers and, later, agent activity. Agents can never see it.")
                     .ht(.bodySmall).foregroundStyle(HT.C.ink2)

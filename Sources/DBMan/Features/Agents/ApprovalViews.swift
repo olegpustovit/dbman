@@ -17,10 +17,10 @@ struct Monogram: View {
 struct ApprovalDialog: View {
     let a: ApprovalRow
     var body: some View {
-        if a.kind == "credentials" { CredentialSheet(a: a) } else {
+        if a.kind == "credentials" || a.kind == "update" { CredentialSheet(a: a) } else {
             VStack(alignment: .leading, spacing: 10) {
                 ApprovalCard(a: a)
-                HStack { Spacer(); Button("Later // esc") { ApprovalCenter.shared.dismiss() }.buttonStyle(.htOutline).keyboardShortcut(.cancelAction) }
+                HStack { Spacer(); Button("Later  esc") { ApprovalCenter.shared.dismiss() }.buttonStyle(.htOutline).keyboardShortcut(.cancelAction) }
             }.padding(14).frame(width: 520).background(HT.C.paper)
         }
     }
@@ -42,21 +42,32 @@ struct CredentialSheet: View {
 
     private var engine: Engine { Engine(rawValue: a.field("engine") ?? "") ?? .postgres }
     private var name: String { a.field("name") ?? "connection" }
-    private var profile: ConnectionProfile {
-        ConnectionProfile(name: name, engine: engine, host: a.field("host") ?? "", port: a.field("port").flatMap(Int.init), database: a.field("database") ?? "", user: a.field("user") ?? "",
-                          filePath: a.field("file_path"), sslMode: SSLMode(rawValue: a.field("ssl_mode") ?? "") ?? .prefer, environment: env)
+    /// `update`: the agent proposes new settings for an existing connection (same id, layers and Keychain item).
+    private var isUpdate: Bool { a.kind == "update" }
+    private var existing: ConnectionProfile? { isUpdate ? a.field("connection_id").flatMap(UUID.init(uuidString:)).flatMap(app.profile) : nil }
+    private var ssh: SSHTunnel? {
+        a.field("ssh_host").map { SSHTunnel(host: $0, user: a.field("ssh_user"), port: a.field("ssh_port").flatMap(Int.init), identityFile: a.field("ssh_identity")) }
     }
+    private var profile: ConnectionProfile {
+        var p = existing ?? ConnectionProfile(name: name, engine: engine)
+        p.name = name; p.engine = engine; p.host = a.field("host") ?? ""; p.port = a.field("port").flatMap(Int.init) ?? engine.defaultPort
+        p.database = a.field("database") ?? ""; p.user = a.field("user") ?? ""; p.filePath = a.field("file_path")
+        p.sslMode = SSLMode(rawValue: a.field("ssl_mode") ?? "") ?? .prefer; p.environment = env; p.ssh = ssh
+        return p
+    }
+    /// A blank password on an update keeps the saved one.
+    private var effectivePassword: String? { !password.isEmpty ? password : existing.flatMap { Keychain.password(for: $0) } }
     private var envOptions: [(value: EnvironmentTag, title: String)] { EnvironmentTag.allCases.filter { $0 != .system }.map { (value: $0, title: $0.rawValue.uppercased()) } }
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) { Monogram(text: a.mono); CapsLabel("\(a.who) wants to add a connection") }
+            HStack(spacing: 8) { Monogram(text: a.mono); CapsLabel("\(a.who) wants to \(isUpdate ? "change" : "add") a connection") }
                 .padding(.horizontal, 12).frame(height: HT.M.frameHeader + 6)
             Rectangle().fill(HT.C.line).frame(height: 1)
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(name).font(.system(size: 15, weight: .semibold))
-                    Text("// \(engine.displayName.uppercased()) // FROM THE AGENT").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                    Text("\(engine.displayName.uppercased()) · FROM THE AGENT").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                 }
                 Text(ConnectionURL.format(profile)).ht(.dataSmall).lineLimit(1).truncationMode(.middle)
                     .padding(.horizontal, 8).frame(height: 30).frame(maxWidth: .infinity, alignment: .leading)
@@ -68,13 +79,17 @@ struct CredentialSheet: View {
                     } else {
                         row("HOST", profile.host, "PORT", String(profile.port))
                         row("DATABASE", profile.database, "USER", profile.user)
+                        row("SSH", profile.ssh.map { "via \($0.display)\($0.identityFile.map { " · key " + ($0 as NSString).lastPathComponent } ?? "") · DBMan opens the tunnel" } ?? "direct (no tunnel)")
+                    }
+                    if isUpdate, let old = existing, ConnectionURL.format(old) != ConnectionURL.format(profile) || old.name != profile.name {
+                        row("WAS", ConnectionURL.format(old) + (old.name != profile.name ? " · \(old.name)" : ""))
                     }
                     GridRow { CapsLabel("TAG").foregroundStyle(HT.C.ink3); HTSegmented(selection: $env, options: envOptions).gridCellColumns(3) }
                     if engine != .sqlite {
                         GridRow {
                             CapsLabel("PASSWORD").foregroundStyle(HT.C.ink3)
                             HStack(spacing: 8) {
-                                SecureField("typed here, stored in Keychain", text: $password).textFieldStyle(.plain).ht(.bodySmall).accessibilityLabel("Password for \(profile.user)")
+                                SecureField(isUpdate ? "blank = keep the saved password" : "typed here, stored in Keychain", text: $password).textFieldStyle(.plain).ht(.bodySmall).accessibilityLabel("Password for \(profile.user)")
                                 Text("→ KEYCHAIN").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                             }
                             .padding(.horizontal, 8).frame(height: 26)
@@ -94,11 +109,11 @@ struct CredentialSheet: View {
             }.padding(12)
             Rectangle().fill(HT.C.line).frame(height: 1)
             HStack(spacing: 8) {
-                Text("SAVED TO // \(env.rawValue.uppercased())").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                Text("SAVED TO · \(env.rawValue.uppercased())").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                 Spacer()
-                Button("Later // esc") { ApprovalCenter.shared.dismiss() }.buttonStyle(.htOutline).keyboardShortcut(.cancelAction)
+                Button("Later  esc") { ApprovalCenter.shared.dismiss() }.buttonStyle(.htOutline).keyboardShortcut(.cancelAction)
                 Button("Reject") { ApprovalCenter.shared.decide(a, "rejected", note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? [:] : ["note": note.trimmingCharacters(in: .whitespacesAndNewlines)]) }.buttonStyle(.htDestructive)
-                Button("Save // ⌘S") { save() }.buttonStyle(.htPrimary).keyboardShortcut("s")
+                Button("Save  ⌘S") { save() }.buttonStyle(.htPrimary).keyboardShortcut("s")
             }.padding(.horizontal, 12).frame(height: 44)
         }
         .frame(width: 460).background(HT.C.paper)
@@ -118,7 +133,7 @@ struct CredentialSheet: View {
     }
 
     private func test() {
-        let p = profile, pw = password.isEmpty ? nil : password
+        let p = profile, pw = effectivePassword
         testing = true; reached = nil; problem = nil
         Task {
             defer { testing = false }
@@ -127,6 +142,7 @@ struct CredentialSheet: View {
     }
 
     private func save() {
+        if isUpdate, existing == nil { problem = "That connection no longer exists"; return }
         let p = profile
         app.upsert(p)
         if !password.isEmpty { Keychain.save(password, for: p) }
@@ -144,21 +160,21 @@ struct ApprovalCard: View {
         VStack(alignment: .leading, spacing: 7) {
             HStack(spacing: 8) {
                 Monogram(text: a.mono)
-                CapsLabel(block ? "Prod guard override" : a.kind == "remove" ? "Remove connection" : "Add connection").foregroundStyle(block ? HT.C.amber : HT.C.accent)
+                CapsLabel(block ? "Prod guard override" : a.kind == "remove" ? "Remove connection" : a.kind == "update" ? "Change connection" : "Add connection").foregroundStyle(block ? HT.C.amber : HT.C.accent)
                 Spacer()
                 TimelineView(.periodic(from: .now, by: 1)) { c in Text("EXPIRES IN \(ApprovalCenter.countdown(a.expiresAt, now: c.date))").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
             }
             if block {
                 HStack(spacing: 8) {
                     Text("BLOCKED_BY_PROD_GUARD").ht(.labelSmall).foregroundStyle(HT.C.alert)
-                    Text("// \(a.who) · \(a.connectionName) · \(a.field("reason") ?? "")").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(2)
+                    Text("\(a.who) · \(a.connectionName) · \(a.field("reason") ?? "")").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(2)
                 }
                 Text(a.field("sql") ?? "").ht(.dataSmall).textSelection(.enabled).lineLimit(6).padding(8).frame(maxWidth: .infinity, alignment: .leading)
                     .background(HT.C.sunken, in: RoundedRectangle(cornerRadius: HT.M.radius))
                 if let hint = a.field("hint") { HStack(spacing: 8) { CapsLabel("Suggest").foregroundStyle(HT.C.ink3); Text(hint).ht(.bodySmall).foregroundStyle(HT.C.ink2).lineLimit(2) } }
                 HStack(spacing: 6) {
                     Button("Allow once") { center.allowOnce(a) }.buttonStyle(.htOutline).foregroundStyle(HT.C.amber).help("Let \(a.who) run this one statement once")
-                    Button("Raise timeout // \(a.field("timeout_ms").flatMap(Int.init).map { $0 / 1000 } ?? 5) s → \(ApprovalCenter.raisedTimeoutMs / 1000) s") { center.raiseTimeout(a) }
+                    Button("Raise timeout · \(a.field("timeout_ms").flatMap(Int.init).map { $0 / 1000 } ?? 5) s → \(ApprovalCenter.raisedTimeoutMs / 1000) s") { center.raiseTimeout(a) }
                         .buttonStyle(.htOutline).help("Raise the statement timeout for this agent on \(a.connectionName)")
                     Spacer()
                     Button("Keep blocked") { center.decide(a, "rejected") }.buttonStyle(.htPrimary)

@@ -12,14 +12,14 @@ public enum HTTone: Equatable {
     }
 }
 
-/// `LABEL // value` — text only, no dots or pills.
+/// `LABEL │ value` — text with a hairline divider, no dots or pills.
 public struct StatusText: View {
     let label: String, value: String, tone: HTTone
     public init(label: String, value: String, tone: HTTone = .normal) { self.label = label; self.value = value; self.tone = tone }
     public var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             Text(label).foregroundStyle(HT.C.ink3)
-            Text("//").foregroundStyle(HT.C.ink3)
+            HTDivider()
             Text(value).foregroundStyle(tone.color)
         }
         .ht(.labelSmall).lineLimit(1)

@@ -16,8 +16,8 @@ struct SchemaMapView: View {
 
     var body: some View {
         @Bindable var map = ws.map
-        HStack(spacing: HT.M.gap) {
-            VStack(spacing: HT.M.gap) {
+        HStack(spacing: HT.M.seam) {
+            VStack(spacing: HT.M.seam) {
                 HTFrame(title: "Schema map", tail: caption, accessory: { header(map) }) {
                     VStack(spacing: 0) {
                         options(map)
@@ -78,9 +78,9 @@ struct SchemaMapView: View {
             }
             Spacer(minLength: 0)
             layerToggles.fixedSize()
-            Button("−") { map.zoom(by: 1 / 1.25, in: vpSize) }.buttonStyle(.htOutline).keyboardShortcut("-").help("Zoom out  ⌘−")
-            Text("\(Int(((map.viewport ?? map.fit(in: vpSize)).zoom * 100).rounded())) %").ht(.dataSmall).frame(minWidth: 44)
-            Button("+") { map.zoom(by: 1.25, in: vpSize) }.buttonStyle(.htOutline).keyboardShortcut("=").help("Zoom in  ⌘+")
+            Button("−") { map.zoom(by: 1 / 1.25, in: map.canvasSize) }.buttonStyle(.htOutline).keyboardShortcut("-").help("Zoom out  ⌘−")
+            ZoomReadout(map: map).ht(.dataSmall).frame(minWidth: 44)
+            Button("+") { map.zoom(by: 1.25, in: map.canvasSize) }.buttonStyle(.htOutline).keyboardShortcut("=").help("Zoom in  ⌘+")
             Button("Fit F") { map.viewport = nil }.buttonStyle(.htOutline).help("Fit to window  F")
         }
         .padding(.horizontal, 10).frame(height: 32)
@@ -101,57 +101,14 @@ struct SchemaMapView: View {
 
     // MARK: viewport
 
-    @State private var vpSize: CGSize = .init(width: 900, height: 600)
-    @State private var panStart: MapViewport?
-    @State private var zoomStart: MapViewport?
-
+    /// The canvas lives in its own view: only it (and the two zoom readouts) observe `viewport`, so a pan frame does not re-render the toolbar or inspector.
     private var viewportView: some View {
-        GeometryReader { geo in
-            let vp = map.viewport ?? map.fit(in: geo.size)
-            let path = map.path
-            let style = MapStyle(selection: map.selection, dimmed: map.dimmed, onPath: map.onPath,
-                                 pathIndex: Dictionary(uniqueKeysWithValues: (path?.tables ?? []).enumerated().map { ($1, $0) }).merging(
-                                    path == nil ? Dictionary(uniqueKeysWithValues: map.pathPicks.enumerated().map { ($1, $0) }) : [:]) { a, _ in a }, interactive: map)
-            ZStack(alignment: .bottomTrailing) {
-                Canvas { ctx, size in // 16 pt dot grid that moves with the world
-                    let g = 16 * vp.zoom
-                    guard g > 6 else { return }
-                    var p = Path()
-                    for x in stride(from: vp.origin.x.truncatingRemainder(dividingBy: g), to: size.width, by: g) {
-                        for y in stride(from: vp.origin.y.truncatingRemainder(dividingBy: g), to: size.height, by: g) { p.addRect(CGRect(x: x - 0.4, y: y - 0.4, width: 0.8, height: 0.8)) }
-                    }
-                    ctx.fill(p, with: .color(HT.C.fill30))
-                }
-                .contentShape(Rectangle())
-                .gesture(DragGesture(minimumDistance: 2).onChanged { g in
-                    let s = panStart ?? vp; panStart = s
-                    map.viewport = MapViewport(zoom: s.zoom, origin: CGPoint(x: s.origin.x + g.translation.width, y: s.origin.y + g.translation.height))
-                }.onEnded { _ in panStart = nil })
-                .onTapGesture { map.selection = nil; canvasFocus = true }
-                MapWorld(scene: map.scene, style: style, viewport: vp)
-                if map.scene.graph.tables.isEmpty { Text("No tables match").ht(.label).foregroundStyle(HT.C.ink3).frame(maxWidth: .infinity, maxHeight: .infinity) }
-                MiniMap(map: map, viewport: vp, size: geo.size).padding(10).padding(.bottom, map.pathMode && map.pathPicks.count == 2 ? 172 : 0)
-                WheelCatcher { dx, dy, cmd, at in
-                    if cmd { map.zoom(by: exp(dy * 0.01), in: geo.size, anchor: at) }
-                    else { map.viewport = MapViewport(zoom: vp.zoom, origin: CGPoint(x: vp.origin.x + dx, y: vp.origin.y + dy)) }
-                }.allowsHitTesting(false)
-                if map.pathMode && map.pathPicks.count == 2 { PathDrawer(ws: ws, map: map, path: path).frame(height: 172).frame(maxHeight: .infinity, alignment: .bottom) }
-                if map.exportOpen { ExportPopover(ws: ws, map: map).padding(.top, 4).padding(.trailing, 10).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing) }
-                if map.agentOpen { AgentPopover(ws: ws, map: map).padding(.top, 4).padding(.trailing, 10).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing) }
-            }
-            .clipped()
-            .onAppear { vpSize = geo.size }
-            .onChange(of: geo.size) { _, s in vpSize = s }
-            .gesture(MagnifyGesture().onChanged { v in
-                let s = zoomStart ?? vp; zoomStart = s
-                map.viewport = MapViewport(zoom: (s.zoom * v.magnification).clamped(0.25, 4), origin: s.origin)
-            }.onEnded { _ in zoomStart = nil })
-        }
-        .focusable().focused($canvasFocus).focusEffectDisabled()
-        .onAppear { canvasFocus = true }
-        .onKeyPress(phases: .down) { press in key(press) }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Schema map, \(map.scene.graph.tables.count) tables")
+        MapCanvasView(ws: ws, map: map, onBackgroundTap: { canvasFocus = true })
+            .focusable().focused($canvasFocus).focusEffectDisabled()
+            .onAppear { canvasFocus = true }
+            .onKeyPress(phases: .down) { press in key(press) }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Schema map, \(map.scene.graph.tables.count) tables")
     }
 
     private func key(_ p: KeyPress) -> KeyPress.Result {
@@ -184,8 +141,12 @@ struct SchemaMapView: View {
         let declared = g.edges.filter { $0.kind == .declared && !$0.manyToMany }.count, inferred = g.edges.filter { $0.kind == .inferred }.count
         let virtual = g.edges.filter { $0.kind == .virtual }.count
         return HStack(spacing: 14) {
-            Text("\(g.tables.count == total ? "\(total)" : "\(g.tables.count) of \(total)") tables // \(declared + virtual) relations // \(inferred) inferred" + (virtual > 0 ? " // \(virtual) virtual // mine" : "")).ht(.labelSmall)
-            Text("\(map.kind.rawValue) · \(map.detail.rawValue) · \(Int(((map.viewport ?? map.fit(in: vpSize)).zoom * 100).rounded())) %" + (map.selection.map { " · selected \($0)" } ?? "")).ht(.labelSmall).foregroundStyle(HT.C.ink3)
+            Text("\(g.tables.count == total ? "\(total)" : "\(g.tables.count) of \(total)") tables · \(declared + virtual) relations · \(inferred) inferred" + (virtual > 0 ? " · \(virtual) virtual · mine" : "")).ht(.labelSmall)
+            HStack(spacing: 0) {
+                Text("\(map.kind.rawValue) · \(map.detail.rawValue) · ")
+                ZoomReadout(map: map)
+                Text(map.selection.map { " · selected \($0)" } ?? "")
+            }.ht(.labelSmall).foregroundStyle(HT.C.ink3)
             legend
             Spacer(minLength: 0)
             if let n = map.notice { Text(n).ht(.labelSmall).foregroundStyle(HT.C.alert) }
@@ -205,6 +166,81 @@ struct SchemaMapView: View {
             }
         }
         return HStack(spacing: 12) { swatch("declared", [], HT.C.ink); swatch("inferred", [3, 2], HT.C.accent); swatch("virtual", [6, 2, 1.5, 2], HT.C.ink) }.accessibilityHidden(true)
+    }
+}
+
+/// `74 %`: the only toolbar piece that follows the viewport.
+private struct ZoomReadout: View {
+    let map: SchemaMapState
+    var body: some View { Text("\(Int(((map.viewport ?? map.fit(in: map.canvasSize)).zoom * 100).rounded())) %").monospacedDigit() }
+}
+
+/// Dot grid + edges + cards + minimap + overlays. Pan and zoom write `map.viewport`; everything heavy underneath is cached or equatable.
+private struct MapCanvasView: View {
+    let ws: WorkspaceModel
+    let map: SchemaMapState
+    let onBackgroundTap: () -> Void
+    @State private var panStart: MapViewport?
+    @State private var zoomStart: MapViewport?
+
+    var body: some View {
+        GeometryReader { geo in
+            let vp = map.viewport ?? map.fit(in: geo.size)
+            let path = map.path
+            let style = MapStyle(selection: map.selection, dimmed: map.dimmedSet, onPath: map.pathEdgeKeys,
+                                 pathIndex: Dictionary(uniqueKeysWithValues: (path?.tables ?? []).enumerated().map { ($1, $0) }).merging(
+                                    path == nil ? Dictionary(uniqueKeysWithValues: map.pathPicks.enumerated().map { ($1, $0) }) : [:]) { a, _ in a },
+                                 neighbors: map.neighborsOfSelection, isolated: map.isolatedSet, interactive: map)
+            let _ = { map.liveZoom = vp.zoom }()
+            ZStack(alignment: .bottomTrailing) {
+                DotGrid(viewport: vp)
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(minimumDistance: 2).onChanged { g in
+                        let s = panStart ?? vp; panStart = s
+                        map.viewport = MapViewport(zoom: s.zoom, origin: CGPoint(x: s.origin.x + g.translation.width, y: s.origin.y + g.translation.height))
+                    }.onEnded { _ in panStart = nil })
+                    .onTapGesture { map.selection = nil; onBackgroundTap() }
+                MapWorld(scene: map.scene, style: style, viewport: vp, routes: map.routes, sceneRev: map.sceneRev)
+                if map.scene.graph.tables.isEmpty { Text("No tables match").ht(.label).foregroundStyle(HT.C.ink3).frame(maxWidth: .infinity, maxHeight: .infinity) }
+                MiniMap(map: map, viewport: vp, size: geo.size).padding(10).padding(.bottom, map.pathMode && map.pathPicks.count == 2 ? 172 : 0)
+                WheelCatcher { dx, dy, cmd, at in
+                    if cmd { map.zoom(by: exp(dy * 0.01), in: geo.size, anchor: at) }
+                    else { let v = map.viewport ?? map.fit(in: geo.size); map.viewport = MapViewport(zoom: v.zoom, origin: CGPoint(x: v.origin.x + dx, y: v.origin.y + dy)) }
+                }.allowsHitTesting(false)
+                if map.pathMode && map.pathPicks.count == 2 { PathDrawer(ws: ws, map: map, path: path).frame(height: 172).frame(maxHeight: .infinity, alignment: .bottom) }
+                if map.exportOpen { ExportPopover(ws: ws, map: map).padding(.top, 4).padding(.trailing, 10).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing) }
+                if map.agentOpen { AgentPopover(ws: ws, map: map).padding(.top, 4).padding(.trailing, 10).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing) }
+            }
+            .clipped()
+            .onAppear { map.canvasSize = geo.size }
+            .onChange(of: geo.size) { _, s in map.canvasSize = s }
+            .gesture(MagnifyGesture().onChanged { v in
+                // pinch zooms around the point under the fingers: that world point stays put on screen
+                let s = zoomStart ?? vp; zoomStart = s
+                let z = (s.zoom * v.magnification).clamped(0.25, 4), a = v.startLocation
+                map.viewport = MapViewport(zoom: z, origin: CGPoint(x: a.x - (a.x - s.origin.x) * z / s.zoom, y: a.y - (a.y - s.origin.y) * z / s.zoom))
+            }.onEnded { _ in zoomStart = nil })
+        }
+    }
+}
+
+/// 16 pt dot grid that moves with the world: one tiled image, not thousands of rects.
+private struct DotGrid: View {
+    let viewport: MapViewport
+    /// One 16×16 tile with a dot in the corner; drawn lazily so it follows light/dark.
+    private static let tile: Image = {
+        let img = NSImage(size: NSSize(width: 16, height: 16), flipped: true) { _ in
+            HT.NS.fill30.setFill(); NSRect(x: 0, y: 0, width: 0.8, height: 0.8).fill(); return true
+        }
+        return Image(nsImage: img)
+    }()
+    var body: some View {
+        Canvas { ctx, size in
+            let g = 16 * viewport.zoom
+            guard g > 6 else { return }
+            let o = CGPoint(x: viewport.origin.x.truncatingRemainder(dividingBy: g) - 0.4, y: viewport.origin.y.truncatingRemainder(dividingBy: g) - 0.4)
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .tiledImage(Self.tile, origin: o, scale: viewport.zoom))
+        }
     }
 }
 

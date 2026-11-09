@@ -28,6 +28,10 @@ struct DataGrid: NSViewRepresentable {
     var markedRows: Set<Int> = []  // rows with staged changes: amber gutter bar
     var layerCells: [Int: Set<Int>] = [:]  // row → columns patched by a store layer: cobalt cell mark + gutter bar
     var staleRows: Set<Int> = []           // rows whose layer patch is stale (the database moved on): amber cell mark
+    /// Widths the user set before (column name → points); others auto-fit to their content.
+    var savedWidths: [String: CGFloat] = [:]
+    /// Called (debounced) after the user resizes a column, with every user-set width so far.
+    var onColumnsResized: (([String: CGFloat]) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -82,6 +86,11 @@ struct DataGrid: NSViewRepresentable {
         var endRequestedAt = -1
         var ctx = (row: 0, col: 0)
         var marks: [Int: Set<Int>] = [:], stale: Set<Int> = []
+        /// True while widths are set programmatically (rebuild, auto-fit), so only real drags are remembered.
+        var applying = false
+        var fittedWithRows = false
+        var userWidths: [String: CGFloat] = [:]
+        var saveWork: DispatchWorkItem?
 
         init(_ p: DataGrid) { self.p = p }
 
@@ -98,6 +107,7 @@ struct DataGrid: NSViewRepresentable {
             } else if p.rows != rows { // identical array buffers compare in O(1)
                 let old = rows
                 rows = p.rows
+                if !fittedWithRows, !rows.isEmpty { autoFit() } // headers came first (from the schema): fit to the data once it lands
                 if !old.isEmpty, rows.count > old.count, rows[0] == old[0], rows[old.count - 1] == old[old.count - 1] {
                     table.insertRows(at: IndexSet(old.count..<rows.count), withAnimation: [])
                 } else {
@@ -123,7 +133,30 @@ struct DataGrid: NSViewRepresentable {
             lastSel = table.selectedRow
         }
 
+        /// Columns the user never resized take their content width (first page of data).
+        func autoFit() {
+            fittedWithRows = true
+            applying = true; defer { applying = false }
+            for tc in table.tableColumns {
+                guard let i = dataIndex(tc), i < cols.count, p.savedWidths[cols[i].name] == nil, userWidths[cols[i].name] == nil else { continue }
+                tc.width = contentWidth(i, cols[i])
+            }
+        }
+
+        func tableViewColumnDidResize(_ n: Notification) {
+            guard !applying, !syncing, let tc = n.userInfo?["NSTableColumn"] as? NSTableColumn, let i = dataIndex(tc), i < cols.count else { return }
+            userWidths[cols[i].name] = tc.width.rounded()
+            saveWork?.cancel()
+            let w = p.savedWidths.merging(userWidths) { $1 }
+            let work = DispatchWorkItem { [weak self] in self?.p.onColumnsResized?(w) }
+            saveWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
+        }
+
         func rebuildColumns() {
+            applying = true; defer { applying = false }
+            userWidths = [:]
+            fittedWithRows = !rows.isEmpty
             for c in table.tableColumns { table.removeTableColumn(c) }
             func add(_ id: String, _ title: String, _ w: CGFloat, fixed: Bool) {
                 let c = NSTableColumn(identifier: .init(id))
@@ -136,7 +169,7 @@ struct DataGrid: NSViewRepresentable {
                 table.addTableColumn(c)
             }
             add("L", "", 48, fixed: true)
-            for (i, col) in cols.enumerated() { add("c\(i)", col.name, contentWidth(i, col), fixed: false) }
+            for (i, col) in cols.enumerated() { add("c\(i)", col.name, p.savedWidths[col.name] ?? contentWidth(i, col), fixed: false) }
             add("R", "", 48, fixed: true)
         }
 

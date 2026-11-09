@@ -39,6 +39,7 @@ struct LayersPanel: View {
         HTFrame(title: "Store", tail: ws.profile.name, accessory: { Text("⌥⌘L").ht(.labelSmall).foregroundStyle(HT.C.ink3) }) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    SeeAsPicker(ws: ws)
                     CapsLabel("Layers", "\(m.layers.count + 1) · top wins").foregroundStyle(HT.C.ink3)
                     VStack(spacing: 2) {
                         ForEach(m.stack) { layerRow($0) }
@@ -103,7 +104,7 @@ struct LayersPanel: View {
                     tile("DB", on: on, agent: false)
                     VStack(alignment: .leading, spacing: 1) {
                         Text("DATABASE").ht(.bodySmall)
-                        Text("read-only // never touched by agents").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
+                        Text("read-only · never touched by agents").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
                     }
                     Spacer(minLength: 0)
                 }
@@ -129,7 +130,7 @@ struct LayersPanel: View {
         let live = m.items(of: l.id)
         let patches = live.filter { $0.kind == "row_patch" }.count
         return VStack(alignment: .leading, spacing: 8) {
-            Readout(value: "\(live.count)", label: l.isMine ? "Layer // yours" : "Layer // agent", tail: l.name, size: .m)
+            Readout(value: "\(live.count)", label: l.isMine ? "Layer · yours" : "Layer · agent", tail: l.name, size: .m)
             Button { m.compare.toggle() } label: { Text("Compare with database ⌘D").frame(maxWidth: .infinity) }.buttonStyle(m.compare ? .htPrimary : .htOutline)
                 .keyboardShortcut("d", modifiers: .command)
             HStack(spacing: 6) {

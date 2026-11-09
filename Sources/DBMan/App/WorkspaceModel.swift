@@ -1,6 +1,7 @@
 import AppKit
 import DBCore
 import Foundation
+import Halftone
 import Observation
 import SwiftUI
 
@@ -81,20 +82,95 @@ final class WorkspaceModel {
     }
 
     // MARK: connection
+
+    /// What CONNECTING shows: one step per stage, each with its own timing (States 01 / Motion 05).
+    var connectSteps: [HTStep] = []
+    var connectStarted = Date()
+    /// Bumped by every connect and by cancel, so a late result from an abandoned attempt is closed, not shown.
+    @ObservationIgnored private var connectGen = 0
+
+    private func plannedSteps() -> [HTStep] {
+        let p = profile
+        var out: [HTStep] = []
+        if let t = p.ssh { out.append(HTStep(id: ConnectStage.tunnel.rawValue, title: "SSH tunnel", detail: "ssh \(t.display) → forward to \(p.host):\(p.port)")) }
+        let target = p.engine == .sqlite ? ((p.filePath ?? "") as NSString).abbreviatingWithTildeInPath
+            : "\(p.ssh == nil ? "\(p.host):\(p.port)" : "through tunnel") · \(p.user.isEmpty ? "" : p.user + "@")\(p.database) · TLS \(p.sslMode.rawValue)"
+        out.append(HTStep(id: ConnectStage.handshake.rawValue, title: p.engine == .sqlite ? "Open file" : "Connect + authenticate", detail: target))
+        out.append(HTStep(id: "schema", title: "Read schema", detail: "tables, columns, keys and indexes"))
+        return out
+    }
+
+    private func step(_ id: String, _ change: (inout HTStep) -> Void) {
+        guard let i = connectSteps.firstIndex(where: { $0.id == id }) else { return }
+        change(&connectSteps[i])
+    }
+    private func begin(_ id: String) { step(id) { if case .pending = $0.state { $0.state = .active(since: Date()) } } }
+    private func end(_ id: String, _ detail: String? = nil) {
+        step(id) { s in
+            guard case .active(let since) = s.state else { return }
+            s.state = .done(ms: Int(Date().timeIntervalSince(since) * 1000))
+            if let detail { s.detail = detail }
+        }
+    }
+    /// Marks the running step failed (or the first unfinished one) and leaves the rest pending.
+    private func failActive(_ note: String) {
+        guard let i = connectSteps.firstIndex(where: { $0.state.isActive }) ?? connectSteps.firstIndex(where: { $0.state == .pending }) else { return }
+        let since: Date = { if case .active(let d) = connectSteps[i].state { return d } else { return Date() } }()
+        connectSteps[i].state = .failed(ms: Int(Date().timeIntervalSince(since) * 1000))
+        connectSteps[i].detail = note
+    }
+
     func connect(password: String?) async {
+        connectGen += 1
+        let gen = connectGen
         state = .connecting
+        connectStarted = Date()
+        connectSteps = plannedSteps()
+        let progress: ConnectProgress = { [weak self] ev in
+            Task { @MainActor in
+                guard let self, self.connectGen == gen else { return }
+                switch ev {
+                case .started(let st): self.begin(st.rawValue)
+                case .finished(let st, let detail): self.end(st.rawValue, detail)
+                }
+            }
+        }
         do {
             let start = Date()
-            let s = try await DatabaseSession.connect(profile, password: password)
+            let s = try await DatabaseSession.connect(profile, password: password, progress: progress)
+            guard gen == connectGen else { await s.close(); return } // cancelled meanwhile
+            for st in [ConnectStage.tunnel, .handshake] { begin(st.rawValue); end(st.rawValue) } // progress hops may still be queued; never leave a stage spinning
             if writesUnlocked { await s.unlockWrites() } // unlocked before the session existed (internal store, ⌥-click)
+            begin("schema")
+            let sc = try await s.schema(progress: { [weak self] line in
+                Task { @MainActor in
+                    guard let self, self.connectGen == gen else { return }
+                    self.step("schema") { if $0.state.isActive { $0.detail = line } }
+                }
+            })
+            guard gen == connectGen else { await s.close(); return }
+            let cols = sc.tables.reduce(0) { $0 + $1.columns.count }
+            end("schema", "\(sc.tables.count.formatted()) tables · \(cols.formatted()) columns" + (sc.serverVersion.isEmpty ? "" : " · \(sc.serverVersion.prefix(40))"))
             session = s
-            schema = try await s.schema()
-            await dash.ensureDefault(self) // needs the schema
+            schema = sc
             state = .connected(latencyMs: Date().timeIntervalSince(start) * 1000)
             log("connect \(profile.engine.displayName) \(profile.database.isEmpty ? (profile.filePath ?? "") : profile.database)", "ok")
+            // the default overview probes the data (time columns, growth): build it after the window is usable, with its own skeleton
+            Task { await dash.prepareDefault(self) } // detached: connect() returns as soon as the window is usable
         } catch {
+            guard gen == connectGen else { return }
+            failActive(error.localizedDescription)
             state = .failed(error.localizedDescription)
         }
+    }
+
+    /// CANCEL // ⌘. while connecting: the attempt is abandoned (its session, if it still arrives, is closed) and Retry is offered.
+    func cancelConnect() {
+        guard state == .connecting else { return }
+        connectGen += 1
+        let where_ = connectSteps.first(where: { $0.state.isActive })?.title.lowercased() ?? "connecting"
+        failActive("cancelled by you")
+        state = .failed("Cancelled during \(where_)")
     }
 
     /// Drops the session; the failed-state view offers Retry.
@@ -131,6 +207,17 @@ final class WorkspaceModel {
         return t
     }
     func queryTab(_ id: UUID) -> QueryTab? { queryTabs.first { $0.id == id } }
+    /// Navigator ▸ right-click ▸ Delete: the tab, its open tab chip and any history entries pointing at it.
+    func deleteQuery(_ id: UUID) {
+        let r = Route.query(id)
+        queryTabs.removeAll { $0.id == id }
+        history.removeAll { $0 == r }; forward.removeAll { $0 == r }
+        closeTab(r)
+    }
+    func duplicateQuery(_ id: UUID) {
+        guard let t = queryTab(id) else { return }
+        let n = newQuery(sql: t.sql); n.title = t.title + " copy"
+    }
 
     // MARK: console
     func log(_ sql: String, _ summary: String, error: Bool = false) {

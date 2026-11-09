@@ -80,7 +80,7 @@ final class DBManMCPTests: XCTestCase {
 
     func testToolsPromptsResources() async throws {
         let names = try await client.listTools().tools.map(\.name)
-        same(names, ["connections.list", "connections.add", "connections.test", "connections.remove", "schema.tables", "schema.describe", "schema.graph", "schema.search",
+        same(names, ["connections.list", "connections.add", "connections.update", "connections.test", "connections.remove", "schema.tables", "schema.describe", "schema.graph", "schema.search",
                                "query.run", "query.explain", "query.sample", "stats.column", "overlay.status", "overlay.patch_rows", "overlay.diff", "overlay.reset", "views.list", "views.create",
                      "views.replace", "views.drop", "relations.add", "notes.set", "saved.list", "saved.save", "dashboard.components", "dashboard.list", "dashboard.get", "dashboard.create",
                      "dashboard.update", "ui.open"])
@@ -294,6 +294,47 @@ final class DBManMCPTests: XCTestCase {
         same(try raw("SELECT kind, status, json_extract(payload, '$.host'), json_extract(payload, '$.env') FROM approvals").map { $0.map { "\($0!)" } }, [["credentials", "approved", "db.example.com", "staging"]])
         yes(try await call("connections.add", ["url": "postgres://app:hunter2@db.example.com/billing", "name": "x"]).text.hasPrefix("INVALID_ARGUMENT (passwords are never accepted"))
         yes(try await call("connections.add", ["url": "postgres://app@db.example.com/billing", "name": "Shop"]).text.hasPrefix("INVALID_ARGUMENT (a connection named"))
+    }
+
+    func testAddWithSSHPutsTheTunnelInThePayload() async throws {
+        async let r = call("connections.add", ["url": "postgres://phenix@127.0.0.1:5455/satellite_launches", "name": "satdb-staging", "env": "staging", "ssh": "ubuntu@cx2-satdb:22"])
+        try await decide("credentials", "approved", merge: #"{"connection_id":"c-sat"}"#)
+        no(try await r.isError)
+        same(try raw("SELECT json_extract(payload, '$.host'), json_extract(payload, '$.port'), json_extract(payload, '$.ssh_host'), json_extract(payload, '$.ssh_user'), json_extract(payload, '$.ssh_port') FROM approvals").map { $0.map { "\($0!)" } },
+             [["127.0.0.1", "5455", "cx2-satdb", "ubuntu", "22"]])
+        // ?ssh= in the url works too; bad hops and SQLite are refused before any approval
+        async let r2 = call("connections.add", ["url": "postgres://u@127.0.0.1/d?ssh=bastion", "name": "via-url"])
+        try await decide("credentials", "approved", merge: #"{"connection_id":"c-url"}"#)
+        no(try await r2.isError)
+        same(try raw("SELECT json_extract(payload, '$.ssh_host') FROM approvals WHERE json_extract(payload, '$.name') = 'via-url'")[0][0] as? String, "bastion")
+        yes(try await call("connections.add", ["url": "postgres://u@h/d", "name": "bad", "ssh": "-oProxyCommand=x"]).text.hasPrefix("INVALID_ARGUMENT"))
+        yes(try await call("connections.add", ["url": "postgres://u@h/d", "name": "bad", "ssh": "a b"]).text.hasPrefix("INVALID_ARGUMENT"))
+        yes(try await call("connections.add", ["url": .string(dir.path + "/x.sqlite"), "name": "bad", "ssh": "b"]).text.hasPrefix("INVALID_ARGUMENT"))
+    }
+
+    func testUpdateProposesSettingsForTheSameConnection() async throws {
+        var c = ConnectionRow(id: "c-pg", name: "pg", engine: "postgres"); c.host = "127.0.0.1"; c.port = 15455; c.database = "d"; c.user = "u"; c.env = "staging"
+        try store.upsert(c)
+        async let r = call("connections.update", ["connection": "pg", "url": "postgres://u@127.0.0.1:5455/d", "ssh": "ubuntu@cx2-satdb"])
+        try await decide("update", "approved", merge: #"{"name":"pg"}"#)
+        let (t, err) = try await r
+        no(err, t); same(t, #"{"id":"c-pg","name":"pg","via_ssh":"ubuntu@cx2-satdb"}"#)
+        same(try raw("SELECT connection_id, json_extract(payload, '$.connection_id'), json_extract(payload, '$.port'), json_extract(payload, '$.ssh_host'), json_extract(payload, '$.env') FROM approvals WHERE kind = 'update'").map { $0.map { "\($0!)" } },
+             [["c-pg", "c-pg", "5455", "cx2-satdb", "staging"]])
+        // ssh "none" drops the tunnel; the engine cannot change; rejection carries the note
+        async let r2 = call("connections.update", ["connection": "pg", "ssh": "none"])
+        try await decide("update", "rejected", merge: #"{"note":"keep it"}"#)
+        yes(try await r2.text.hasPrefix("REJECTED (keep it"))
+        same(try raw("SELECT json_extract(payload, '$.ssh_host') FROM approvals WHERE kind = 'update' AND status = 'rejected'")[0][0] as? String, nil)
+        yes(try await call("connections.update", ["connection": "pg", "url": "mysql://u@h/d"]).text.hasPrefix("INVALID_ARGUMENT (the engine"))
+        yes(try await call("connections.update", ["connection": "shop", "ssh": "b"]).text.hasPrefix("INVALID_ARGUMENT"))
+    }
+
+    func testListShowsTheSSHHop() async throws {
+        var c = ConnectionRow(id: "c-pg", name: "pg", engine: "postgres"); c.host = "127.0.0.1"; c.port = 5455; c.sshHost = "cx2-satdb"; c.sshUser = "ubuntu"
+        try store.upsert(c)
+        let (t, err) = try await call("connections.list")
+        no(err, t); yes(t.contains(#""via_ssh":"ubuntu@cx2-satdb""#), t)
     }
 
     func testAddRefusesTheStoreFolder() async throws {

@@ -24,6 +24,9 @@ struct ConnectionEditor: View {
     @State private var filePath: String
     @State private var sslMode: SSLMode
     @State private var sslRootCert: String?
+    @State private var sshOn: Bool
+    @State private var sshTarget: String
+    @State private var sshKey: String?
     @State private var environment: EnvironmentTag
     @State private var openReadOnly: Bool
     @State private var stageWrites: Bool
@@ -46,6 +49,9 @@ struct ConnectionEditor: View {
         _filePath = State(initialValue: p.filePath ?? "")
         _sslMode = State(initialValue: p.sslMode)
         _sslRootCert = State(initialValue: p.sslRootCert)
+        _sshOn = State(initialValue: p.ssh != nil)
+        _sshTarget = State(initialValue: p.ssh?.display ?? "")
+        _sshKey = State(initialValue: p.ssh?.identityFile)
         _environment = State(initialValue: p.environment)
         _openReadOnly = State(initialValue: p.openReadOnly)
         _stageWrites = State(initialValue: p.stageWrites)
@@ -56,15 +62,15 @@ struct ConnectionEditor: View {
     private var envOptions: [(value: EnvironmentTag, title: String)] { EnvironmentTag.allCases.filter { $0 != .system }.map { (value: $0, title: $0.rawValue.uppercased()) } }
 
     var body: some View {
-        HTFrame(title: "CONNECTION", tail: "\(app.profile(id)?.name ?? "NEW") // \(engine.displayName.uppercased())") {
+        HTFrame(title: "CONNECTION", tail: "\(app.profile(id)?.name ?? "NEW") · \(engine.displayName.uppercased())") {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         urlBlock
                         HStack(spacing: 6) {
-                            OptionTile(title: "POSTGRES SYSTEMS", subtitle: "PORT 5432 // TLS // PG 12–17", isSelected: engine == .postgres) { pick(.postgres) }
-                            OptionTile(title: "MYSQL SYSTEMS", subtitle: "PORT 3306 // MYSQL 8 // MARIADB", isSelected: engine == .mysql) { pick(.mysql) }
-                            OptionTile(title: "SQLITE FILES", subtitle: "LOCAL FILE // READ-WRITE", isSelected: engine == .sqlite) { pick(.sqlite) }
+                            OptionTile(title: "POSTGRES SYSTEMS", subtitle: "PORT 5432 · TLS · PG 12–17", isSelected: engine == .postgres) { pick(.postgres) }
+                            OptionTile(title: "MYSQL SYSTEMS", subtitle: "PORT 3306 · MYSQL 8 · MARIADB", isSelected: engine == .mysql) { pick(.mysql) }
+                            OptionTile(title: "SQLITE FILES", subtitle: "LOCAL FILE · READ-WRITE", isSelected: engine == .sqlite) { pick(.sqlite) }
                         }
                         fields
                     }
@@ -132,6 +138,30 @@ struct ConnectionEditor: View {
                         if sslRootCert != nil { Button("Clear") { sslRootCert = nil }.buttonStyle(.htOutline) }
                     }.gridCellColumns(3)
                 }
+                GridRow {
+                    CapsLabel("SSH")
+                    HTToggleChip("TUNNEL THROUGH BASTION", isOn: $sshOn).fixedSize().gridCellColumns(3)
+                        .accessibilityLabel("Connect over SSH tunnel")
+                }
+                if sshOn {
+                    GridRow {
+                        CapsLabel("VIA")
+                        TextField("user@bastion:22 or ~/.ssh/config alias", text: $sshTarget).ht(.code).htInput()
+                            .accessibilityLabel("SSH host").gridCellColumns(3)
+                    }
+                    GridRow {
+                        CapsLabel("KEY", sshKey.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "SSH_AGENT · CONFIG")
+                        HStack(spacing: 6) {
+                            Button("Choose…") { chooseKey() }.buttonStyle(.htOutline)
+                            if sshKey != nil { Button("Clear") { sshKey = nil }.buttonStyle(.htOutline) }
+                        }.gridCellColumns(3)
+                    }
+                    GridRow {
+                        Color.clear.frame(width: 1, height: 1)
+                        Text("HOST and PORT above are as seen from the SSH host (e.g. 127.0.0.1 and the container's published port). DBMan runs your system ssh: keys, agent and ~/.ssh/config apply; it never prompts.")
+                            .ht(.bodySmall).foregroundStyle(HT.C.ink3).fixedSize(horizontal: false, vertical: true).gridCellColumns(3)
+                    }
+                }
             }
             GridRow {
                 CapsLabel("TAG")
@@ -165,10 +195,10 @@ struct ConnectionEditor: View {
                 if let reached { StatusText(label: "REACHED", value: reached) }
                 if let problem { StatusText(label: "ERROR", value: problem, tone: .alert) }
                 Spacer(minLength: 8)
-                Button("Save // ⌘S") { save() }
+                Button("Save  ⌘S") { save() }
                     .buttonStyle(.htOutline)
                     .keyboardShortcut("s")
-                Button("Connect // ⏎") { connect() }
+                Button("Connect  ⏎") { connect() }
                     .buttonStyle(.htPrimary)
                     .keyboardShortcut(.defaultAction)
             }
@@ -206,10 +236,11 @@ struct ConnectionEditor: View {
         sslRootCert = p.sslRootCert
         if let f = p.filePath { filePath = f }
         if let pw { password = pw }
+        if let t = p.ssh { sshOn = true; sshTarget = t.display; sshKey = t.identityFile }
         let fields = p.engine == .sqlite
             ? 1
             : 2 + [!p.database.isEmpty, !p.user.isEmpty, pw != nil, text.contains("sslmode")].filter { $0 }.count
-        urlNote = (urlNote.map { $0 + " // " } ?? "") + "PARSED_INTO_\(fields)_FIELDS"
+        urlNote = (urlNote.map { $0 + " · " } ?? "") + "PARSED_INTO_\(fields)_FIELDS"
     }
 
     /// Root certificate (PEM) used to verify the server for verify-full; nil = system trust store.
@@ -219,6 +250,17 @@ struct ConnectionEditor: View {
         panel.canChooseDirectories = false
         panel.message = "Choose the CA certificate (PEM) that signed the server certificate"
         if panel.runModal() == .OK, let url = panel.url { sslRootCert = url.path }
+    }
+
+    /// Private key for the SSH hop; nil = whatever ssh picks (agent, ~/.ssh/config IdentityFile, defaults).
+    private func chooseKey() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.showsHiddenFiles = true
+        panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh")
+        panel.message = "Choose the SSH private key for the tunnel"
+        if panel.runModal() == .OK, let url = panel.url { sshKey = url.path }
     }
 
     private func chooseFile() {
@@ -253,13 +295,18 @@ struct ConnectionEditor: View {
             guard !u.isEmpty else { problem = "User is required."; return nil }
             portNumber = n
         }
+        var tunnel: SSHTunnel?
+        if sshOn, !isSQLite {
+            guard let t = SSHTunnel(parsing: sshTarget, identityFile: sshKey), !t.host.hasPrefix("-") else { problem = "SSH must be [user@]host[:port] or a ~/.ssh/config alias."; return nil }
+            tunnel = t
+        }
         let name = app.profile(id)?.name
             ?? (isSQLite ? URL(fileURLWithPath: file).lastPathComponent : "\(db)@\(h)")
         return ConnectionProfile(
             id: id, name: name, engine: engine, host: isSQLite ? "" : h, port: portNumber,
             database: isSQLite ? "" : db, user: isSQLite ? "" : u, filePath: isSQLite ? file : nil,
             sslMode: sslMode, environment: environment, openReadOnly: openReadOnly,
-            stageWrites: stageWrites, lastOpened: app.profile(id)?.lastOpened, sslRootCert: isSQLite ? nil : sslRootCert)
+            stageWrites: stageWrites, lastOpened: app.profile(id)?.lastOpened, sslRootCert: isSQLite ? nil : sslRootCert, ssh: tunnel)
     }
 
     private func test() {

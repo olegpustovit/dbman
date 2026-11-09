@@ -36,7 +36,7 @@ struct LayerDiffView: View {
                     Text(i.name ?? "").ht(.label)
                 }
                 CapsLabel(l.name).foregroundStyle(HT.C.ink3)
-                if i.status == "stale" { Text("Stale // database changed").ht(.labelSmall).foregroundStyle(HT.C.amber) }
+                if i.status == "stale" { Text("Stale · database changed").ht(.labelSmall).foregroundStyle(HT.C.amber) }
                 Spacer(minLength: 0)
                 if !l.isMine { Button("→ Mine") { m.adopt([i.id]) }.buttonStyle(.htOutline) }
                 Button("✕") { m.discard(layer: l.id, ids: [i.id], note: nil) }.buttonStyle(.htOutline)
@@ -55,8 +55,8 @@ struct LayerDiffView: View {
         return Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 2) {
             GridRow {
                 CapsLabel("Column").foregroundStyle(HT.C.ink3)
-                CapsLabel(p.op == .insert ? "Database" : "Database // was").foregroundStyle(HT.C.ink3)
-                if p.stale { CapsLabel("Database // now").foregroundStyle(HT.C.amber) }
+                CapsLabel(p.op == .insert ? "Database" : "Database · was").foregroundStyle(HT.C.ink3)
+                if p.stale { CapsLabel("Database · now").foregroundStyle(HT.C.amber) }
                 CapsLabel("Layer").foregroundStyle(HT.C.accent)
             }
             ForEach(cols, id: \.self) { c in

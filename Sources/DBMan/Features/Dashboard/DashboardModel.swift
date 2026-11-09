@@ -64,6 +64,20 @@ final class DashboardModel {
     }
 
     /// The first dashboard of a connection is "Overview // default" (the internal store seeds its own). Seeded once: a deleted default stays deleted.
+    /// True while the default overview is being generated (DashboardView shows a skeleton dashboard meanwhile).
+    var preparing = false
+    var preparingSince = Date()
+
+    /// After connect: generate the default overview if this connection has none, then show it if the overview is on screen.
+    func prepareDefault(_ ws: WorkspaceModel) async {
+        reload(ws)
+        let had = defaultEntry != nil
+        preparing = !had; preparingSince = Date()
+        await ensureDefault(ws)
+        preparing = false
+        if !had, ws.route == .overview { itemID = nil; await open(nil, ws) }
+    }
+
     func ensureDefault(_ ws: WorkspaceModel) async {
         conn = ws.storeID
         let mine = Store.mineID(conn)
@@ -79,7 +93,7 @@ final class DashboardModel {
         guard let e = id.flatMap({ id in entries.first { $0.id == id } }) ?? defaultEntry else { itemID = nil; spec = nil; return }
         guard e.id != itemID else { return }
         itemID = e.id; spec = e.spec
-        edit = false; selected = nil; data = [:]; asTable = []; costs = [:]; rates = [:]; insightBase = nil; notice = nil
+        edit = false; selected = nil; data = [:]; asTable = []; costs = [:]; rates = [:]; insightBase = nil; notice = nil; inflight = [:]; refreshStarted = nil
         accepted = Set(e.spec?.widgets.map(\.id) ?? [])
         values = Dictionary(uniqueKeysWithValues: (e.spec?.variables ?? []).compactMap { v in (v.default ?? (v.type == "enum" ? "all" : "30d")).isEmpty ? nil : (v.name, v.default ?? (v.type == "enum" ? "all" : "30d")) })
         await loadOptions(ws)
@@ -94,6 +108,11 @@ final class DashboardModel {
 
     // MARK: data
 
+    /// Widgets whose query is running right now, with when it started (card header spinner, dashboard UPDATING n/m).
+    var inflight: [String: Date] = [:]
+    var refreshStarted: Date?
+    var refreshTotal = 0
+
     func refresh(_ ws: WorkspaceModel, only: Set<String>? = nil) async {
         guard let s = ws.session, let spec else { return }
         let e = ws.profile.engine, id = itemID
@@ -101,8 +120,13 @@ final class DashboardModel {
             (w, ws.layers.expand(DashSQL.bind(w.query ?? "", variables: spec.variables, values: values, engine: e), mysql: e == .mysql))
         }
         for (w, _) in jobs { if only != nil || data[w.id] == nil { data[w.id] = .loading } }
+        let started = Date()
+        for (w, _) in jobs { inflight[w.id] = started }
+        refreshStarted = started; refreshTotal = jobs.count
+        defer { if id == itemID { for (w, _) in jobs { inflight[w.id] = nil }; if inflight.isEmpty { refreshStarted = nil } } }
         func store(_ wid: String, _ r: Result<WTable, Error>) {
             guard id == itemID else { return }
+            inflight[wid] = nil
             switch r {
             case .success(let t): data[wid] = .ready(t, stale: false)
             case .failure(let err):
@@ -111,7 +135,8 @@ final class DashboardModel {
         }
         await withTaskGroup(of: (String, Result<WTable, Error>).self) { g in
             for (w, sql) in jobs {
-                if let src = DashSource.split(w.query ?? "") { store(w.id, await local(w, src, ws, s)) } else { g.addTask { (w.id, await Self.fetch(s, w, sql)) } }
+                // local sources (insights probe, rates) run alongside the queries instead of in front of them
+                if let src = DashSource.split(w.query ?? "") { g.addTask { @MainActor in (w.id, await self.local(w, src, ws, s)) } } else { g.addTask { (w.id, await Self.fetch(s, w, sql)) } }
             }
             for await (wid, r) in g { store(wid, r) }
         }
@@ -277,8 +302,14 @@ final class DashboardModel {
     }
     func duplicate(_ ws: WorkspaceModel) {
         guard var s = spec else { return }
-        s.title += " // copy"
+        s.title += " · copy"
         if let id = addMine(s) { ws.go(.dashboard(id)) }
+    }
+    /// Navigator ▸ right-click ▸ Delete on any dashboard row (open or not). Discarded, like DELETE in the editor.
+    func delete(_ id: String, _ ws: WorkspaceModel) {
+        try? store.setStatus([id], "discarded"); reloadSoon()
+        if ws.route == .dashboard(id) { ws.closeTab(ws.route) }
+        if itemID == id { itemID = nil; spec = nil }
     }
     func delete(_ ws: WorkspaceModel) {
         guard let id = itemID else { return }
@@ -289,7 +320,7 @@ final class DashboardModel {
     func exportJSON() {
         guard let spec else { return }
         let p = NSSavePanel()
-        p.allowedContentTypes = [.json]; p.nameFieldStringValue = spec.title.replacingOccurrences(of: " // ", with: "-").replacingOccurrences(of: " ", with: "-").lowercased() + ".json"
+        p.allowedContentTypes = [.json]; p.nameFieldStringValue = spec.title.replacingOccurrences(of: " · ", with: "-").replacingOccurrences(of: " ", with: "-").lowercased() + ".json"
         guard p.runModal() == .OK, let url = p.url else { return }
         do { try spec.json(pretty: true).write(to: url, atomically: true, encoding: .utf8); notice = "Exported \(url.lastPathComponent)" } catch { notice = error.localizedDescription }
     }
@@ -328,7 +359,7 @@ final class DashboardModel {
     /// GENERATE WITH AGENT: the build-dashboard prompt on the clipboard (there is no channel into a running agent).
     func copyBuildPrompt(_ ws: WorkspaceModel, goal: String, agent: String?) {
         copy("Use the dbman MCP server. " + MCPService.buildDashboardPrompt(connection: ws.profile.name, goal: goal))
-        notice = agent.map { "PROMPT COPIED // PASTE INTO \($0.uppercased())" } ?? "PROMPT COPIED // PASTE INTO ANY AGENT WITH DBMAN MCP"
+        notice = agent.map { "PROMPT COPIED · PASTE INTO \($0.uppercased())" } ?? "PROMPT COPIED · PASTE INTO ANY AGENT WITH DBMAN MCP"
     }
 
     /// ASK AGENT TO FIX (G10): dashboard.get + the error as a prompt. MINE is read-only for agents, so the fix arrives as a new proposal.
@@ -337,7 +368,7 @@ final class DashboardModel {
         let how = e.mine ? "You cannot edit MINE; call dashboard.create with the corrected spec (same title) and I will adopt it."
                          : "Apply the fix with dashboard.update {id, ops: [{op: replace, path: /widgets/N/query, value: ...}]}."
         copy("Use the dbman MCP server. In DBMan, widget \"\(w.title)\" (id \(w.id)) of dashboard \"\(e.title)\" (id \(e.id), connection \(ws.profile.name)) fails: \(error). Call dashboard.get {id: \"\(e.id)\"}, check the current columns with schema.describe, fix the query, test it with query.run. \(how)")
-        notice = "PROMPT COPIED // PASTE INTO YOUR AGENT"
+        notice = "PROMPT COPIED · PASTE INTO YOUR AGENT"
     }
 
     private func copy(_ s: String) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(s, forType: .string) }

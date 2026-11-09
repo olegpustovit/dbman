@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Icon + two-line caps/sentence + muted time.
@@ -25,26 +26,51 @@ public struct ActivityItem: View {
 }
 
 /// Large outlined choice tile; selected = inverted.
+/// A clickable card: a choice in a picker (`isSelected`), or an action (`arrow: true` adds →).
+/// Solid paper, a visible border, ink border + tint on hover, and a press state, so it reads as a button on the dot grid.
 public struct OptionTile: View {
-    let title: String, subtitle: String, isSelected: Bool, action: () -> Void
-    public init(title: String, subtitle: String, isSelected: Bool, action: @escaping () -> Void = {}) {
-        self.title = title; self.subtitle = subtitle; self.isSelected = isSelected; self.action = action
+    let title: String, subtitle: String, isSelected: Bool, arrow: Bool, action: () -> Void
+    public init(title: String, subtitle: String, isSelected: Bool, arrow: Bool = false, action: @escaping () -> Void = {}) {
+        self.title = title; self.subtitle = subtitle; self.isSelected = isSelected; self.arrow = arrow; self.action = action
     }
     public var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).ht(.label)
-                Text(subtitle).ht(.bodySmall).opacity(0.7)
+            HStack(alignment: .top, spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).ht(.label)
+                    Text(subtitle).ht(.bodySmall).opacity(0.7)
+                }
+                Spacer(minLength: 0)
+                if arrow { Text("→").font(.system(size: 15, weight: .medium)) }
             }
-            .foregroundStyle(isSelected ? HT.C.paper : HT.C.ink)
-            .frame(maxWidth: .infinity, minHeight: 64, alignment: .topLeading).padding(10)
-            .background(isSelected ? HT.C.ink : .clear, in: RoundedRectangle(cornerRadius: HT.M.radius))
-            .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(isSelected ? HT.C.ink : HT.C.line, lineWidth: 1))
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TileStyle(isSelected: isSelected, arrow: arrow))
         .accessibilityLabel(title).accessibilityHint(subtitle)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+private struct TileStyle: ButtonStyle {
+    let isSelected: Bool, arrow: Bool
+    func makeBody(configuration: Configuration) -> some View { TileBody(configuration: configuration, isSelected: isSelected, arrow: arrow) }
+
+    struct TileBody: View {
+        let configuration: ButtonStyleConfiguration
+        let isSelected: Bool, arrow: Bool
+        @State private var hover = false
+        var body: some View {
+            let pressed = configuration.isPressed
+            configuration.label
+                .foregroundStyle(isSelected ? HT.C.paper : HT.C.ink)
+                .frame(maxWidth: .infinity, minHeight: 64, alignment: .topLeading).padding(10)
+                .background(isSelected ? HT.C.ink : (hover || pressed ? HT.C.accentSoft : HT.C.paper), in: RoundedRectangle(cornerRadius: HT.M.radius))
+                .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(isSelected || hover ? HT.C.ink : HT.C.ink.opacity(0.3), lineWidth: 1))
+                .shadow(color: .black.opacity(isSelected || pressed ? 0 : 0.06), radius: 0, x: 0, y: hover ? 2 : 1)
+                .offset(y: pressed ? 1 : 0)
+                .contentShape(Rectangle())
+                .onHover { h in hover = h; if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
+                .animation(.easeOut(duration: 0.12), value: hover)
+        }
     }
 }
 

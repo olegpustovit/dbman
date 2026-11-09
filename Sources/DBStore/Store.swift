@@ -16,6 +16,11 @@ public struct ConnectionRow: Equatable, Sendable {
     public var readOnly = false
     public var stageWrites = true
     public var lastOpened: Date?
+    /// SSH hop (nil host = direct). DBMan runs the system ssh, so the host may be a ~/.ssh/config alias.
+    public var sshHost: String?
+    public var sshUser: String?
+    public var sshPort: Int?
+    public var sshIdentity: String?
     /// Where the password lives (Keychain item / dev secrets file, both keyed by id). Never the password itself.
     public var secretRef: String? { engine == "sqlite" ? nil : "keychain:" + id }
     public init(id: String, name: String, engine: String) { self.id = id; self.name = name; self.engine = engine }
@@ -36,7 +41,7 @@ public final class Store: @unchecked Sendable {
     private var pending = false
     private var watchers: [DispatchSourceFileSystemObject] = []
 
-    private static let migrations: [String] = [PackageResources._001_init_sql, PackageResources._002_approvals_sql].map { String(decoding: $0, as: UTF8.self) } // shortcut: migrations are listed by hand (embedInCode mangles the file name), upgrade: generate the list once there are many
+    private static let migrations: [String] = [PackageResources._001_init_sql, PackageResources._002_approvals_sql, PackageResources._003_ssh_sql].map { String(decoding: $0, as: UTF8.self) } // shortcut: migrations are listed by hand (embedInCode mangles the file name), upgrade: generate the list once there are many
 
     public static let productionURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent("DBMan/dbman.sqlite")
@@ -194,7 +199,8 @@ public final class Store: @unchecked Sendable {
 
     private func connectionsLocked() throws -> [ConnectionRow] {
         try h.query("""
-            SELECT id, name, engine, host, port, "database", "user", ssl_mode, ssl_root_cert, env, file_path, read_only, stage_writes, last_opened_at
+            SELECT id, name, engine, host, port, "database", "user", ssl_mode, ssl_root_cert, env, file_path, read_only, stage_writes, last_opened_at,
+              ssh_host, ssh_user, ssh_port, ssh_identity
             FROM connections ORDER BY env = 'system', rowid
             """).map { r in
             var c = ConnectionRow(id: r.s(0), name: r.s(1), engine: r.s(2))
@@ -202,6 +208,7 @@ public final class Store: @unchecked Sendable {
             c.sslMode = r.s(7); c.sslRootCert = r[8] as? String; c.env = r.s(9); c.filePath = r[10] as? String
             c.readOnly = r.n(11) == 1; c.stageWrites = r.n(12) == 1
             c.lastOpened = (r[13] as? Int64).map { Date(timeIntervalSince1970: Double($0) / 1000) }
+            c.sshHost = r[14] as? String; c.sshUser = r[15] as? String; c.sshPort = (r[16] as? Int64).map(Int.init); c.sshIdentity = r[17] as? String
             return c
         }
     }
@@ -213,14 +220,17 @@ public final class Store: @unchecked Sendable {
     }
     private func upsertLocked(_ c: ConnectionRow) throws {
         try h.query("""
-            INSERT INTO connections(id, name, engine, host, port, "database", "user", ssl_mode, ssl_root_cert, env, file_path, secret_ref, read_only, stage_writes, last_opened_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            INSERT INTO connections(id, name, engine, host, port, "database", "user", ssl_mode, ssl_root_cert, env, file_path, secret_ref, read_only, stage_writes, last_opened_at,
+              ssh_host, ssh_user, ssh_port, ssh_identity)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET name=excluded.name, engine=excluded.engine, host=excluded.host, port=excluded.port, "database"=excluded."database",
               "user"=excluded."user", ssl_mode=excluded.ssl_mode, ssl_root_cert=excluded.ssl_root_cert, env=excluded.env, file_path=excluded.file_path,
               secret_ref=excluded.secret_ref, read_only=excluded.read_only, stage_writes=excluded.stage_writes, last_opened_at=excluded.last_opened_at,
+              ssh_host=excluded.ssh_host, ssh_user=excluded.ssh_user, ssh_port=excluded.ssh_port, ssh_identity=excluded.ssh_identity,
               updated_at=CAST(unixepoch('subsec') * 1000 AS INTEGER)
             """, [c.id, c.name, c.engine, c.host, c.port, c.database, c.user, c.sslMode, c.sslRootCert, c.env, c.filePath, c.secretRef,
-                  c.readOnly, c.stageWrites, c.lastOpened.map { Int64($0.timeIntervalSince1970 * 1000) }])
+                  c.readOnly, c.stageWrites, c.lastOpened.map { Int64($0.timeIntervalSince1970 * 1000) },
+                  c.sshHost, c.sshUser, c.sshPort, c.sshIdentity])
         try ensureMine(c.id)
     }
 

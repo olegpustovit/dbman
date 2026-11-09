@@ -8,11 +8,13 @@ final class DashboardTests: XCTestCase {
     private func spec(_ ws: [DashWidget]) -> DashboardSpec { DashboardSpec(title: "T", widgets: ws) }
     private func issues(_ ws: [DashWidget]) -> [String] { spec(ws).validate().map { ($0.widget ?? "-") + ": " + $0.message } }
 
-    func testCatalogHas19TypesIn7Groups() {
-        XCTAssertEqual(DashCatalog.types.count, 19)
+    func testCatalogHas28TypesIn8Groups() {
+        XCTAssertEqual(DashCatalog.types.count, 28)
+        XCTAssertEqual(DashCatalog.groups.count, 8)
+        XCTAssertEqual(Set(DashCatalog.types.map(\.id)).count, 28, "ids are unique")
         XCTAssertEqual(Set(DashCatalog.types.map(\.group)), Set(DashCatalog.groups))
         let json = try! JSONSerialization.jsonObject(with: DashCatalog.schemaJSON()) as! [String: Any]
-        XCTAssertEqual((json["catalog"] as! [String: Any]).count, 19)
+        XCTAssertEqual((json["catalog"] as! [String: Any]).count, 28)
     }
 
     func testValidSpecFromTheSpecDocument() throws {

@@ -11,17 +11,19 @@ struct DashboardView: View {
     static let row: CGFloat = 72
 
     var body: some View {
-        VStack(spacing: HT.M.gap) {
+        VStack(spacing: HT.M.seam) {
             if let spec = m.spec {
                 if m.isProposal { ProposalHeader(ws: ws, spec: spec) } else { header(spec) }
-                HStack(spacing: HT.M.gap) {
+                HStack(spacing: HT.M.seam) {
                     if m.edit { Library(ws: ws).frame(width: 210) }
                     if spec.widgets.isEmpty && !m.isProposal && !m.edit { EmptyDashboard(ws: ws) } else { VStack(spacing: HT.M.gap) { DashGridView(ws: ws, spec: spec); if m.isProposal { ProposalSQL(ws: ws) } } }
                     if m.edit { Inspector(ws: ws, spec: spec).frame(width: 300) }
                 }
                 strip(spec)
+            } else if m.preparing {
+                PreparingOverview(ws: ws, since: m.preparingSince)
             } else {
-                StateFrame(title: "Dashboard", tail: nil, message: "NO_DASHBOARD // OPEN ONE FROM THE NAVIGATOR")
+                StateFrame(title: "Dashboard", tail: nil, message: "NO_DASHBOARD · OPEN ONE FROM THE NAVIGATOR")
             }
         }
         .task(id: id) { await m.open(id, ws) }
@@ -40,11 +42,11 @@ struct DashboardView: View {
                 if m.edit {
                     TextField("Title", text: Binding(get: { spec.title }, set: { m.spec?.title = $0 })).textFieldStyle(.plain).ht(.strong).frame(maxWidth: 320)
                         .htInput()
-                } else { Text(spec.title).ht(.strong) }
-                Text("// \(ws.profile.name) · \(spec.widgets.count) widgets · layer \((e?.layer ?? "mine").lowercased()) · dbman store").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
+                } else { Text(DashText.title(spec.title)).ht(.strong) }
+                Text("\(ws.profile.name) · \(spec.widgets.count) widgets · layer \((e?.layer ?? "mine").lowercased()) · dbman store").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
                 Spacer(minLength: 4)
                 if let n = m.notice { Text(n).ht(.labelSmall).foregroundStyle(HT.C.accent).lineLimit(1) }
-                Button(m.edit ? "DONE // ⌘E" : "EDIT // ⌘E") { m.toggleEdit() }.buttonStyle(m.edit ? .htPrimary : .htOutline)
+                Button(m.edit ? "DONE  ⌘E" : "EDIT  ⌘E") { m.toggleEdit() }.buttonStyle(m.edit ? .htPrimary : .htOutline)
                 Menu("SHARE / EXPORT JSON") {
                     Button("EXPORT JSON…") { m.exportJSON() }
                     Button("IMPORT JSON…") { m.importJSON(ws) }
@@ -62,16 +64,24 @@ struct DashboardView: View {
                     ForEach(DashboardSpec.refreshes, id: \.self) { r in Button(Self.refreshLabel(r)) { m.setRefresh(r) } }
                 }.menuStyle(.button).buttonStyle(.htOutline).fixedSize().accessibilityLabel("Auto-refresh")
                 Spacer(minLength: 4)
-                if let at = m.updated {
+                if let since = m.refreshStarted, !m.inflight.isEmpty {
+                    LateReveal(after: .milliseconds(250)) {
+                        HStack(spacing: 6) {
+                            DotSpinner(dot: 3, gap: 1, tint: HT.C.accent)
+                            Text("UPDATING \(m.refreshTotal - m.inflight.count)/\(m.refreshTotal)").ht(.labelSmall).foregroundStyle(HT.C.accent).monospacedDigit()
+                            ElapsedText(since: since, tint: HT.C.accent)
+                        }
+                    }
+                } else if let at = m.updated {
                     let times: [Double] = m.data.values.compactMap { if case .ready(let t, _) = $0 { t.ms } else { nil } }
-                    let ms = times.reduce(0, +)
-                    Text("updated // \(at.formatted(date: .omitted, time: .standard)) · \(Int(ms)) ms · \(m.data.count) queries").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                    // queries run in parallel: the slowest one is the wait, not their sum
+                    Text("updated · \(at.formatted(date: .omitted, time: .standard)) · slowest \(ElapsedText.ms(Int(times.max() ?? 0)).lowercased()) · \(m.data.count) queries").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                 }
             }
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
-        .background(HT.C.paper, in: RoundedRectangle(cornerRadius: HT.M.radius))
-        .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
+        .background(HT.C.paper)
+        .overlay(Rectangle().strokeBorder(HT.C.line, lineWidth: HT.M.hairline))
     }
 
     @ViewBuilder private func variable(_ v: DashVariable) -> some View {
@@ -92,11 +102,11 @@ struct DashboardView: View {
     private func strip(_ spec: DashboardSpec) -> some View {
         HStack(spacing: 14) {
             Text("12 COLS · \(spec.widgets.count) WIDGETS").ht(.labelSmall)
-            Text(m.edit ? "EDIT // DRAG TO MOVE, CORNER TO RESIZE, SNAPS TO THE GRID" : m.isProposal ? "PROPOSAL // NOTHING IS IN MINE UNTIL YOU ADOPT" : "VIEW // ⌘E EDITS THE LAYOUT").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+            Text(m.edit ? "EDIT · DRAG TO MOVE, CORNER TO RESIZE, SNAPS TO THE GRID" : m.isProposal ? "PROPOSAL · NOTHING IS IN MINE UNTIL YOU ADOPT" : "VIEW  ⌘E EDITS THE LAYOUT").ht(.labelSmall).foregroundStyle(HT.C.ink3)
             Spacer()
-            Text("AUTO_REFRESH // \(spec.refresh == "off" ? "OFF" : spec.refresh.uppercased())").ht(.labelSmall).foregroundStyle(HT.C.ink3)
-            Text("STORE // LAYER \((m.entry?.layer ?? "MINE").uppercased())").ht(.labelSmall).foregroundStyle(HT.C.ink3)
-        }.frame(height: 16).lineLimit(1)
+            Text("AUTO_REFRESH · \(spec.refresh == "off" ? "OFF" : spec.refresh.uppercased())").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+            Text("STORE · LAYER \((m.entry?.layer ?? "MINE").uppercased())").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+        }.padding(.horizontal, 8).frame(height: 20).lineLimit(1)
     }
 }
 
@@ -107,7 +117,8 @@ struct DashGridView: View {
     let ws: WorkspaceModel, spec: DashboardSpec
     @State private var drag: (id: String, dx: CGFloat, dy: CGFloat, resize: Bool)?
     private var m: DashboardModel { ws.dash }
-    private let gap = HT.M.gap, row = DashboardView.row
+    /// Cards breathe: 10 pt gutters on paper, each card one crisp hairline (no shared double borders).
+    private let gap: CGFloat = 10, row = DashboardView.row
 
     var body: some View {
         GeometryReader { geo in
@@ -136,10 +147,15 @@ struct DashGridView: View {
                 }
             }
         }
+        .padding(12)
+        .background(HT.C.paper)
+        .overlay(Rectangle().strokeBorder(HT.C.line, lineWidth: HT.M.hairline))
     }
 
     private func rect(_ w: DashWidget, _ cw: CGFloat) -> CGRect {
-        CGRect(x: CGFloat(w.x) * (cw + gap), y: CGFloat(w.y) * (row + gap), width: CGFloat(w.w) * cw + CGFloat(w.w - 1) * gap, height: CGFloat(w.h) * row + CGFloat(w.h - 1) * gap)
+        // whole points: card edges land on pixel boundaries, so the 1 pt border stays one crisp line
+        let x0 = (CGFloat(w.x) * (cw + gap)).rounded(), x1 = (CGFloat(w.x + w.w) * (cw + gap) - gap).rounded()
+        return CGRect(x: x0, y: CGFloat(w.y) * (row + gap), width: x1 - x0, height: CGFloat(w.h) * row + CGFloat(w.h - 1) * gap)
     }
 
     /// Snapped cell for a drag in progress: nearest cell for a move, nearest whole cells for a resize.
@@ -220,10 +236,12 @@ private struct Library: View {
     static let icons = ["kpi": "number", "kpi.spark": "chart.line.uptrend.xyaxis", "meter": "gauge", "line": "chart.xyaxis.line", "area.stacked": "chart.line.flattrend.xyaxis", "heatmap.hour_week": "square.grid.3x3",
                         "heatmap.calendar": "calendar", "bars": "chart.bar", "bars.stacked": "chart.bar.fill", "bars.horizontal": "list.number", "radar": "hexagon", "funnel": "line.3.horizontal.decrease",
                         "histogram": "chart.bar.xaxis", "halftone.distribution": "circle.grid.3x3", "scatter": "chart.dots.scatter", "table": "tablecells", "status.feed": "list.bullet",
-                        "er.mini": "point.3.connected.trianglepath.dotted", "text": "text.alignleft"]
+                        "er.mini": "point.3.connected.trianglepath.dotted", "text": "text.alignleft",
+                        "kpi.target": "target", "gauge": "gauge.with.dots.needle.67percent", "stat.list": "list.number", "sparkline.grid": "square.grid.2x2",
+                        "leaderboard": "trophy", "donut": "chart.pie", "waffle": "circle.grid.3x3.fill", "status.grid": "checkmark.seal", "progress.list": "chart.bar.doc.horizontal"]
 
     var body: some View {
-        HTFrame(title: "Component library", tail: "19", accessory: { EmptyView() }) {
+        HTFrame(title: "Component library", tail: "\(DashCatalog.types.count)", accessory: { EmptyView() }) {
             VStack(spacing: 8) {
                 HTSearchField(text: $filter, prompt: "Search components")
                 ScrollView {
@@ -274,13 +292,13 @@ private struct EmptyDashboard: View {
                     Text("A dashboard is a 12-column grid of widgets. Every widget keeps its SQL inspectable, and nothing an agent builds reaches MINE until you adopt it.").ht(.bodySmall).foregroundStyle(HT.C.ink2).frame(maxWidth: 260, alignment: .leading)
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    CapsLabel("01 // Generate with agent", "⌥⌘G").foregroundStyle(HT.C.ink3)
+                    CapsLabel("01 · Generate with agent", "⌥⌘G").foregroundStyle(HT.C.ink3)
                     TextField("What should it show? e.g. Sales health: revenue, orders, top products", text: $goal).textFieldStyle(.plain).ht(.bodySmall).htInput(stroke: HT.C.accent, weight: 1.5).frame(width: 360)
                     HStack(spacing: 8) {
                         let live = MCPHost.shared.live
                         if live.isEmpty { Button("GENERATE WITH AGENT") { m.copyBuildPrompt(ws, goal: goal, agent: nil) }.buttonStyle(.htPrimary) }
                         else {
-                            Menu("GENERATE WITH AGENT") { ForEach(live, id: \.name) { a in Button("\(a.name) // \(a.version)") { m.copyBuildPrompt(ws, goal: goal, agent: a.name) } } }.menuStyle(.button).buttonStyle(.htPrimary).fixedSize()
+                            Menu("GENERATE WITH AGENT") { ForEach(live, id: \.name) { a in Button("\(a.name) · \(a.version)") { m.copyBuildPrompt(ws, goal: goal, agent: a.name) } } }.menuStyle(.button).buttonStyle(.htPrimary).fixedSize()
                             Button("COPY PROMPT") { m.copyBuildPrompt(ws, goal: goal, agent: nil) }.buttonStyle(.htOutline)
                         }
                     }
@@ -288,7 +306,7 @@ private struct EmptyDashboard: View {
                     Text("The prompt is copied; paste it into the agent. The result arrives here as a proposal in its layer.").ht(.bodySmall).foregroundStyle(HT.C.ink3).frame(maxWidth: 360, alignment: .leading)
                 }
                 VStack(alignment: .leading, spacing: 0) {
-                    CapsLabel("02 // Start from template", nil).foregroundStyle(HT.C.ink3).padding(.bottom, 4)
+                    CapsLabel("02 · Start from template", nil).foregroundStyle(HT.C.ink3).padding(.bottom, 4)
                     ForEach(Array(DefaultDashboard.templates.enumerated()), id: \.offset) { i, t in
                         Button { Task { await m.useTemplate(i, ws) } } label: {
                             HStack(spacing: 8) {
@@ -305,7 +323,7 @@ private struct EmptyDashboard: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    CapsLabel("03 // Add widget", "⌘L").foregroundStyle(HT.C.ink3)
+                    CapsLabel("03 · Add widget", "⌘L").foregroundStyle(HT.C.ink3)
                     Text("19 types in 7 groups. Open the library and drag one onto the grid.").ht(.bodySmall).foregroundStyle(HT.C.ink2).frame(maxWidth: 220, alignment: .leading)
                     Button("+ ADD WIDGET") { m.edit = true }.buttonStyle(.htOutline)
                     Button("IMPORT JSON…") { m.importJSON(ws) }.buttonStyle(.htOutline)
@@ -313,7 +331,7 @@ private struct EmptyDashboard: View {
             }.padding(20)
         }
     }
-    private func liveNote(_ n: Int) -> String { n == 0 ? "NO AGENT CONNECTED // COPY THE PROMPT INTO ANY AGENT WITH DBMAN MCP" : "\(n) AGENT\(n == 1 ? "" : "S") CONNECTED" }
+    private func liveNote(_ n: Int) -> String { n == 0 ? "NO AGENT CONNECTED · COPY THE PROMPT INTO ANY AGENT WITH DBMAN MCP" : "\(n) AGENT\(n == 1 ? "" : "S") CONNECTED" }
 }
 
 // MARK: - proposal review (F5, G18)
@@ -331,11 +349,11 @@ private struct ProposalHeader: View {
             Text(layerMono(m.entry?.layer ?? "")).ht(.labelSmall).frame(width: 26, height: 20).overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(HT.C.accent, lineWidth: 1)).foregroundStyle(HT.C.accent)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(m.entry?.layer ?? "agent") proposes \(spec.title)").ht(.strong).lineLimit(1)
-                Text("\(spec.widgets.count) widgets // every query ran read-only // lives in \(m.entry?.layer ?? "its") layer until adopted").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
+                Text("\(spec.widgets.count) widgets · every query ran read-only · lives in \(m.entry?.layer ?? "its") layer until adopted").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
             }
             Spacer(minLength: 4)
             chip("\(spec.widgets.count - bad) VALID"); if bad > 0 { chip("\(bad) ALERT", HT.C.alert) }
-            if total > 0 { chip("TOTAL COST // \(total < 1000 ? String(Int(total)) : String(format: "%.1e", total).replacingOccurrences(of: "e+0", with: "e").replacingOccurrences(of: "e+", with: "e"))") }
+            if total > 0 { chip("TOTAL COST · \(total < 1000 ? String(Int(total)) : String(format: "%.1e", total).replacingOccurrences(of: "e+0", with: "e").replacingOccurrences(of: "e+", with: "e"))") }
             if let n = m.notice { Text(n).ht(.labelSmall).foregroundStyle(HT.C.accent) }
             Button("ASK FOR CHANGES") { asking = true }.buttonStyle(.htOutline)
                 .popover(isPresented: $asking) {
@@ -362,13 +380,13 @@ private struct ProposalSQL: View {
     let ws: WorkspaceModel
     var body: some View {
         let m = ws.dash, w = m.widget(m.selected) ?? m.spec?.widgets.first
-        HTFrame(title: w.map { "\($0.id) // \($0.title)" } ?? "SQL", tail: w.map { "\($0.type) · sql" }) {
+        HTFrame(title: w.map { "\($0.id) · \($0.title)" } ?? "SQL", tail: w.map { "\($0.type) · sql" }) {
             HStack(alignment: .top, spacing: 10) {
                 ScrollView { Text(w?.query ?? "no query").ht(.dataSmall).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(8) }
                 if let w {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(m.costs[w.id].map { "EXPLAIN COST \($0)" } ?? "NO COST").ht(.labelSmall)
-                        if case .ready(let t, _)? = m.data[w.id] { Text("\(t.rows.count) ROWS // \(Int(t.ms)) MS").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
+                        if case .ready(let t, _)? = m.data[w.id] { Text("\(t.rows.count) ROWS · \(Int(t.ms)) MS").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
                         if case .failed(let e)? = m.data[w.id] { Text(e).ht(.dataSmall).foregroundStyle(HT.C.alert) }
                     }.padding(8).frame(width: 220, alignment: .leading)
                 }
@@ -379,4 +397,43 @@ private struct ProposalSQL: View {
 
 extension DashboardModel {
     func failed(_ id: String) -> Bool { if case .failed? = data[id] { true } else { false } }
+}
+
+/// The default overview is being generated (it probes the biggest tables for time columns and growth): the dashboard's own
+/// footprint in skeleton form, so the real one lands in place.
+private struct PreparingOverview: View {
+    let ws: WorkspaceModel
+    let since: Date
+    private var biggest: String { (ws.schema?.tables ?? []).filter { $0.kind == .table }.max { $0.rowCount < $1.rowCount }?.name ?? "the largest table" }
+
+    var body: some View {
+        VStack(spacing: HT.M.gap) {
+            HTLoadingStrip("Preparing overview", detail: "probing \(biggest) and friends for time columns and growth · first open only", since: since)
+            // proportional to the space there is (2 : 4 : 4 grid rows), never taller than the window
+            GeometryReader { g in
+                let unit = max(0, (g.size.height - 2 * HT.M.gap) / 10)
+                LateReveal {
+                    VStack(spacing: HT.M.gap) {
+                        HStack(spacing: HT.M.gap) { ForEach(0..<4, id: \.self) { i in tile(i, kpi: true) } }.frame(height: 2 * unit)
+                        HStack(spacing: HT.M.gap) { tile(4, kpi: false).frame(width: (g.size.width - HT.M.gap) * 2 / 3); tile(5, kpi: false) }.frame(height: 4 * unit)
+                        HStack(spacing: HT.M.gap) { ForEach(6..<8, id: \.self) { i in lines(i) } }.frame(height: 4 * unit)
+                    }
+                }
+            }
+            .clipped()
+        }
+    }
+
+    private func tile(_ i: Int, kpi: Bool) -> some View {
+        HTFrame(title: " ") {
+            VStack(alignment: .leading, spacing: 10) {
+                SkeletonBar(fraction: 0.5, height: 7).frame(width: 120)
+                if kpi { SkeletonBar(fraction: 0.7, height: 22).frame(width: 140) }
+                SkeletonBars(count: kpi ? 14 : 28).opacity(0.7)
+            }.padding(10)
+        }
+    }
+    private func lines(_ i: Int) -> some View {
+        HTFrame(title: " ") { VStack(alignment: .leading, spacing: 8) { SkeletonBar(fraction: 0.4, height: 7).frame(width: 120); SkeletonLines(count: 6, keyWidth: 110) }.padding(10).frame(maxHeight: .infinity, alignment: .top).clipped() }
+    }
 }

@@ -28,8 +28,34 @@ extension DBManMCPTests {
 
     func testComponentsCatalog() async throws {
         let r = try await json("dashboard.components")
-        same((r["catalog"] as! [String: Any]).count, 19)
+        same((r["catalog"] as! [String: Any]).count, 28)
+        for id in ["kpi.target", "gauge", "stat.list", "sparkline.grid", "leaderboard", "donut", "waffle", "status.grid", "progress.list"] {
+            yes((r["catalog"] as! [String: Any])[id] != nil, "\(id) is listed for agents")
+        }
         yes(String(describing: r["properties"]!).contains("widgets"))
+    }
+
+    /// The extended library through MCP: an agent builds a dashboard from every new card; each validates and runs against the fixture.
+    func testCreateWithTheExtendedLibrary() async throws {
+        let spec: Value = ["version": 1, "title": "Ops board", "widgets": [
+            widget("t", "kpi.target", 0, 0, 3, 3, "select sum(total) as value, 100 as target from orders", ["value": "value", "target": "target"]),
+            widget("g", "gauge", 3, 0, 3, 3, "select count(*) as value, 10 as max from orders", ["value": "value", "max": "max"]),
+            widget("s", "stat.list", 6, 0, 3, 3, "select city as label, count(*) as value, 5.0 as delta from customers group by 1", ["label": "label", "value": "value", "delta": "delta"]),
+            widget("l", "leaderboard", 9, 0, 3, 3, "select city as label, count(*) as value from customers group by 1", ["label": "label", "value": "value"]),
+            widget("k", "sparkline.grid", 0, 3, 6, 3, "select kind as label, id as x, n as y from events where id < 50", ["label": "label", "x": "x", "y": "y"]),
+            widget("d", "donut", 6, 3, 3, 3, "select kind as label, count(*) as value from events group by 1", ["label": "label", "value": "value"]),
+            widget("w", "waffle", 9, 3, 3, 3, "select kind as label, count(*) as value from events group by 1", ["label": "label", "value": "value"]),
+            widget("h", "status.grid", 0, 6, 4, 3, "select kind as label, count(*) as value, 'ok' as status from events group by 1", ["label": "label", "value": "value", "status": "status"]),
+            widget("p", "progress.list", 4, 6, 3, 3, "select city as label, count(*) as value, 3 as max from customers group by 1", ["label": "label", "value": "value", "max": "max"]),
+        ]]
+        let r = try await json("dashboard.create", args(["spec": spec]))
+        same(r["ok"] as? Int, 9); same(r["failed"] as? Int, 0)
+        // a missing required encoding is caught for the new types too
+        var broken = spec.objectValue!; var ws = broken["widgets"]!.arrayValue!
+        ws[1] = widget("g", "gauge", 3, 0, 3, 3, "select count(*) as value from orders", ["value": "value"])
+        broken["widgets"] = .array(ws)
+        let bad = try await call("dashboard.create", args(["spec": .object(broken)]))
+        yes(bad.text.contains("max"), bad.text)
     }
 
     func testCreateWithOneFailingWidgetThenAdopt() async throws {
@@ -112,7 +138,7 @@ extension DBManMCPTests {
     func testDashboardCreateThroughTheHelper() async throws {
         let (tool, stop) = try startHelper(agent: "helper-agent"); defer { stop() }
         let cat = try tool("dashboard.components", [:])
-        XCTAssertEqual((cat["catalog"] as? [String: Any])?.count, 19)
+        XCTAssertEqual((cat["catalog"] as? [String: Any])?.count, 28)
         let spec = try JSONSerialization.jsonObject(with: try JSONEncoder().encode(eightWidgets))
         let r = try tool("dashboard.create", ["connection": "shop", "spec": spec])
         XCTAssertEqual(r["ok"] as? Int, 7); XCTAssertEqual(r["failed"] as? Int, 1)

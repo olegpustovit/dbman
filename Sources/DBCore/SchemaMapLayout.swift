@@ -12,8 +12,10 @@ public enum MapMetrics {
 }
 
 public extension SchemaGraph {
+    /// Wide enough for the whole name (11 pt condensed caps ≈ 7.2 pt a glyph) plus a hop / JUNCTION tag: names never truncate.
     func size(_ t: TableInfo, _ detail: MapDetail) -> CGSize {
-        CGSize(width: detail.cardWidth, height: MapMetrics.head + CGFloat(shownColumns(t, detail).count) * MapMetrics.row + MapMetrics.foot)
+        let named = (CGFloat(t.name.count) * 7.2 + 16 + 74).rounded(.up)
+        return CGSize(width: max(detail.cardWidth, (named / 10).rounded(.up) * 10), height: MapMetrics.head + CGFloat(shownColumns(t, detail).count) * MapMetrics.row + MapMetrics.foot)
     }
     func sizes(_ detail: MapDetail) -> [String: CGSize] { Dictionary(uniqueKeysWithValues: tables.map { ($0.name, size($0, detail)) }) }
 }
