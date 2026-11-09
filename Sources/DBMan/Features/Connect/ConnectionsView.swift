@@ -1,3 +1,4 @@
+import AppKit
 import DBCore
 import Halftone
 import SwiftUI
@@ -7,7 +8,6 @@ struct ConnectionsView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
-    @AppStorage("relativeDates") private var relativeDates = false
     @State private var selectedID: UUID?
     @State private var isNew = false
     @State private var newCount = 0          // bumps on every "+" so the editor resets
@@ -17,6 +17,7 @@ struct ConnectionsView: View {
     private static let groups: [EnvironmentTag] = [.production, .staging, .local]
 
     private var selected: ConnectionProfile? { isNew ? nil : selectedID.flatMap { app.profile($0) } }
+    private var optionHeld: Bool { NSEvent.modifierFlags.contains(.option) }
     private var editorKey: String { isNew ? "new-\(newCount)" : (selectedID?.uuidString ?? "none") }
 
     var body: some View {
@@ -35,6 +36,15 @@ struct ConnectionsView: View {
                                 .padding(.top, 6)
                                 ForEach(items) { row($0) }
                             }
+                            if let internalStore = app.profiles.first(where: { $0.environment == .system }) {
+                                Spacer(minLength: 12)
+                                HStack(spacing: 6) {
+                                    Text("SYSTEM").ht(.label)
+                                    Text("// 01 · PINNED").ht(.label).foregroundStyle(HT.C.ink3)
+                                    Rectangle().fill(HT.C.line).frame(height: 1)
+                                }
+                                row(internalStore)
+                            }
                         }
                         .padding(8)
                     }
@@ -43,9 +53,13 @@ struct ConnectionsView: View {
             }
             .frame(width: 260)
 
-            ConnectionEditor(profile: selected) { id in
-                selectedID = id
-                isNew = false
+            Group {
+                if let p = selected, p.environment == .system { internalPane(p) } else {
+                    ConnectionEditor(profile: selected) { id in
+                        selectedID = id
+                        isNew = false
+                    }
+                }
             }
             .id(editorKey)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -78,6 +92,7 @@ struct ConnectionsView: View {
     private func row(_ p: ConnectionProfile) -> some View {
         let on = selected?.id == p.id
         return Button {
+            if p.environment == .system && optionHeld { openInternal(unlocked: true); return } // ⌥-click: UNLOCK INTERNAL STORE
             selectedID = p.id
             isNew = false
         } label: {
@@ -85,8 +100,14 @@ struct ConnectionsView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(p.name).ht(.strong)
                     Spacer(minLength: 4)
-                    Text(stamp(p)).ht(.labelSmall)
-                        .foregroundStyle(on ? HT.C.paper : (p.environment == .production ? HT.C.amber : HT.C.ink3))
+                    if p.environment == .system {
+                        // SYSTEM tag: ink outline, not amber (it is DBMan, not production data).
+                        Text("SYSTEM").ht(.labelSmall).padding(.horizontal, 4)
+                            .overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(on ? HT.C.paper : HT.C.ink, lineWidth: 1))
+                    } else {
+                        Text(stamp(p)).ht(.labelSmall)
+                            .foregroundStyle(on ? HT.C.paper : (p.environment == .production ? HT.C.amber : HT.C.ink3))
+                    }
                 }
                 Text(detail(p)).ht(.dataSmall).lineLimit(1).truncationMode(.middle)
                     .foregroundStyle(on ? HT.C.paper.opacity(0.7) : HT.C.ink3)
@@ -117,7 +138,7 @@ struct ConnectionsView: View {
                 }
             }
             .buttonStyle(.htOutline)
-            .disabled(selected == nil && !isNew)
+            .disabled((selected == nil && !isNew) || selected?.environment == .system)
             .accessibilityLabel("Remove connection")
             Spacer(minLength: 4)
             Button("Try sample database") {
@@ -127,6 +148,27 @@ struct ConnectionsView: View {
         }
         .padding(8)
         .overlay(alignment: .top) { Rectangle().fill(HT.C.line).frame(height: 1) }
+    }
+
+    private func internalPane(_ p: ConnectionProfile) -> some View {
+        HTFrame(title: "CONNECTION", tail: "\(p.name) // SYSTEM") {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("DBMan\u{2019}s own SQLite store: settings, connections, layers and, later, agent activity. Agents can never see it.")
+                    .ht(.bodySmall).foregroundStyle(HT.C.ink2)
+                Text(p.filePath ?? "").ht(.dataSmall).foregroundStyle(HT.C.ink3).textSelection(.enabled)
+                HStack {
+                    Button("OPEN READ-ONLY") { openInternal(unlocked: optionHeld) }.buttonStyle(.htPrimary)
+                    Text("⌥-click: UNLOCK INTERNAL STORE (edits go through the review sheet)").ht(.labelSmall).foregroundStyle(HT.C.ink3)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+        }
+    }
+
+    private func openInternal(unlocked: Bool) {
+        if unlocked { app.workspace(for: ConnectionProfile.internalID)?.unlockWrites() } // creates the workspace; the option key is still down
+        openWindow(value: ConnectionProfile.internalID)
     }
 
     private func remove(_ p: ConnectionProfile) {
@@ -144,7 +186,7 @@ struct ConnectionsView: View {
 
     private func stamp(_ p: ConnectionProfile) -> String {
         guard let d = p.lastOpened else { return "NEVER" }
-        return relativeDates
+        return app.relativeDates
             ? d.formatted(.relative(presentation: .numeric, unitsStyle: .narrow)).uppercased()
             : d.formatted(.dateTime.month(.abbreviated).day()).uppercased()
     }

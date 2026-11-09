@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DBMan // internal — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="height: 1500px; display: flex; flex-direction: column">
+
+<!-- ============================================================ WORKSPACE WINDOW on DBMan // internal -->
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; flex: none; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: stretch; gap: 4px">
+    <div aria-hidden="true" style="display: flex; align-items: center; gap: 7px; padding: 0 8px">
+      <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+    </div>
+    <nav aria-label="Routes" role="tablist" style="display: flex; gap: 4px">
+      <sc-for list="{{routes}}" as="n" hint-placeholder-count="4">
+        <button type="button" role="tab" aria-selected="{{n.on}}" title="{{n.tip}}" onClick="{{n.pick}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg><span>{{n.t}}</span></button>
+      </sc-for>
+    </nav>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="4"><span style="display: inline-flex; gap: 5px"><span style="{{capDim}}">{{r.k}} //</span><span style="{{r.vs}}">{{r.v}}</span></span></sc-for>
+    </div>
+    <span title="Environment tag — reserved for DBMan's own store" style="{{sysChip}}">SYSTEM</span>
+    <span role="status" title="{{lockTip}}" style="{{lockChip}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1"></rect><path d="{{lockPath}}"></path></svg>{{lockText}}</span>
+    <button type="button" aria-pressed="{{unlockAttr}}" title="{{unlockTip}}" onClick="{{toggleLock}}" style="{{unlockBtn}}"><span style="font-family: var(--code); font-weight: 400; letter-spacing: 0">⌥</span>{{unlockText}}</button>
+  </div>
+
+  <sc-if value="{{unlocked}}" hint-placeholder-val="{{false}}">
+    <div role="alert" style="height: 24px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 1px solid var(--amber); border-radius: 3px; background: var(--paper)">
+      <span style="{{capAmber}}">UNLOCKED // INTERNAL STORE</span>
+      <span style="font-size: 12px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">You are editing DBMan itself — permissions, layers and settings. Edits go through the review sheet and apply live to every window.</span>
+      <span style="flex: 1"></span>
+      <span style="{{capDim}}; font-size: 10px">AGENTS STILL SEE NOTHING</span>
+      <button type="button" title="Lock the internal store again" onClick="{{toggleLock}}" style="{{boxS}}">RELOCK</button>
+    </div>
+  </sc-if>
+
+  <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+
+    <!-- NAVIGATOR -->
+    <nav aria-label="Internal store navigator" style="{{navFrame}}">
+      <div style="padding: 10px; border-bottom: 1px solid var(--line)">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="{{cap}}">DBMan</span><span style="{{capDim}}">// internal</span><span style="flex: 1"></span><span style="{{sysTag}}">SYSTEM</span></span>
+        <span style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px"><span style="font-size: 36px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">6,149</span><span style="{{capDim}}">rows · 14 tables</span></span>
+        <span style="display: block; margin-top: 4px; {{capDim}}">sqlite 3.46 · 2.4 MB · wal</span>
+      </div>
+      <label style="display: flex; align-items: center; gap: 6px; height: 26px; margin: 8px 8px 2px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="text" placeholder="FILTER" aria-label="Filter navigator" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+        <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">⌥⌘F</span>
+      </label>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 0 8px 8px">
+        <sc-for list="{{navSections}}" as="s" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 8px; padding: 0 2px">
+            <span style="{{cap}}">{{s.name}}</span><span style="{{capDim}}">// {{s.count}}</span>
+            <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+          </div>
+          <sc-for list="{{s.items}}" as="it" hint-placeholder-count="6">
+            <button type="button" aria-current="{{it.current}}" title="{{it.tip}}" onClick="{{it.pick}}" style="{{it.style}}">
+              <span style="{{it.nameStyle}}">{{it.name}}</span>
+              <span aria-hidden="true" style="display: inline-flex; gap: 1px"><sc-for list="{{it.meter}}" as="m" hint-placeholder-count="8"><span style="{{m}}"></span></sc-for></span>
+              <span style="{{it.countStyle}}">{{it.count}}</span>
+            </button>
+          </sc-for>
+        </sc-for>
+      </div>
+      <div style="height: 26px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-top: 1px solid var(--line)">
+        <span style="{{capDim}}">status //</span><span style="{{cap}}">open · wal · 0.3 ms</span>
+      </div>
+    </nav>
+
+    <!-- CENTER -->
+    <section aria-label="{{centerLabel}}" style="{{frame}} flex: 1; display: flex; flex-direction: column">
+
+      <!-- ======================== TABLE -->
+      <sc-if value="{{isTable}}" hint-placeholder-val="{{true}}">
+        <div style="{{head34}}">
+          <h1 style="margin: 0; {{cap}}; font-size: 12px">{{tb.name}}</h1><span style="{{capDim}}">{{tb.sub}}</span>
+          <span style="flex: 1"></span>
+          <span style="{{tb.modeStyle}}">{{tb.mode}}</span>
+          <span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">⌘T</span>
+        </div>
+        <div role="grid" aria-label="{{tb.name}}" style="flex: none; display: flex; flex-direction: column">
+          <div role="row" style="{{tb.headRow}}">
+            <sc-for list="{{tb.heads}}" as="h" hint-placeholder-count="5"><span role="columnheader" style="{{h.s}}"><span style="{{h.nS}}">{{h.n}}</span><span style="{{h.tS}}">{{h.t}}</span></span></sc-for>
+          </div>
+          <div style="font-family: var(--code); font-size: 11.5px">
+            <sc-for list="{{tb.rows}}" as="r" hint-placeholder-count="24">
+              <div role="row" style="{{r.style}}">
+                <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5"><span role="gridcell" title="{{c.tip}}" onClick="{{c.pick}}" style="{{c.s}}">{{c.v}}</span></sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- review / feedback bar -->
+        <div style="{{bar.frame}}">
+          <span style="{{bar.tagStyle}}">{{bar.tag}}</span>
+          <span style="{{bar.textStyle}}">{{bar.text}}</span>
+          <span style="flex: 1"></span>
+          <span style="{{bar.metaStyle}}">{{bar.meta}}</span>
+          <button type="button" title="{{bar.aTip}}" onClick="{{bar.aPick}}" style="{{bar.aStyle}}">{{bar.a}}</button>
+          <button type="button" title="{{bar.bTip}}" onClick="{{bar.bPick}}" style="{{bar.bStyle}}">{{bar.b}}</button>
+        </div>
+
+        <div style="flex: 1; min-height: 0; overflow: hidden; padding: 10px 12px; display: flex; gap: 16px; border-top: 1px solid var(--line); background: var(--sunken)">
+          <div style="flex: 1; min-width: 0">
+            <div style="display: flex; gap: 6px; height: 16px"><span style="{{cap}}">DDL</span><span style="{{capDim}}">// STRICT · FOREIGN_KEYS ON</span></div>
+            <sc-for list="{{tb.ddl}}" as="l" hint-placeholder-count="4"><div style="font-family: var(--code); font-size: 11px; line-height: 16px; white-space: pre; color: var(--ink2); overflow: hidden; text-overflow: ellipsis">{{l}}</div></sc-for>
+          </div>
+          <div style="flex: 0 0 300px; min-width: 0">
+            <div style="display: flex; gap: 6px; height: 16px"><span style="{{cap}}">LIVE RELOAD</span><span style="{{capDim}}">// UPDATE HOOK</span></div>
+            <div style="font-size: 12px; line-height: 1.45; color: var(--ink2)">{{tb.live}}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ======================== QUERY -->
+      <sc-if value="{{isQuery}}" hint-placeholder-val="{{false}}">
+        <div style="{{head34}}">
+          <h1 style="margin: 0; {{cap}}; font-size: 12px">Query 1</h1><span style="{{capDim}}">// dbman // internal · sqlite</span>
+          <span style="flex: 1"></span>
+          <span style="{{q.modeStyle}}">{{q.mode}}</span>
+          <button type="button" title="Explain query plan  ⇧⌘E" style="{{boxS}}">EXPLAIN</button>
+          <button type="button" title="Add as a widget to “Agent activity”" onClick="{{goDash}}" style="{{boxS}}">SAVE AS WIDGET</button>
+          <button type="button" title="Run  ⌘↩" style="{{boxSPrimary}}">RUN ⌘↩</button>
+        </div>
+        <div aria-label="SQL editor" style="flex: none; display: flex; padding: 8px 0; border-bottom: 1px solid var(--line); font-family: var(--code); font-size: 12px; line-height: 19px">
+          <div aria-hidden="true" style="flex: 0 0 38px; text-align: right; padding-right: 10px; box-sizing: border-box; color: var(--ink3)">
+            <sc-for list="{{q.lines}}" as="ln" hint-placeholder-count="10"><div>{{ln.n}}</div></sc-for>
+          </div>
+          <div style="flex: 1; min-width: 0">
+            <sc-for list="{{q.lines}}" as="ln" hint-placeholder-count="10"><div style="white-space: pre"><sc-for list="{{ln.tok}}" as="k" hint-placeholder-count="6"><span style="{{k.s}}">{{k.t}}</span></sc-for></div></sc-for>
+          </div>
+        </div>
+        <div style="height: 28px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line)">
+          <span style="{{cap}}">RESULT</span><span style="{{capDim}}">// 5 ROWS · 3.1 MS · LAST 24 H</span>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}; font-size: 10px">SCAN activity USING INDEX activity_ts · SEARCH agents USING PK</span>
+        </div>
+        <div role="grid" aria-label="Result" style="flex: none">
+          <div role="row" style="{{q.headRow}}"><sc-for list="{{q.heads}}" as="h" hint-placeholder-count="6"><span role="columnheader" style="{{h.s}}">{{h.n}}</span></sc-for></div>
+          <sc-for list="{{q.rows}}" as="r" hint-placeholder-count="5">
+            <div role="row" style="{{q.rowStyle}}"><sc-for list="{{r}}" as="c" hint-placeholder-count="6"><span role="gridcell" style="{{c.s}}">{{c.v}}</span></sc-for></div>
+          </sc-for>
+        </div>
+        <div style="flex: 1; min-height: 0; overflow: hidden; padding: 12px; border-top: 1px solid var(--line); background: var(--sunken)">
+          <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">SNIPPETS</span><span style="{{capDim}}">// THE STORE IS PLAIN SQL</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+          <sc-for list="{{q.snips}}" as="sn" hint-placeholder-count="5">
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 12px; align-items: center; height: 26px; border-bottom: 1px solid var(--line)">
+              <span style="font-family: var(--code); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{sn.sql}}</span>
+              <span style="{{sn.noteStyle}}">{{sn.note}}</span>
+            </div>
+          </sc-for>
+          <div style="display: flex; align-items: center; gap: 6px; height: 22px; margin-top: 14px"><span style="{{cap}}">HISTORY</span><span style="{{capDim}}">// query_history · 1,204 ROWS · HUMANS AND AGENTS</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+          <sc-for list="{{q.hist}}" as="hi" hint-placeholder-count="6">
+            <div style="display: grid; grid-template-columns: 64px 22px 110px minmax(0, 1fr) 60px; gap: 8px; align-items: center; height: 24px; border-bottom: 1px solid var(--line)">
+              <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">{{hi.ts}}</span>
+              <span style="{{hi.tileStyle}}">{{hi.m}}</span>
+              <span style="font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{hi.c}}</span>
+              <span style="font-family: var(--code); font-size: 11px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{hi.sql}}</span>
+              <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3); text-align: right">{{hi.ms}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- ======================== SCHEMA -->
+      <sc-if value="{{isSchema}}" hint-placeholder-val="{{false}}">
+        <div style="{{head34}}">
+          <h1 style="margin: 0; {{cap}}; font-size: 12px">Schema map</h1><span style="{{capDim}}">// dbman // internal · LAYERED · KEYS · 8 of 14 tables</span>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}; font-size: 10px">{{sm.selNote}}</span>
+          <button type="button" title="Export Mermaid" style="{{boxS}}">EXPORT</button>
+        </div>
+        <div style="position: relative; flex: 1; min-height: 0; overflow: hidden; background-image: radial-gradient(circle, var(--dots) 1px, transparent 1.2px); background-size: 8px 8px">
+          <svg aria-hidden="true" width="888" height="760" style="position: absolute; left: 0; top: 0; overflow: visible">
+            <path d="{{sm.dimD}}" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--fill30)"></path>
+            <path d="{{sm.onD}}" fill="none" stroke="currentColor" stroke-width="{{sm.onW}}" style="color: var(--ink)"></path>
+          </svg>
+          <sc-for list="{{sm.cards}}" as="c" hint-placeholder-count="8">
+            <div role="button" tabindex="0" aria-pressed="{{c.on}}" title="{{c.tip}}" onClick="{{c.pick}}" style="{{c.style}}">
+              <div style="{{c.head}}"><span style="{{c.nameStyle}}">{{c.name}}</span><span style="flex: 1"></span><span style="{{c.rowsStyle}}">{{c.rows}}</span></div>
+              <sc-for list="{{c.cols}}" as="k" hint-placeholder-count="4">
+                <div style="display: flex; align-items: center; gap: 5px; height: 18px; padding: 0 8px; font-family: var(--code); font-size: 11px">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true" style="flex: none"><path d="{{k.g}}"></path></svg>
+                  <span style="{{k.nS}}">{{k.n}}</span><span style="flex: 1"></span><span style="color: var(--ink3); font-size: 10px">{{k.t}}</span>
+                </div>
+              </sc-for>
+              <div style="display: flex; align-items: center; gap: 1px; height: 14px; padding: 0 8px 2px"><sc-for list="{{c.meter}}" as="m" hint-placeholder-count="12"><span style="{{m}}"></span></sc-for></div>
+            </div>
+          </sc-for>
+          <div style="position: absolute; left: 470px; top: 404px; width: 400px; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper)">
+            <div style="display: flex; gap: 6px; align-items: center; height: 18px"><span style="{{cap}}">G21 // AGENTS CAN'T REACH THIS GRAPH</span></div>
+            <sc-for list="{{sm.checks}}" as="ck" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 3px 0; border-bottom: 1px solid var(--line)"><span style="{{capDim}}; font-size: 10px">{{ck.k}}</span><span style="font-family: var(--code); font-size: 11px; line-height: 15px">{{ck.v}}</span></div>
+            </sc-for>
+          </div>
+          <div style="position: absolute; left: 470px; top: 590px; width: 400px; box-sizing: border-box; padding: 10px 12px; border: 1px dashed var(--fill30); border-radius: 3px; background: var(--paper)">
+            <div style="display: flex; gap: 6px; height: 18px"><span style="{{cap}}">STANDALONE</span><span style="{{capDim}}">// 6 · HIDDEN BY “HIDE ISOLATED”</span></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px"><sc-for list="{{sm.lonely}}" as="lo" hint-placeholder-count="6"><span style="{{sm.lonelyStyle}}">{{lo}}</span></sc-for></div>
+          </div>
+        </div>
+        <div style="height: 26px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 10px; border-top: 1px solid var(--line)">
+          <span style="{{cap}}">8 TABLES // 10 RELATIONS // 0 INFERRED</span>
+          <span style="{{capDim}}">every FK declared · ON DELETE CASCADE from layers</span>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}">CLICK A CARD TO TRACE ITS KEYS</span>
+        </div>
+      </sc-if>
+
+      <!-- ======================== DASHBOARD -->
+      <sc-if value="{{isDash}}" hint-placeholder-val="{{false}}">
+        <div style="{{head34}}">
+          <h1 style="margin: 0; {{cap}}; font-size: 12px">Agent activity</h1><span style="{{capDim}}">// default dashboard of the internal store · 4 widgets</span>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}; font-size: 10px">range</span>
+          <span style="display: flex"><sc-for list="{{ds.ranges}}" as="rg" hint-placeholder-count="3"><span style="{{rg.s}}">{{rg.t}}</span></sc-for></span>
+          <span style="{{capDim}}; font-size: 10px">AUTO 30 S</span>
+          <button type="button" title="Edit layout  ⌘E" style="{{boxS}}">EDIT ⌘E</button>
+        </div>
+        <div style="flex: 1; min-height: 0; overflow: hidden; padding: 8px; display: flex; flex-direction: column; gap: 6px; background: var(--sunken)">
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; flex: none">
+            <sc-for list="{{ds.kpis}}" as="kp" hint-placeholder-count="4">
+              <div style="{{kp.frame}}">
+                <div style="display: flex; gap: 6px"><span style="{{cap}}">{{kp.k}}</span><span style="{{capDim}}">// {{kp.sub}}</span></div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px"><span style="{{kp.vStyle}}">{{kp.v}}</span><span style="{{kp.dStyle}}">{{kp.d}}</span></div>
+                <div style="{{capDim}}; font-size: 10px; margin-top: 6px">{{kp.foot}}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: grid; grid-template-columns: 586px minmax(0, 1fr); gap: 6px; flex: none; height: 380px">
+            <div style="{{wFrame}}">
+              <div style="{{wHead}}"><span style="{{cap}}">CALLS / HOUR</span><span style="{{capDim}}">// LINE · v_agent_activity_daily</span><span style="flex: 1"></span><span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 14px; height: 2px; background: var(--accent)"></span><span style="{{capDim}}; font-size: 10px">all agents</span></span><span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 14px; height: 0; border-top: 1px solid var(--ink)"></span><span style="{{capDim}}; font-size: 10px">claude-code</span></span></div>
+              <div style="position: relative; height: 334px; margin: 6px 10px 0">
+                <sc-for list="{{ds.line.yl}}" as="y" hint-placeholder-count="4"><span style="{{y.s}}">{{y.t}}</span></sc-for>
+                <svg width="530" height="294" viewBox="0 0 530 294" role="img" aria-label="Calls per hour, last 24 hours" style="position: absolute; left: 32px; top: 0; overflow: visible">
+                  <defs><pattern id="int22-halftone" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.85" style="fill: var(--accent)"></circle></pattern></defs>
+                  <path d="{{ds.line.grid}}" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--line)"></path>
+                  <path d="{{ds.line.base}}" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--lineStrong)"></path>
+                  <path d="{{ds.line.area}}" fill="url(#int22-halftone)" stroke="none" style="opacity: .6"></path>
+                  <path d="{{ds.line.cc}}" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" style="color: var(--ink)"></path>
+                  <path d="{{ds.line.all}}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="color: var(--accent)"></path>
+                  <path d="{{ds.line.dot}}" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" style="color: var(--accent)"></path>
+                </svg>
+                <sc-for list="{{ds.line.xl}}" as="x" hint-placeholder-count="7"><span style="{{x.s}}">{{x.t}}</span></sc-for>
+                <span style="{{ds.line.peakStyle}}">{{ds.line.peak}}</span>
+              </div>
+            </div>
+            <div style="{{wFrame}}">
+              <div style="{{wHead}}"><span style="{{cap}}">BLOCKED BY AGENT</span><span style="{{capDim}}">// BARS · 24 H</span></div>
+              <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 10px">
+                <sc-for list="{{ds.blocked}}" as="b" hint-placeholder-count="5">
+                  <div style="display: grid; grid-template-columns: 18px 92px minmax(0, 1fr) 28px; gap: 8px; align-items: center">
+                    <span style="{{tile}}">{{b.m}}</span>
+                    <span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.n}}</span>
+                    <span aria-hidden="true" style="height: 14px; position: relative; background: var(--fill12)"><span style="{{b.bar}}"></span></span>
+                    <span style="{{b.vStyle}}">{{b.v}}</span>
+                  </div>
+                </sc-for>
+                <div style="font-size: 11.5px; line-height: 1.45; color: var(--ink2); margin-top: 4px">41 blocked = 38 prod guard + 3 row cap. Blocked calls never reach a database; the agent gets the reason and a rewrite hint.</div>
+              </div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 586px minmax(0, 1fr); gap: 6px; flex: 1; min-height: 0">
+            <div style="{{wFrame}}">
+              <div style="{{wHead}}"><span style="{{cap}}">LAYER SIZES</span><span style="{{capDim}}">// v_layer_summary · 9 LAYERS · 17 ITEMS</span><span style="flex: 1"></span><span style="{{capDim}}; font-size: 10px">ITEMS · LAST ACTIVITY</span></div>
+              <div style="padding: 6px 12px">
+                <sc-for list="{{ds.layers}}" as="ly" hint-placeholder-count="9">
+                  <div style="display: grid; grid-template-columns: 18px 170px minmax(0, 1fr) 24px 70px; gap: 8px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)">
+                    <span style="{{ly.tileStyle}}">{{ly.m}}</span>
+                    <span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ly.n}}</span>
+                    <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 2px; height: 8px"><sc-for list="{{ly.seg}}" as="sg" hint-placeholder-count="24"><span style="{{sg}}"></span></sc-for></span>
+                    <span style="font-family: var(--code); font-size: 11px; text-align: right">{{ly.v}}</span>
+                    <span style="{{capDim}}; font-size: 10px; text-align: right">{{ly.when}}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="{{wFrame}}">
+              <div style="{{wHead}}"><span style="{{cap}}">PENDING APPROVALS</span><span style="{{capDim}}">// v_pending_approvals</span></div>
+              <div style="padding: 10px 12px">
+                <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 48px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">2</span><span style="{{capDim}}">OF 31 · OLDEST 4 MIN</span></div>
+                <sc-for list="{{ds.pending}}" as="p" hint-placeholder-count="2">
+                  <div style="display: flex; flex-direction: column; gap: 3px; padding: 7px 0; border-bottom: 1px solid var(--line)">
+                    <span style="display: flex; align-items: center; gap: 6px"><span style="{{tile}}">{{p.m}}</span><span style="{{p.kindStyle}}">{{p.kind}}</span><span style="flex: 1"></span><span style="{{capDim}}; font-size: 10px">{{p.exp}}</span></span>
+                    <span style="font-family: var(--code); font-size: 11px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p.what}}</span>
+                  </div>
+                </sc-for>
+                <div style="font-size: 11.5px; line-height: 1.45; color: var(--ink2); margin-top: 8px">Same rows the Agents window reads. Approving here writes <span style="font-family: var(--code)">approvals.status</span> — the agent sees it on its next call.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <!-- INSPECTOR -->
+    <aside aria-label="Store file and live change feed" style="{{frame}} flex: 0 0 292px; display: flex; flex-direction: column">
+      <div style="{{head34}}"><span style="{{cap}}; font-size: 12px">store</span><span style="{{capDim}}">// dbman.sqlite</span><span style="flex: 1"></span><span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">⌥⌘L</span></div>
+      <div style="flex: none; padding: 6px 12px 10px; border-bottom: 1px solid var(--line)">
+        <sc-for list="{{fileKv}}" as="kv" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)"><span style="{{capDim}}; font-size: 10px">{{kv.k}}</span><span style="{{kv.vs}}">{{kv.v}}</span></div>
+        </sc-for>
+      </div>
+      <div style="flex: none; padding: 8px 12px 10px; border-bottom: 1px solid var(--line)">
+        <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">LIVE</span><span style="{{capDim}}">// HOOK + FILE EVENTS</span><span style="flex: 1"></span><span style="{{capDim}}; font-size: 10px">{{feedCount}}</span></div>
+        <sc-for list="{{feed}}" as="f" hint-placeholder-count="9">
+          <div style="{{f.row}}">
+            <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">{{f.ts}}</span>
+            <span style="{{f.tS}}">{{f.t}}</span>
+            <span style="{{f.opS}}">{{f.op}}</span>
+            <span style="{{f.srcS}}">{{f.src}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 8px 12px">
+        <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">RELOADS</span><span style="{{capDim}}">// TABLE → STATE</span></div>
+        <sc-for list="{{reloads}}" as="rl" hint-placeholder-count="5">
+          <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)"><span style="font-family: var(--code); font-size: 11px">{{rl.k}}</span><span style="font-size: 11.5px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{rl.v}}</span></div>
+        </sc-for>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ============================================================ BELOW THE WINDOW -->
+<div style="height: 600px; flex: none; box-sizing: border-box; padding: 14px 6px 6px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--lineStrong)">
+
+  <header style="display: flex; align-items: flex-end; gap: 14px; height: 50px; flex: none; box-sizing: border-box; padding: 0 4px 6px; margin-bottom: 2px; border-bottom: 1px solid var(--line)">
+    <div style="font-size: 46px; font-weight: 300; letter-spacing: -2px; line-height: .9">22</div>
+    <div style="min-width: 0">
+      <div style="{{cap}}">DBMan // internal — the app's own SQLite store, opened in DBMan</div>
+      <div style="font-size: 12px; color: var(--ink2); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Settings, connections, agents, permissions, layers, activity and dashboards live in one file, bootstrapped at launch. You can browse it like any database; agents can't see that it exists.</div>
+    </div>
+    <span style="flex: 1"></span>
+    <span style="{{capDim}}">G21 · G22 // V2-SPEC §6</span>
+  </header>
+
+  <!-- (a) bootstrap -->
+  <section aria-label="Bootstrap sequence" style="{{bFrame}} height: 180px; flex: none">
+    <div style="{{bHead}}"><span style="{{cap}}">A // BOOTSTRAP // &lt; 50 MS</span><span style="{{capDim}}">// APP LAUNCH, BEFORE THE FIRST WINDOW</span><span style="flex: 1"></span><span style="{{capDim}}">FIRST V2 LAUNCH //</span><span style="{{cap}}">{{boot.total}} MS</span><span style="{{capDim}}">· WARM // {{boot.warm}} MS · BUDGET 50</span></div>
+    <div style="position: relative; height: 22px; margin: 10px 12px 0; background: var(--fill12)">
+      <sc-for list="{{boot.segs}}" as="sg" hint-placeholder-count="7"><span style="{{sg.s}}"><span style="{{sg.ls}}">{{sg.t}}</span></span></sc-for>
+      <span style="position: absolute; right: 0; top: -4px; bottom: -4px; width: 0; border-left: 1px dashed var(--lineStrong)"></span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; margin: 8px 12px 0">
+      <sc-for list="{{boot.steps}}" as="st" hint-placeholder-count="7">
+        <div style="{{st.box}}">
+          <div style="display: flex; align-items: center; gap: 6px"><span style="{{capDim}}">{{st.n}}</span><span style="{{cap}}">{{st.t}}</span><span style="flex: 1"></span><span style="{{st.arrowStyle}}">→</span></div>
+          <div style="display: flex; align-items: baseline; gap: 4px; margin-top: 4px"><span style="font-size: 24px; font-weight: 300; letter-spacing: -0.02em; line-height: 1">{{st.ms}}</span><span style="{{capDim}}">MS</span><span style="{{st.flagStyle}}">{{st.flag}}</span></div>
+          <div style="font-family: var(--code); font-size: 10.5px; line-height: 14px; color: var(--ink2); margin-top: 5px">{{st.a}}</div>
+          <div style="font-family: var(--code); font-size: 10.5px; line-height: 14px; color: var(--ink3)">{{st.b}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 450px 500px minmax(0, 1fr); gap: 4px">
+
+    <!-- (b) connections crop -->
+    <section aria-label="Connections window, internal connection pinned" style="{{bFrame}}">
+      <div style="{{bHead}}"><span style="{{cap}}">B // CONNECTIONS WINDOW</span><span style="{{capDim}}">// PINNED AT THE BOTTOM</span></div>
+      <div style="flex: 1; min-height: 0; display: flex; gap: 12px; padding: 0 12px 0 12px; background: var(--sunken)">
+        <div aria-label="Saved connections (crop)" style="flex: 0 0 226px; display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--lineStrong); border-top: 0; box-shadow: 6px 6px 0 var(--fill12); margin-bottom: 12px">
+          <div style="flex: 1; min-height: 0; overflow: hidden; padding: 0 8px">
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 4px"><span style="{{cap}}">LOCAL</span><span style="{{capDim}}">// 02</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+            <sc-for list="{{cx.local}}" as="c" hint-placeholder-count="2">
+              <div style="{{c.style}}"><span style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 13px; font-weight: 600">{{c.name}}</span><span style="flex: 1"></span><span style="{{c.whenStyle}}">{{c.when}}</span></span><span style="{{c.hostStyle}}">{{c.host}}</span></div>
+            </sc-for>
+          </div>
+          <div style="flex: none; padding: 0 8px 6px; border-top: 1px solid var(--lineStrong)">
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 2px"><span style="{{cap}}">SYSTEM</span><span style="{{capDim}}">// 01 · PINNED</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+            <div title="DBMan // internal — ~/Library/Application Support/DBMan/dbman.sqlite" style="display: block; padding: 6px 8px; border-radius: 3px; border: 1px solid var(--lineStrong)">
+              <span style="display: flex; align-items: center; gap: 6px"><span style="font-size: 13px; font-weight: 600">DBMan // internal</span><span style="flex: 1"></span><span style="{{sysTag}}">SYSTEM</span></span>
+              <span style="display: block; font-size: 11px; margin-top: 2px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">dbman.sqlite · SQLite · read-only</span>
+            </div>
+          </div>
+          <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-top: 1px solid var(--line)">
+            <button type="button" aria-label="New connection (⌘N)" title="New connection  ⌘N" style="{{boxS}}">+</button>
+            <button type="button" aria-label="Remove connection" aria-disabled="true" title="DBMan // internal can't be removed" style="{{boxS}} opacity: .35; cursor: default">−</button>
+            <span style="flex: 1"></span>
+            <span style="{{capDim}}; font-size: 10px">SAVED // 05 + 1</span>
+          </div>
+        </div>
+        <div style="flex: 1; min-width: 0; padding-top: 12px; display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{cx.notes}}" as="nt" hint-placeholder-count="4">
+            <div style="padding-left: 8px; border-left: 2px solid var(--lineStrong)"><div style="{{cap}}; font-size: 10.5px">{{nt.k}}</div><div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2); margin-top: 2px">{{nt.v}}</div></div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <!-- (c) agents can't see this -->
+    <section aria-label="Agents can't see the internal store" style="{{bFrame}}">
+      <div style="{{bHead}}"><span style="{{cap}}">C // AGENTS CAN'T SEE THIS</span><span style="{{capDim}}">// G21</span><span style="flex: 1"></span><span style="{{tile}}">CC</span><span style="{{capDim}}">MCP // AS CLAUDE-CODE</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px">
+        <div style="{{mcpBox}}">
+          <div style="display: flex; align-items: center; gap: 6px"><span style="{{capDim}}">→ CALL</span><span style="font-family: var(--code); font-size: 11.5px; font-weight: 700">connections.list</span><span style="font-family: var(--code); font-size: 11.5px; color: var(--ink3)">{}</span><span style="flex: 1"></span><span style="{{capDim}}; font-size: 10px">2 MS · OK</span></div>
+          <div style="font-family: var(--code); font-size: 11px; line-height: 15px; margin-top: 6px; white-space: pre; color: var(--ink2)">{{mcp.list}}</div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px"><span style="{{cap}}; font-size: 10.5px">5 OF 6 ROWS</span><span style="{{capDim}}; font-size: 10.5px">// internal is filtered in code, not hidden by a flag</span></div>
+        </div>
+        <div style="{{mcpBoxErr}}">
+          <div style="display: flex; align-items: center; gap: 6px"><span style="{{capDim}}">→ CALL</span><span style="font-family: var(--code); font-size: 11.5px; font-weight: 700">query.run</span><span style="flex: 1"></span><span style="{{capAlert}}">PERMISSION_DENIED</span></div>
+          <div style="font-family: var(--code); font-size: 11px; line-height: 15px; margin-top: 4px; white-space: pre; color: var(--ink2)">{{mcp.run}}</div>
+          <div style="font-family: var(--code); font-size: 11px; line-height: 15px; margin-top: 6px; white-space: pre; color: var(--alert)">{{mcp.err}}</div>
+        </div>
+        <div style="{{mcpBox}}">
+          <div style="display: flex; align-items: center; gap: 6px"><span style="{{capDim}}">→ EVEN IF IT GUESSED</span><span style="font-family: var(--code); font-size: 11px">permissions.set(cc, 'internal', 'read')</span></div>
+          <div style="font-family: var(--code); font-size: 11px; line-height: 15px; margin-top: 4px; color: var(--alert)">CHECK constraint failed: permissions_not_internal</div>
+        </div>
+        <div style="font-size: 12px; line-height: 1.45; color: var(--ink2)">It holds the permission table: an agent must never read or grant its own rights.</div>
+      </div>
+    </section>
+
+    <!-- (d) file facts -->
+    <section aria-label="File facts" style="{{bFrame}}">
+      <div style="{{bHead}}"><span style="{{cap}}">D // FILE</span><span style="{{capDim}}">// ONE FILE, NO SECRETS</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 6px 12px 10px">
+        <sc-for list="{{facts}}" as="fx" hint-placeholder-count="7">
+          <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--line)">
+            <span style="{{capDim}}; font-size: 10px">{{fx.k}}</span>
+            <span style="min-width: 0"><span style="{{fx.vs}}">{{fx.v}}</span><span style="display: block; font-size: 11px; color: var(--ink3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{fx.d}}</span></span>
+          </div>
+        </sc-for>
+        <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: center; padding: 6px 0 0">
+          <span style="{{capDim}}; font-size: 10px">BACKUPS ×7</span>
+          <span style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px"><sc-for list="{{backups}}" as="bk" hint-placeholder-count="7"><span style="{{bk.s}}"><span style="{{bk.dS}}">{{bk.d}}</span><span style="{{bk.zS}}">{{bk.z}}</span></span></sc-for></span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {route: 'table', tbl: 'settings', unlocked: false, staged: null, applied: {}, last: null, nope: false, card: null};
+  }
+  renderVals() {
+    const S = this.state;
+    const AP = S.applied || {};
+    const dark = AP.appearance === '"dark"' || (AP.appearance !== '"light"' && (this.props.dark ?? false));
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:1500px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    // ---------------------------------------------------------------- shared styles
+    const set = (o) => this.setState(o);
+    const noop = () => {};
+    const HIDE = 'display: none;';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;';
+    const boxS = box;
+    const boxSPrimary = boxBase + 'height: 20px; padding: 0 8px; font-size: 10.5px; background: var(--ink); color: var(--paper);';
+    const boxSAmber = boxBase + 'height: 20px; padding: 0 8px; font-size: 10.5px; background: transparent; color: var(--amber); border-color: var(--amber);';
+    const capAmber = CAPS + ' color: var(--amber); white-space: nowrap';
+    const capAlert = CAPS + ' color: var(--alert); white-space: nowrap';
+    const capAccent = CAPS + ' color: var(--accent); white-space: nowrap';
+    const ell = 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;';
+    const head34 = 'height: 34px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line); overflow: hidden';
+    const tile = 'display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; font: 700 9px var(--ui); letter-spacing: .02em; color: var(--ink)';
+    const tagCss = (color, filled) => CAPS + 'font-size: 9px; letter-spacing: .06em; display: inline-flex; align-items: center; height: 14px; padding: 0 4px; box-sizing: border-box; border-radius: 2px; border: 1px solid ' + color + ';' + (filled ? 'background: ' + color + '; color: var(--paper);' : 'color: ' + color + ';');
+    const sysTag = tagCss('var(--lineStrong)');
+    const segStyle = (on, first, last, h) => CAPS + 'font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; height: ' + (h || 22) + 'px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: ' + (first && last ? '2px' : first ? '2px 0 0 2px' : last ? '0 2px 2px 0' : '0') + ';' + (first ? '' : 'margin-left: -1px;') + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);');
+    const fmtN = (n) => n.toLocaleString('en-US');
+    const fmtK = (n) => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n);
+
+    // ---------------------------------------------------------------- top strip
+    const unlocked = !!S.unlocked;
+    const NAVI = {dash: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', table: 'M3 4h18v16H3zM3 10h18M9 4v16', query: 'M4 17l6-5-6-5M12 19h8',
+      schema: 'M3 4h6v5H3zM15 4h6v5h-6zM9 15h6v5H9zM9 6.5h6M6 9v3.5h6V15M18 9v3.5h-6'};
+    const routes = [['dash', 'Dashboard', '⌘0'], ['table', 'Table', '⌘T'], ['query', 'Query', '⌘⏎'], ['schema', 'Schema', '⌘4']].map(([id, label, key]) => {
+      const on = S.route === id;
+      return {t: label, icon: NAVI[id], tip: label + '  ' + key, on: on ? 'true' : 'false', pick: () => set({route: id}),
+        style: CAPS + 'white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; cursor: pointer; font-family: var(--ui); border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [['session', 'dbman // internal'], ['engine', 'sqlite 3.46'], ['user_version', '3'], ['app_id', 'DBMN']].map(([k, v], i) => ({k, v, vs: cap + '; color: var(--ink)'}));
+    const sysChip = CAPS + 'display: inline-flex; align-items: center; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper); color: var(--ink); white-space: nowrap;';
+    const lockChip = CAPS + 'display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border-radius: 3px; white-space: nowrap;' +
+      (unlocked ? 'border: 1px solid var(--amber); background: var(--amber); color: var(--paper);' : 'border: 1px solid var(--line); background: var(--paper); color: var(--ink);');
+    const unlockBtn = CAPS + 'display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; box-sizing: border-box; border-radius: 3px; cursor: pointer; font-family: var(--ui); white-space: nowrap;' +
+      (unlocked ? 'border: 1px solid var(--amber); background: var(--paper); color: var(--amber);' : 'border: 1px solid var(--lineStrong); background: var(--paper); color: var(--ink);');
+    const toggleLock = () => set({unlocked: !unlocked, staged: null, nope: false});
+
+    // ---------------------------------------------------------------- data (V2-SPEC §6)
+    const ROWS = {activity: 4812, agents: 5, approvals: 31, connections: 6, layers: 9, map_layouts: 3, meta: 4, overlay_items: 17, permissions: 15, query_history: 1204, row_patches: 6, schema_cache: 6, sensitive_columns: 7, settings: 24};
+    const SET = [
+      ['appearance', '"system"', 19], ['density', '"compact"', 19], ['page_size', '500', 7], ['relative_dates', 'true', 19], ['date_format', '"yyyy-MM-dd HH:mm"', 19],
+      ['null_display', '"∅"', 19], ['grid_font_size', '11.5', 12], ['sidebar_width', '220', 3], ['reopen_last_session', 'true', 19], ['confirm_discard', 'true', 19],
+      ['prod_guard_cost', '1000000', 19], ['prod_guard_rows', '1000000', 19], ['explain_on_prod', 'true', 19], ['timeout_ms', '15000', 19], ['timeout_ms_prod', '5000', 19],
+      ['row_cap', '500', 19], ['approval_ttl_s', '600', 19], ['redaction_patterns', '["email","phone","ssn","address","name","token","password","iban","dob"]', 19],
+      ['activity_retention_d', '30', 19], ['layer_archive_d', '30', 19], ['backup_keep', '7', 19], ['backup_at', '"03:00"', 19], ['mcp_socket', 'true', 19], ['mcp_protocol', '"2025-06-18"', 19],
+    ];
+    const NEXT = {appearance: {'"system"': '"dark"', '"dark"': '"light"', '"light"': '"system"'}, density: {'"compact"': '"regular"', '"regular"': '"compact"'},
+      page_size: {'500': '1000', '1000': '250', '250': '500'}, relative_dates: {'true': 'false', 'false': 'true'}, row_cap: {'500': '1000', '1000': '500'}};
+    const EFFECT = {appearance: 'every window re-themed', density: 'rows ' + (AP.density === '"regular"' ? '23 → 26' : '26 → 23') + ' px', page_size: 'grids page by the new size',
+      relative_dates: 'date cells re-rendered', row_cap: 'MCP row cap for every agent'};
+    const val = (k, v0) => AP[k] !== undefined ? AP[k] : v0;
+    const relDates = val('relative_dates', 'true') === 'true';
+    const rowH = val('density', '"compact"') === '"regular"' ? 26 : 23;
+    const DATES = {19: ['2026-10-21 09:02', '19 d ago'], 12: ['2026-10-28 18:11', '12 d ago'], 7: ['2026-11-02 16:40', '7 d ago'], 3: ['2026-11-06 10:27', '3 d ago'], 0: ['2026-11-09 14:32', 'just now']};
+    const jtype = (v) => v[0] === '"' ? 'text' : v[0] === '[' ? 'array' : v === 'true' || v === 'false' ? v : v.includes('.') ? 'real' : 'integer';
+
+    const cellBase = 'display: flex; align-items: center; height: 100%; padding: 0 8px; box-sizing: border-box; border-right: 1px solid var(--line);' + ell;
+    const mkHead = (cols) => cols.map(([n, ty], i) => ({n, t: ty || '', s: 'display: flex; align-items: center; gap: 6px; padding: 0 8px; box-sizing: border-box; border-right: 1px solid var(--line); min-width: 0; overflow: hidden',
+      nS: CAPS + 'font-size: 10.5px; color: var(--ink); white-space: nowrap; text-transform: none; letter-spacing: .02em', tS: CAPS + 'font-size: 9px; color: var(--ink3); white-space: nowrap'}));
+    const tmpl = (cols) => '36px ' + cols.map((c) => c[2] ? c[2] + 'px' : 'minmax(0, 1fr)').join(' ');
+    const headRowCss = (cols) => 'display: grid; grid-template-columns: ' + tmpl(cols) + '; height: 24px; align-items: stretch; border-bottom: 1px solid var(--lineStrong); background: var(--paper)';
+    const rowCss = (cols, i, extra) => 'display: grid; grid-template-columns: ' + tmpl(cols) + '; height: ' + rowH + 'px; align-items: stretch; border-bottom: 1px solid var(--line);' + (i % 2 ? 'background: var(--sunken);' : '') + (extra || '');
+    const numCell = (i) => ({v: String(i + 1), s: cellBase + 'justify-content: flex-end; color: var(--ink3); font-size: 10.5px', tip: '', pick: noop});
+    const plain = (v, extra) => ({v, s: cellBase + (extra || ''), tip: v, pick: noop});
+
+    // ---- settings (editable when unlocked)
+    const SCOLS = [['key', 'TEXT PK', 168], ['value', 'JSON', 0], ['json_type', '', 72], ['updated_at', 'UNIX MS', 132]];
+    const staged = S.staged;
+    const settingsRows = SET.map(([k, v0, age], i) => {
+      const cur = val(k, v0);
+      const isStaged = staged && staged.key === k;
+      const isApplied = AP[k] !== undefined;
+      const editable = !!NEXT[k];
+      const d = DATES[isApplied ? 0 : age];
+      const pickVal = !unlocked ? () => set({nope: k, staged: null}) : editable ? () => set({staged: {key: k, from: cur, to: NEXT[k][cur]}, nope: false}) : () => set({nope: 'demo:' + k});
+      const vStyle = cellBase + 'cursor: pointer;' + (isStaged ? 'color: var(--accent); font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--accent);' : isApplied ? 'color: var(--accent);' : '') +
+        (unlocked && editable && !isStaged ? 'text-decoration: underline dotted; text-underline-offset: 3px;' : '');
+      return {style: rowCss(SCOLS, i, isApplied || isStaged ? 'box-shadow: inset 3px 0 0 var(--accent);' : ''), cells: [
+        numCell(i), plain(k, 'font-weight: 600'),
+        {v: isStaged ? staged.from + '  →  ' + staged.to : cur, s: vStyle, pick: pickVal, tip: unlocked ? (editable ? 'Click to stage a new value' : 'Edit through the review sheet') : 'Read-only — ⌥-click UNLOCK INTERNAL STORE to edit'},
+        plain(jtype(cur), 'color: var(--ink3)'), plain(relDates ? d[1] : d[0], 'color: var(--ink2)')]};
+    });
+
+    // ---- other sampled tables
+    const ENVC = {production: 'color: var(--amber)', system: 'font-weight: 700'};
+    const gen = (cols, data, fmt) => data.map((r, i) => ({style: rowCss(cols, i), cells: [numCell(i)].concat(r.map((v, j) => plain(String(v), fmt ? fmt(j, String(v)) : '')))}));
+    const CCOLS = [['id', 'PK', 92], ['name', '', 132], ['engine', '', 70], ['env', 'CHECK', 84], ['host / file_path', '', 0], ['secret_ref', '→ KEYCHAIN', 190]];
+    const CDATA = [['c_shop', 'shop', 'postgres', 'local', 'localhost:5432/shop', 'keychain:dbman.c_shop'], ['c_notes', 'notes.sqlite', 'sqlite', 'local', '~/Developer/notes.sqlite', '∅'],
+      ['c_crm', 'crm', 'mysql', 'staging', 'staging.crm.internal:3306', 'keychain:dbman.c_crm'], ['c_analytics', 'analytics', 'postgres', 'production', 'prod-db.internal:5432', 'keychain:dbman.c_analytics'],
+      ['c_billing', 'billing', 'postgres', 'production', 'billing-db.internal:5432', 'keychain:dbman.c_billing'], ['internal', 'DBMan // internal', 'sqlite', 'system', '~/Library/Application Support/DBMan/dbman.sqlite', '∅']];
+    const ACOLS = [['id', 'PK', 64], ['client_name', '', 130], ['platform', '', 70], ['version', '', 70], ['config_path', '', 0], ['installed_via', 'CHECK', 100], ['last_seen', '', 96]];
+    const ADATA = [['a_cc', 'claude-code', 'CC', '2.0.31', '~/.claude.json', 'native', '14:32:10'], ['a_cx', 'codex', 'CX', '0.58.0', '~/.codex/config.toml', 'native', '14:32:09'],
+      ['a_cu', 'cursor', 'CU', '2.1.4', '~/.cursor/mcp.json', 'agentpack', '13:58:41'], ['a_cd', 'claude-desktop', 'CD', '1.4.2', '~/Library/…/claude_desktop_config.json', 'native', '12:20:03'],
+      ['a_zd', 'zed', 'ZD', '0.211.4', '~/.config/zed/settings.json', 'manual', '09:41:56']];
+    const PCOLS = [['agent_id', 'PK FK', 110], ['connection_id', 'PK FK', 150], ['level', 'CHECK', 110], ['timeout_ms', '', 110], ['row_cap', '', 0]];
+    const LV = {c_shop: 'overlay', c_crm: 'overlay', c_analytics: 'read'};
+    const PDATA = [];
+    ['a_cc', 'a_cx', 'a_cu', 'a_cd', 'a_zd'].forEach((a) => ['c_shop', 'c_crm', 'c_analytics'].forEach((c) => {
+      const lv = a === 'a_zd' && c !== 'c_shop' ? 'off' : a === 'a_cd' && c === 'c_crm' ? 'read' : LV[c];
+      PDATA.push([a, c, lv, c === 'c_analytics' ? '5000' : '15000', '500']);
+    }));
+    const YCOLS = [['id', 'PK', 64], ['connection_id', 'FK', 120], ['owner', 'CHECK', 70], ['agent_id', 'FK', 84], ['name', '', 0], ['visible', '', 64], ['items', '', 60]];
+    const YDATA = [['l_1', 'c_shop', 'human', '∅', 'MINE', '1', '4'], ['l_2', 'c_shop', 'agent', 'a_cc', 'claude-code', '1', '6'], ['l_3', 'c_shop', 'agent', 'a_cx', 'codex', '1', '3'],
+      ['l_4', 'c_analytics', 'human', '∅', 'MINE', '1', '1'], ['l_5', 'c_analytics', 'agent', 'a_cc', 'claude-code', '1', '2'], ['l_6', 'c_crm', 'human', '∅', 'MINE', '1', '0'],
+      ['l_7', 'c_crm', 'agent', 'a_cu', 'cursor', '1', '1'], ['l_8', 'c_billing', 'human', '∅', 'MINE', '1', '0'], ['l_9', 'c_notes', 'human', '∅', 'MINE', '1', '0']];
+    const VCOLS = [['id', 'PK', 64], ['ts', '', 76], ['agent_id', 'FK', 72], ['connection_id', 'FK', 104], ['tool', '', 140], ['args_summary', '', 0], ['ms', '', 52], ['status', 'CHECK', 74]];
+    const VDATA = [[4812, '14:32:10', 'a_cc', 'c_analytics', 'query.run', 'events · checkout', 0, 'blocked'], [4811, '14:32:09', 'a_cx', 'c_shop', 'query.explain', 'events · created_at > …', 9, 'ok'],
+      [4810, '14:32:07', 'a_cx', 'c_analytics', 'query.run', 'events · group by 1', 0, 'blocked'], [4809, '14:31:58', 'a_cc', 'c_analytics', 'query.run', 'customers · 500 rows', 212, 'ok'],
+      [4808, '14:31:40', 'a_cc', 'c_shop', 'overlay.patch_rows', 'orders · 3 rows', 4, 'overlay'], [4807, '14:31:12', 'a_cc', 'c_shop', 'schema.describe', 'invoices', 6, 'ok'],
+      [4806, '14:30:55', 'a_cu', 'c_crm', 'stats.column', 'contacts.stage', 18, 'ok'], [4805, '14:29:31', 'a_cc', 'c_shop', 'views.create', 'daily_revenue', 3, 'overlay'],
+      [4804, '14:27:02', 'a_cx', 'c_shop', 'query.run', 'order_items · 500 rows', 41, 'ok'], [4803, '14:26:40', 'a_cx', 'c_billing', 'query.run', 'invoices', 0, 'denied'],
+      [4802, '14:25:13', 'a_cc', 'c_shop', 'dashboard.create', 'Sales health · 6 widgets', 7, 'overlay'], [4801, '14:24:58', 'a_cd', 'c_shop', 'connections.list', '5 rows', 2, 'ok'],
+      [4800, '14:22:19', 'a_cu', 'c_crm', 'query.run', 'deals · 214 rows', 33, 'ok'], [4799, '14:20:03', 'a_cc', 'c_shop', 'schema.graph', '12 tables', 11, 'ok']];
+    const statusFmt = (j, v) => j === 7 ? (v === 'blocked' || v === 'denied' ? 'color: var(--alert)' : v === 'overlay' ? 'color: var(--accent)' : 'color: var(--ink3)') : j === 6 ? 'justify-content: flex-end' : '';
+    const T = {
+      settings: {cols: SCOLS, rows: settingsRows, sub: '// 24 rows · key → JSON · read by AppStore.settings',
+        ddl: ['CREATE TABLE settings (key TEXT PRIMARY KEY,', '  value TEXT NOT NULL CHECK (json_valid(value)),', '  updated_at INTEGER NOT NULL) STRICT;'],
+        live: 'Update hook in-process, file events for sqlite3 or make store-sql. Change a setting with SQL and the UI follows.'},
+      connections: {cols: CCOLS, rows: gen(CCOLS, CDATA, (j, v) => j === 3 ? (ENVC[v] || '') : j === 5 && v === '∅' ? 'color: var(--ink3)' : ''), sub: '// 6 rows · 5 yours + internal · no passwords',
+        ddl: ['CREATE TABLE connections (id TEXT PRIMARY KEY, name TEXT NOT NULL, engine TEXT NOT NULL,', "  env TEXT NOT NULL CHECK (env IN ('local','staging','production','system')),", "  secret_ref TEXT, …, CHECK (env <> 'system' OR id = 'internal')", ') STRICT;'],
+        live: 'secret_ref names a Keychain item (release) or the dev secrets file (DEBUG). Passwords never enter this file.'},
+      agents: {cols: ACOLS, rows: gen(ACOLS, ADATA), sub: '// 5 rows · written by the MCP handshake',
+        ddl: ['CREATE TABLE agents (id TEXT PRIMARY KEY, client_name TEXT NOT NULL, platform TEXT,', "  version TEXT, config_path TEXT, installed_via TEXT CHECK (installed_via IN ('native','agentpack','manual')),", '  first_seen INTEGER, last_seen INTEGER', ') STRICT;'],
+        live: 'A new client_name on the socket inserts a row; the Agents window lists it immediately with permissions at their defaults.'},
+      permissions: {cols: PCOLS, rows: gen(PCOLS, PDATA, (j, v) => j === 2 && v === 'off' ? 'color: var(--ink3)' : j === 2 && v === 'overlay' ? 'color: var(--accent)' : ''), sub: '// 15 rows · 5 agents × 3 connections',
+        ddl: ['CREATE TABLE permissions (agent_id TEXT REFERENCES agents, connection_id TEXT REFERENCES connections,', "  level TEXT NOT NULL CHECK (level IN ('off','read','overlay')), timeout_ms INTEGER, row_cap INTEGER,", "  PRIMARY KEY (agent_id, connection_id), CONSTRAINT permissions_not_internal CHECK (connection_id <> 'internal')", ') STRICT;'],
+        live: 'The MCP gate reads this table on every call. A change applies to the next tool call — no reconnect.'},
+      layers: {cols: YCOLS, rows: gen(YCOLS, YDATA), sub: '// 9 rows · one MINE per connection + agent layers',
+        ddl: ['CREATE TABLE layers (id TEXT PRIMARY KEY, connection_id TEXT REFERENCES connections,', "  owner TEXT CHECK (owner IN ('human','agent')), agent_id TEXT REFERENCES agents,", '  name TEXT, visible INTEGER, position INTEGER, archived_at INTEGER', ') STRICT;'],
+        live: 'Toggling visible here is the same as the eye switch in a workspace’s layer list; every grid re-merges.'},
+      activity: {cols: VCOLS, rows: gen(VCOLS, VDATA, statusFmt), sub: '// 4,812 rows · append-only · 30-day retention',
+        ddl: ['CREATE TABLE activity (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, agent_id TEXT, connection_id TEXT,', "  tool TEXT, args_summary TEXT, ms INTEGER, rows INTEGER,", "  status TEXT CHECK (status IN ('ok','overlay','blocked','denied','error')), error TEXT", ') STRICT;'],
+        live: 'Every MCP call appends one row. The AGENTS inspector and this board’s dashboard are both just queries on it.'},
+    };
+    const tbl = T[S.tbl] ? S.tbl : 'settings';
+    const TD = T[tbl];
+    const tb = {name: tbl, sub: TD.sub, heads: [{n: '#', t: '', s: 'border-right: 1px solid var(--line)', nS: capDim + '; font-size: 10px', tS: HIDE}].concat(mkHead(TD.cols)),
+      headRow: headRowCss(TD.cols), rows: TD.rows, ddl: TD.ddl, live: TD.live,
+      mode: unlocked ? 'UNLOCKED · EDITS VIA REVIEW' : 'READ-ONLY', modeStyle: unlocked ? tagCss('var(--amber)') : tagCss('var(--ink3)')};
+
+    // ---- review / feedback bar
+    const barFrame = (tone) => 'height: 36px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-top: 1px solid ' + (tone || 'var(--lineStrong)') + ';';
+    const textCss = 'font-size: 12px; color: var(--ink2);' + ell;
+    const monoCss = 'font-family: var(--code); font-size: 11.5px; color: var(--ink);' + ell;
+    let bar;
+    const commit = () => staged && set({applied: Object.assign({}, AP, {[staged.key]: staged.to}), last: staged, staged: null, nope: false});
+    if (tbl !== 'settings') {
+      bar = {frame: barFrame('var(--line)'), tag: unlocked ? 'UNLOCKED' : 'READ-ONLY', tagStyle: unlocked ? capAmber : capDim, text: 'Settings is the table this board lets you edit — open it from the navigator.', textStyle: textCss,
+        meta: TD.rows.length + ' OF ' + fmtN(ROWS[tbl]) + ' ROWS', metaStyle: capDim + '; font-size: 10px', a: 'SETTINGS', aTip: 'Open settings', aPick: () => set({tbl: 'settings'}), aStyle: boxS, b: '', bTip: '', bPick: noop, bStyle: HIDE};
+    } else if (staged) {
+      const sql = "UPDATE settings SET value = '" + staged.to + "', updated_at = unixepoch('subsec') * 1000 WHERE key = '" + staged.key + "';";
+      bar = {frame: barFrame('var(--accent)') + 'background: var(--paper);', tag: 'REVIEW // 1 STATEMENT', tagStyle: capAccent, text: sql, textStyle: monoCss,
+        meta: '', metaStyle: HIDE, a: 'DISCARD', aTip: 'Discard  Esc', aPick: () => set({staged: null}), aStyle: boxS, b: 'COMMIT ⌘↩', bTip: 'Commit  ⌘↩', bPick: commit, bStyle: boxSPrimary};
+    } else if (S.last) {
+      const l = S.last;
+      bar = {frame: barFrame('var(--accent)'), tag: 'APPLIED LIVE // UI RELOADED', tagStyle: capAccent, text: l.key + '  ' + l.from + ' → ' + l.to + '  ·  update hook → AppStore.settings → ' + EFFECT[l.key], textStyle: monoCss,
+        meta: '2.8 MS', metaStyle: capDim + '; font-size: 10px', a: 'UNDO', aTip: 'Stage the previous value', aPick: () => set({staged: {key: l.key, from: l.to, to: l.from}}), aStyle: boxS, b: '', bTip: '', bPick: noop, bStyle: HIDE};
+    } else if (S.nope && !unlocked) {
+      bar = {frame: barFrame('var(--amber)'), tag: 'READ-ONLY', tagStyle: capAmber, text: 'settings.' + S.nope + ' belongs to DBMan itself. ⌥-click UNLOCK INTERNAL STORE to stage an edit.', textStyle: textCss,
+        meta: '', metaStyle: HIDE, a: '⌥ UNLOCK', aTip: 'Unlock internal store', aPick: toggleLock, aStyle: boxSAmber, b: '', bTip: '', bPick: noop, bStyle: HIDE};
+    } else if (unlocked) {
+      bar = {frame: barFrame('var(--amber)'), tag: 'UNLOCKED', tagStyle: capAmber, text: S.nope ? 'This board stages appearance, density, page_size, relative_dates and row_cap — try one of those.' : 'Click a dotted value to stage an edit. It goes through the review sheet, then applies live.', textStyle: textCss,
+        meta: '5 KEYS DEMO-EDITABLE', metaStyle: capDim + '; font-size: 10px', a: '', aTip: '', aPick: noop, aStyle: HIDE, b: '', bTip: '', bPick: noop, bStyle: HIDE};
+    } else {
+      bar = {frame: barFrame('var(--line)'), tag: 'READ-ONLY', tagStyle: capDim, text: 'DBMan writes this table; you read it. Click a value to see why it won’t edit.', textStyle: textCss,
+        meta: 'PAGE 1 // 24 OF 24 · PAGE_SIZE ' + val('page_size', '500'), metaStyle: capDim + '; font-size: 10px', a: '', aTip: '', aPick: noop, aStyle: HIDE, b: '', bTip: '', bPick: noop, bStyle: HIDE};
+    }
+
+    // ---------------------------------------------------------------- navigator
+    const navFrame = 'flex: 0 0 220px; display: flex; flex-direction: column; box-sizing: border-box; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; overflow: hidden;';
+    const navItem = (name, o) => {
+      const strong = !!o.on;
+      const filled = o.rows ? Math.max(1, Math.round(Math.log10(o.rows + 1) / 4 * 8)) : 0;
+      const live = !!o.pick;
+      return {name, current: strong ? 'page' : 'false', tip: o.tip || name, count: o.count || '', pick: o.pick || noop,
+        meter: o.rows ? Array.from({length: 8}, (_, k) => 'width: 3px; height: 8px; background: ' + (k < filled ? (strong ? 'var(--paper)' : 'var(--ink)') : 'var(--fill12)')) : [],
+        nameStyle: 'flex: 1; ' + ell + (o.mono ? 'font-family: var(--code); font-size: 11.5px;' : ''),
+        countStyle: 'font-family: var(--code); font-size: 11px; min-width: 38px; text-align: right;' + (strong ? 'color: var(--paper); opacity: .75' : 'color: var(--ink3)'),
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 6px; border: 0; border-radius: 2px; background: transparent; text-align: left; font-family: var(--ui); font-size: 12px; box-sizing: border-box;' +
+          (live ? 'cursor: pointer;' : 'cursor: default;') + (strong ? 'background: var(--ink); color: var(--paper); font-weight: 600;' : 'color: var(--ink);')};
+    };
+    const tablesSorted = Object.keys(ROWS).sort();
+    const navSections = [
+      {name: 'tables', count: '14', items: tablesSorted.map((n) => navItem(n, {rows: ROWS[n], count: fmtK(ROWS[n]), on: S.route === 'table' && tbl === n,
+        tip: n + ' · ' + fmtN(ROWS[n]) + ' rows' + (T[n] ? '' : ' — not sampled on this board'), pick: T[n] ? () => set({route: 'table', tbl: n}) : null}))},
+      {name: 'views', count: '04', items: ['v_agent_activity_daily', 'v_layer_summary', 'v_pending_approvals', 'v_dashboard_widgets'].map((n) => navItem(n, {mono: false, count: 'view', tip: n + ' — open in Query', pick: () => set({route: 'query'})}))},
+      {name: 'dashboards', count: '01', items: [navItem('Agent activity', {count: '⌘0', on: S.route === 'dash', pick: () => set({route: 'dash'}), tip: 'Agent activity — default dashboard of the internal store'})]},
+    ];
+
+    // ---------------------------------------------------------------- query
+    const KW = new Set(['select', 'from', 'join', 'on', 'where', 'group', 'by', 'order', 'desc', 'as', 'and', 'limit']);
+    const FN = new Set(['count', 'sum', 'avg', 'round', 'max', 'datetime', 'unixepoch']);
+    const hl = (line) => (line.match(/--.*$|'[^']*'|\w+|\s+|./g) || []).map((x) => ({t: x,
+      s: x.startsWith('--') ? 'color: var(--ink3)' : x[0] === "'" ? 'color: var(--accent)' : KW.has(x.toLowerCase()) ? 'font-weight: 700' : FN.has(x.toLowerCase()) ? 'color: var(--ink2); font-style: italic' : /^\d/.test(x) ? 'color: var(--ink2)' : ''}));
+    const SQL = [
+      'select a.client_name, count(*) as calls,',
+      "       sum(activity.status = 'blocked') as blocked,",
+      "       sum(activity.status = 'overlay') as overlay,",
+      '       round(avg(activity.ms), 1) as avg_ms,',
+      "       datetime(max(activity.ts) / 1000, 'unixepoch', 'localtime') as last_call",
+      'from activity join agents a on a.id = activity.agent_id',
+      "where activity.ts > unixepoch('now', '-1 day') * 1000",
+      'group by a.client_name',
+      'order by calls desc;',
+    ];
+    const QCOLS = [['client_name', 0, 'l'], ['calls', 110, 'r'], ['blocked', 110, 'r'], ['overlay', 110, 'r'], ['avg_ms', 110, 'r'], ['last_call', 170, 'r']];
+    const qtmpl = '36px ' + QCOLS.map((c) => c[1] ? c[1] + 'px' : 'minmax(0, 1fr)').join(' ');
+    const QD = [['claude-code', 1128, 23, 214, '6.4', '2026-11-09 14:32:10'], ['codex', 612, 14, 88, '9.1', '2026-11-09 14:32:09'], ['cursor', 241, 4, 0, '11.8', '2026-11-09 13:58:41'],
+      ['claude-desktop', 96, 0, 0, '5.2', '2026-11-09 12:20:03'], ['zed', 18, 0, 0, '7.7', '2026-11-09 09:41:56']];
+    const qcell = (v, al, extra) => ({v: String(v), s: 'display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; border-right: 1px solid var(--line);' + ell + (al === 'r' ? 'justify-content: flex-end;' : '') + (extra || '')});
+    const q = {lines: SQL.map((l, i) => ({n: i + 1, tok: hl(l)})),
+      mode: unlocked ? 'UNLOCKED · WRITES → REVIEW SHEET' : 'READ-ONLY · SELECT ONLY', modeStyle: unlocked ? tagCss('var(--amber)') : tagCss('var(--ink3)'),
+      headRow: 'display: grid; grid-template-columns: ' + qtmpl + '; height: 24px; border-bottom: 1px solid var(--lineStrong)',
+      heads: [{n: '#', s: 'border-right: 1px solid var(--line)'}].concat(QCOLS.map(([n, w, al]) => ({n, s: CAPS + 'font-size: 10.5px; text-transform: none; letter-spacing: .02em; display: flex; align-items: center; padding: 0 10px; border-right: 1px solid var(--line);' + (al === 'r' ? 'justify-content: flex-end;' : '')}))),
+      rowStyle: 'display: grid; grid-template-columns: ' + qtmpl + '; height: 24px; border-bottom: 1px solid var(--line); font-family: var(--code); font-size: 11.5px',
+      rows: QD.map((r, i) => [qcell(i + 1, 'r', 'color: var(--ink3); font-size: 10.5px')].concat(r.map((v, j) => qcell(typeof v === 'number' ? fmtN(v) : v, QCOLS[j][2], j === 2 && v > 0 ? 'color: var(--alert)' : j === 0 ? 'font-weight: 600' : '')))),
+      snips: [['select * from v_pending_approvals;', 'READ · 2 ROWS', capDim], ['select layer, items, last_activity from v_layer_summary order by items desc;', 'READ · 9 ROWS', capDim],
+        ["select key, value from settings where key like 'prod_guard%';", 'READ · 2 ROWS', capDim],
+        ["update settings set value = '1000' where key = 'page_size';", unlocked ? 'REVIEW SHEET → APPLIES LIVE' : 'NEEDS UNLOCK', unlocked ? capAccent : capAmber],
+        ["select count(*) from permissions where connection_id = 'internal';", '0 — CHECK FORBIDS IT', capDim]].map(([sql, note, st]) => ({sql, note, noteStyle: st + '; font-size: 10px; text-align: right; overflow: hidden; text-overflow: ellipsis'})),
+      hist: [['14:30:12', 'ME', 'dbman // internal', 'select a.client_name, count(*) as calls, … from activity join agents …', '3 ms'], ['14:32:10', 'CC', 'analytics', "select customer_id, count(*) from events where type = 'checkout' group by 1", 'blocked'],
+        ['14:27:02', 'CX', 'shop', 'select * from order_items where order_id in (…) limit 500', '41 ms'], ['14:22:19', 'CU', 'crm', "select * from deals where stage = 'won' and closed_at > now() - interval '30 days'", '33 ms'],
+        ['14:12:40', 'ME', 'shop', 'select c.plan, sum(o.total) from orders o join customers c on c.id = o.customer_id group by 1', '18 ms'], ['13:58:41', 'CU', 'crm', 'select count(*) from contacts', '4 ms']]
+        .map(([ts, m, c, sql, ms]) => ({ts, m, c, sql, ms, tileStyle: tile + ';' + (m === 'ME' ? '' : 'border-color: var(--accent); color: var(--accent)')}))};
+
+    // ---------------------------------------------------------------- schema mini ER
+    const G = {pk: 'M1.5 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5.5 6H11M9 6v2.2M11 6v1.6', fk: 'M1 6h8.5M6.5 3l3 3-3 3', ck: 'M2 6.5l2.5 2.5L10 3.5', none: ''};
+    const CW = 172;
+    const SM = {
+      connections: {x: 20, y: 84, cols: [['id', 'pk', 'text'], ['name', '', 'text'], ['env', 'ck', 'system'], ['secret_ref', '', '→ keychain']]},
+      agents: {x: 20, y: 404, cols: [['id', 'pk', 'text'], ['client_name', '', 'text'], ['platform', '', 'text']]},
+      permissions: {x: 256, y: 22, cols: [['agent_id', 'fk', 'pk'], ['connection_id', 'fk', 'pk'], ['level', 'ck', 'text']]},
+      layers: {x: 256, y: 196, cols: [['id', 'pk', 'text'], ['connection_id', 'fk', 'text'], ['agent_id', 'fk', 'null'], ['owner', 'ck', 'text']]},
+      activity: {x: 256, y: 392, cols: [['id', 'pk', 'int'], ['agent_id', 'fk', 'text'], ['connection_id', 'fk', 'text'], ['status', 'ck', 'text']]},
+      approvals: {x: 256, y: 588, cols: [['id', 'pk', 'int'], ['agent_id', 'fk', 'text'], ['connection_id', 'fk', 'text'], ['status', 'ck', 'text']]},
+      overlay_items: {x: 470, y: 196, cols: [['id', 'pk', 'int'], ['layer_id', 'fk', 'text'], ['kind', 'ck', 'text'], ['payload', '', 'json']]},
+      row_patches: {x: 690, y: 196, cols: [['item_id', 'fk', 'int'], ['table_name', '', 'text'], ['op', 'ck', 'text']]},
+    };
+    const EDGES = [['permissions', 'agent_id', 'agents'], ['permissions', 'connection_id', 'connections'], ['layers', 'connection_id', 'connections'], ['layers', 'agent_id', 'agents'],
+      ['activity', 'agent_id', 'agents'], ['activity', 'connection_id', 'connections'], ['approvals', 'agent_id', 'agents'], ['approvals', 'connection_id', 'connections'],
+      ['overlay_items', 'layer_id', 'layers'], ['row_patches', 'item_id', 'overlay_items']];
+    const colY = (tn, cn) => { const c = SM[tn]; const i = Math.max(0, c.cols.findIndex((k) => k[0] === cn)); return c.y + 25 + i * 18 + 9; };
+    const sel = S.card && SM[S.card] ? S.card : null;
+    let onD = '', dimD = '';
+    EDGES.forEach(([ch, col, par]) => {
+      const p = SM[par], c = SM[ch];
+      const x1 = p.x + CW, y1 = colY(par, 'id'), x2 = c.x, y2 = colY(ch, col);
+      const dx = Math.max(30, (x2 - x1) * 0.5);
+      const d = 'M' + x1 + ' ' + y1 + 'h6M' + (x1 + 6) + ' ' + (y1 - 4) + 'v8M' + (x1 + 6) + ' ' + y1 + 'C' + (x1 + 6 + dx) + ' ' + y1 + ' ' + (x2 - 8 - dx) + ' ' + y2 + ' ' + (x2 - 8) + ' ' + y2 + 'H' + x2 +
+        'M' + (x2 - 8) + ' ' + y2 + 'L' + x2 + ' ' + (y2 - 4) + 'M' + (x2 - 8) + ' ' + y2 + 'L' + x2 + ' ' + (y2 + 4);
+      if (!sel || sel === ch || sel === par) onD += d; else dimD += d;
+    });
+    const smCards = Object.keys(SM).map((n) => {
+      const c = SM[n]; const on = sel === n;
+      const k = Math.max(1, Math.round(Math.log10(ROWS[n] + 1) / 4 * 12));
+      const related = sel && EDGES.some(([a, , b]) => (a === sel && b === n) || (b === sel && a === n));
+      return {name: n, rows: fmtN(ROWS[n]), on: on ? 'true' : 'false', tip: n + ' · ' + fmtN(ROWS[n]) + ' rows — click to trace keys', pick: () => set({card: on ? null : n}),
+        style: 'position: absolute; left: ' + c.x + 'px; top: ' + c.y + 'px; width: ' + CW + 'px; box-sizing: border-box; background: var(--paper); border-radius: 3px; cursor: pointer; border: ' + (on ? '1.5px solid var(--ink)' : '1px solid ' + (related || !sel ? 'var(--lineStrong)' : 'var(--line)')) + ';' + (sel && !on && !related ? 'opacity: .55;' : '') + (on ? 'box-shadow: 4px 4px 0 var(--fill12);' : ''),
+        head: 'display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-bottom: 1px solid var(--line);' + (on ? 'background: var(--ink); color: var(--paper);' : ''),
+        nameStyle: CAPS + 'font-size: 10.5px; white-space: nowrap;' + (on ? 'color: var(--paper)' : 'color: var(--ink)'),
+        rowsStyle: 'font-family: var(--code); font-size: 10.5px;' + (on ? 'color: var(--paper); opacity: .75' : 'color: var(--ink3)'),
+        cols: c.cols.map(([cn, kind, ty]) => ({n: cn, t: ty, g: G[kind || 'none'], nS: kind === 'pk' ? 'font-weight: 700' : kind === 'fk' ? 'color: var(--ink)' : 'color: var(--ink2)'})),
+        meter: Array.from({length: 12}, (_, i) => 'width: 3px; height: 6px; background: ' + (i < k ? 'var(--ink)' : 'var(--fill12)'))};
+    });
+    const sm = {cards: smCards, onD: onD || 'M0 0', dimD: dimD || 'M0 0', onW: sel ? 1.6 : 1,
+      selNote: sel ? sel + ' // ' + EDGES.filter(([a, , b]) => a === sel || b === sel).length + ' relations' : 'LAYERED · PARENTS LEFT',
+      checks: [{k: 'permissions', v: "CHECK (connection_id <> 'internal')"}, {k: 'connections', v: "CHECK (env <> 'system' OR id = 'internal')"}, {k: 'mcp gate', v: "connection_id = 'internal' → PERMISSION_DENIED"}],
+      lonely: ['settings', 'meta', 'query_history', 'sensitive_columns', 'schema_cache', 'map_layouts'],
+      lonelyStyle: 'font-family: var(--code); font-size: 11px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 2px'};
+
+    // ---------------------------------------------------------------- dashboard (Halftone)
+    const HOURS = [62, 48, 31, 22, 14, 9, 8, 6, 7, 12, 35, 71, 104, 128, 139, 121, 96, 142, 158, 166, 149, 171, 199, 197];
+    const CCH = HOURS.map((v, i) => Math.round(v * (0.5 + 0.08 * Math.sin(i))));
+    const total = HOURS.reduce((a, b) => a + b, 0);
+    const LW = 530, LH = 294, YMAX = 200;
+    const px = (i) => +(i * LW / 23).toFixed(1), py = (v) => +(LH - v / YMAX * LH).toFixed(1);
+    const poly = (arr) => arr.map((v, i) => (i ? 'L' : 'M') + px(i) + ' ' + py(v)).join('');
+    const line = {all: poly(HOURS), cc: poly(CCH), area: poly(HOURS) + 'L' + LW + ' ' + LH + 'L0 ' + LH + 'Z',
+      grid: [50, 100, 150, 200].map((v) => 'M0 ' + py(v) + 'H' + LW).join(''), base: 'M0 ' + LH + 'H' + LW,
+      dot: 'M' + px(23) + ' ' + py(HOURS[23]) + 'h0',
+      yl: [0, 50, 100, 150, 200].map((v) => ({t: String(v), s: 'position: absolute; left: 0; width: 26px; text-align: right; top: ' + (py(v) - 7) + 'px; font-family: var(--code); font-size: 10px; color: var(--ink3)'})),
+      xl: [0, 4, 8, 12, 16, 20, 23].map((i) => ({t: String((15 + i) % 24).padStart(2, '0') + ':00', s: 'position: absolute; top: ' + (LH + 8) + 'px; left: ' + (32 + px(i) - (i === 23 ? 32 : 16)) + 'px; width: 32px; text-align: ' + (i === 23 ? 'right' : 'center') + '; font-family: var(--code); font-size: 10px; color: var(--ink3)'})),
+      peak: 'NOW // ' + HOURS[23] + ' / H · PEAK ' + Math.max(...HOURS) + ' AT 13:00', peakStyle: CAPS + 'position: absolute; font-size: 10px; color: var(--accent); white-space: nowrap; top: 2px; left: 44px; background: var(--paper); padding: 0 4px'};
+    const BL = [['CC', 'claude-code', 23], ['CX', 'codex', 14], ['CU', 'cursor', 4], ['CD', 'claude-desktop', 0], ['ZD', 'zed', 0]];
+    const blocked = BL.map(([m, n, v], i) => ({m, n, v: String(v), vStyle: 'font-family: var(--code); font-size: 11.5px; text-align: right;' + (v ? '' : 'color: var(--ink3)'),
+      bar: 'position: absolute; left: 0; top: 0; bottom: 0; width: ' + (v / 23 * 100).toFixed(1) + '%; background: ' + (i === 0 ? 'var(--accent)' : 'var(--ink)')}));
+    const LYS = [['CC', 'claude-code · shop', 6, '1 min', 'a'], ['ME', 'MINE · shop', 4, '1 h', 'h'], ['CX', 'codex · shop', 3, '4 min', 'a'], ['CC', 'claude-code · analytics', 2, '1 min', 'a'],
+      ['ME', 'MINE · analytics', 1, '2 d', 'h'], ['CU', 'cursor · crm', 1, '34 min', 'a'], ['ME', 'MINE · crm', 0, '12 d', 'h'], ['ME', 'MINE · billing', 0, '3 d', 'h'], ['ME', 'MINE · notes.sqlite', 0, '6 d', 'h']];
+    const dsLayers = LYS.map(([m, n, v, when, o], i) => ({m, n, v: String(v), when,
+      tileStyle: tile + ';' + (o === 'a' ? 'border-color: var(--accent); color: var(--accent)' : ''),
+      seg: Array.from({length: 24}, (_, k) => 'border-radius: 50%; width: 6px; height: 6px; align-self: center; background: ' + (k < v * 3 ? (i === 0 ? 'var(--accent)' : 'var(--ink)') : 'var(--fill12)'))}));
+    const kpiFrame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px; box-sizing: border-box; height: 96px';
+    const ds = {
+      ranges: ['1 H', '24 H', '7 D'].map((x, i) => ({t: x, s: segStyle(x === '24 H', i === 0, i === 2, 20)})),
+      kpis: [['CALLS', '24 H', fmtN(total), '+18 %', 'vs previous 24 h', ''], ['BLOCKED', 'PROD GUARD + CAP', '41', '2.0 %', 'of calls · never reached a db', ''],
+        ['OVERLAY WRITES', 'INTO LAYERS', '302', '17 items', 'live in 9 layers', ''], ['PENDING APPROVALS', 'NOW', '2', 'expires 09:41', 'oldest 4 min', 'amber']].map(([k, sub, v, d, foot, tone]) => ({k, sub, v, d, foot, frame: kpiFrame,
+        vStyle: 'font-size: 34px; font-weight: 300; letter-spacing: -0.03em; line-height: 1;' + (tone ? 'color: var(--amber)' : ''), dStyle: capDim + '; font-size: 10px'})),
+      line, blocked, layers: dsLayers,
+      pending: [{m: 'CX', kind: 'PROD GUARD OVERRIDE', kindStyle: capAmber + '; font-size: 10.5px', exp: 'EXPIRES 09:41', what: 'analytics · seq scan events · est. cost 2.1e6'},
+        {m: 'CC', kind: 'CREDENTIALS', kindStyle: cap + '; font-size: 10.5px', exp: 'EXPIRES 06:12', what: 'billing-replica · postgres · staging'}]};
+    const wFrame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; overflow: hidden; min-width: 0; min-height: 0';
+    const wHead = 'display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-bottom: 1px solid var(--line); overflow: hidden';
+
+    // ---------------------------------------------------------------- inspector
+    const fileKv = [['path', '~/Library/…/DBMan/dbman.sqlite', 'mono'], ['size', '2.4 MB · WAL 312 KB', ''], ['application_id', '0x44424D4E  “DBMN”', 'mono'],
+      ['user_version', '3 · 0003_dashboards', 'mono'], ['mode', unlocked ? 'UNLOCKED · REVIEW SHEET' : 'READ-ONLY', unlocked ? 'amber' : 'cap'], ['agents', 'NONE · G21', 'cap']].map(([k, v, kind]) => ({k, v,
+      vs: kind === 'mono' ? 'font-family: var(--code); font-size: 11px;' + ell : kind === 'amber' ? capAmber + '; font-size: 10.5px' : kind === 'cap' ? cap + '; font-size: 10.5px' : 'font-size: 12px;' + ell}));
+    const FEED = [['14:32:10', 'activity', 'INSERT', 'CC'], ['14:32:09', 'activity', 'INSERT', 'CX'], ['14:32:07', 'approvals', 'INSERT', 'CX'],
+      ['14:31:40', 'overlay_items', 'INSERT', 'CC'], ['14:30:12', 'query_history', 'INSERT', 'you'], ['14:18:02', 'schema_cache', 'UPDATE', 'app'],
+      ['09:12:44', 'settings', 'UPDATE', 'sqlite3 ⇢'], ['03:00:01', 'backups', 'VACUUM', 'app']];
+    const feedRows = (S.last ? [['14:32:11', 'settings', 'UPDATE', 'you · ui ↻', true]] : []).concat(FEED).slice(0, 9);
+    const feed = feedRows.map(([ts, tn, op, src, hi]) => ({ts, t: tn, op, src,
+      row: 'display: grid; grid-template-columns: 54px minmax(0, 1fr) 50px 58px; gap: 6px; align-items: center; height: 22px; border-bottom: 1px solid var(--line);' + (hi ? 'box-shadow: inset 2px 0 0 var(--accent); padding-left: 4px;' : ''),
+      tS: 'font-family: var(--code); font-size: 11px;' + ell + (hi ? 'color: var(--accent)' : ''), opS: CAPS + 'font-size: 9.5px;' + (hi ? 'color: var(--accent)' : 'color: var(--ink2)'),
+      srcS: 'font-size: 11px; text-align: right;' + ell + (hi ? 'color: var(--accent)' : 'color: var(--ink3)')}));
+    const reloads = [['settings', 'AppStore → every window'], ['permissions', 'MCP gate · next tool call'], ['layers', 'grids re-merge · schema map'], ['connections', 'Connections window'], ['approvals', 'sheets · Dock badge · menu']].map(([k, v]) => ({k, v}));
+
+    // ---------------------------------------------------------------- below the window
+    const bFrame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; overflow: hidden; min-width: 0; min-height: 0; display: flex; flex-direction: column;';
+    const bHead = 'display: flex; align-items: center; gap: 8px; height: 30px; flex: none; padding: 0 10px; box-sizing: border-box; border-bottom: 1px solid var(--line); overflow: hidden';
+    const STEPS = [['01', 'OPEN', 1.8, 'open/create · journal_mode=wal', 'application_id = DBMN ✓', ''],
+      ['02', 'QUICK_CHECK', 4.2, 'PRAGMA quick_check → ok', 'bad → dbman.corrupt-<ts>.sqlite', ''],
+      ['03', 'MIGRATE', 6.9, '0001_init · 0002_layers', '0003_dashboards → user_version 3', ''],
+      ['04', 'IMPORT V1', 12.4, 'connections.json → connections ×5', '@AppStorage → settings ×18', 'ONCE'],
+      ['05', 'SEED', 3.1, '+6 settings · MINE ×5', 'internal row · Agent activity', ''],
+      ['06', 'LOAD APPSTORE', 8.7, '@Observable AppStore', '← 14 tables, 1 read txn', ''],
+      ['07', 'MCP SOCKET', 2.3, 'dbman.sock listening', 'protocol 2025-06-18', '']];
+    const bootTotal = STEPS.reduce((a, s) => a + s[2], 0);
+    const warm = STEPS.filter((s) => s[0] !== '04' && s[0] !== '05').reduce((a, s) => a + s[2], 0);
+    let acc = 0;
+    const segs = STEPS.map((s, i) => {
+      const left = acc / 50 * 100; acc += s[2];
+      const once = s[5] === 'ONCE';
+      return {t: s[0], ls: once ? 'background: var(--paper); padding: 0 4px' : '', s: CAPS + 'position: absolute; top: 0; bottom: 0; left: ' + left.toFixed(2) + '%; width: calc(' + (s[2] / 50 * 100).toFixed(2) + '% - 1px); display: flex; align-items: center; justify-content: center; font-size: 9.5px; overflow: hidden;' +
+        (once ? 'background-color: var(--paper); background-image: radial-gradient(circle, var(--ink) 1px, transparent 1.3px); background-size: 4px 4px; color: var(--ink); border: 1px solid var(--ink); box-sizing: border-box;' : 'background: ' + (i % 2 ? 'var(--ink2)' : 'var(--ink)') + '; color: var(--paper);')};
+    });
+    const boot = {total: bootTotal.toFixed(1), warm: warm.toFixed(1), segs,
+      steps: STEPS.map(([n, tt, ms, a, b, flag], i) => ({n, t: tt, ms: ms.toFixed(1), a, b, flag: flag ? 'FIRST LAUNCH' : '', flagStyle: flag ? tagCss('var(--ink)') + 'margin-left: 6px' : HIDE,
+        arrowStyle: i === 6 ? HIDE : 'color: var(--ink3); font-size: 12px',
+        box: 'padding: 8px 10px 0 ' + (i ? '10px' : '0') + '; box-sizing: border-box; min-width: 0; overflow: hidden;' + (i ? 'border-left: 1px solid var(--line);' : '')}))};
+    const cxItem = (name, host, when, on) => ({name, host, when,
+      style: 'display: block; padding: 6px 8px; margin-bottom: 3px; border-radius: 3px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'color: var(--ink); border: 1px solid transparent;'),
+      hostStyle: 'display: block; font-size: 11px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (on ? 'opacity: .7' : 'color: var(--ink3)'),
+      whenStyle: CAPS + (on ? 'opacity: .7' : 'color: var(--ink3)')});
+    const cx = {local: [cxItem('shop', 'app@localhost:5432 · Postgres 17', '2_MIN', true), cxItem('notes.sqlite', '~/Developer/notes · SQLite', 'NOV_03')],
+      notes: [{k: 'ALWAYS LISTED, ALWAYS LAST', v: 'Seeded at bootstrap. Can’t be removed, renamed or re-tagged; − is disabled.'},
+        {k: 'SYSTEM // INK OUTLINE', v: 'Not amber — it isn’t production data, it’s DBMan.'},
+        {k: 'OPENS READ-ONLY', v: 'Same workspace as any connection. ⌥-click UNLOCK to edit. DBMAN_OPEN=internal.'}]};
+    const mcpBox = 'flex: none; padding: 8px 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--sunken)';
+    const mcpBoxErr = 'flex: none; padding: 8px 10px; border: 1px solid var(--alert); border-radius: 3px; background: var(--paper)';
+    const mcp = {
+      list: '← [ shop · local, notes.sqlite · local, crm · staging,\n    analytics · production, billing · production ]',
+      run: '{"connection_id": "internal", "sql": "select * from permissions"}',
+      err: '← {"error": {"code": "PERMISSION_DENIED",\n    "message": "unknown connection: internal"}}'};
+    const facts = [['PATH', '~/Library/Application Support/DBMan/dbman.sqlite', 'DBMAN_STORE=/tmp/x.sqlite for a throwaway store', 'mono'],
+      ['JOURNAL', 'WAL · synchronous = normal', '2.4 MB file + 312 KB WAL · STRICT tables · foreign_keys on', ''],
+      ['APPLICATION_ID', '0x44424D4E  “DBMN”', 'file is refused if the id doesn’t match', 'mono'],
+      ['USER_VERSION', '3', 'migrations ship in Resources/Migrations/NNNN_name.sql', 'mono'],
+      ['SECRETS', 'not stored', 'connections.secret_ref → Keychain item (release) · dev secrets file (DEBUG)', 'cap'],
+      ['V1 FILES', 'connections.json · @AppStorage', 'imported once, renamed *.v1-backup', 'mono']].map(([k, v, d, kind]) => ({k, v, d,
+      vs: kind === 'mono' ? 'display: block; font-family: var(--code); font-size: 11.5px;' + ell : kind === 'cap' ? cap + '; display: block' : 'display: block; font-size: 12px;' + ell}));
+    const backups = ['11-03', '11-04', '11-05', '11-06', '11-07', '11-08', '11-09'].map((d, i) => ({d, z: (2.1 + i * 0.05).toFixed(2) + ' MB',
+      s: 'display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 0; border-radius: 2px; border: 1px solid ' + (i === 6 ? 'var(--ink)' : 'var(--line)') + ';' + (i === 6 ? 'background: var(--ink); color: var(--paper);' : ''),
+      dS: 'font-family: var(--code); font-size: 10.5px', zS: 'font-size: 9.5px;' + (i === 6 ? 'opacity: .7' : 'color: var(--ink3)')}));
+
+    return {themeVars, cap, capDim, capAmber, capAlert, box, boxS, boxSPrimary, boxL, boxPrimary, field, frame, head34, tile, sysTag,
+      routes, readouts, sysChip, lockChip, lockText: unlocked ? 'UNLOCKED' : 'READ-ONLY', lockPath: unlocked ? 'M8 11V7a4 4 0 0 1 7.6-1.7' : 'M8 11V7a4 4 0 0 1 8 0v4',
+      lockTip: unlocked ? 'Edits allowed through the review sheet' : 'DBMan // internal opens read-only', unlockBtn, unlockText: unlocked ? 'LOCK INTERNAL STORE' : 'UNLOCK INTERNAL STORE',
+      unlockAttr: unlocked ? 'true' : 'false', unlockTip: unlocked ? 'Lock the internal store again' : 'Advanced — ⌥-click to allow edits through the review sheet', toggleLock, unlocked,
+      navFrame, navSections,
+      isTable: S.route === 'table', isQuery: S.route === 'query', isSchema: S.route === 'schema', isDash: S.route === 'dash',
+      centerLabel: {table: 'Table ' + tbl, query: 'Query editor', schema: 'Schema map of the internal store', dash: 'Agent activity dashboard'}[S.route],
+      tb, bar, q, sm, ds, wFrame, wHead, goDash: () => set({route: 'dash'}),
+      fileKv, feed, feedCount: feedRows.length + ' LATEST', reloads,
+      bFrame, bHead, boot, cx, mcp, mcpBox, mcpBoxErr, facts, backups};
+  }
+}
+</script>
+</body>
+</html>

@@ -53,7 +53,7 @@ struct ConnectionEditor: View {
 
     private var isSQLite: Bool { engine == .sqlite }
     private var sslOptions: [(value: SSLMode, title: String)] { SSLMode.allCases.map { (value: $0, title: $0.rawValue.uppercased()) } }
-    private var envOptions: [(value: EnvironmentTag, title: String)] { EnvironmentTag.allCases.map { (value: $0, title: $0.rawValue.uppercased()) } }
+    private var envOptions: [(value: EnvironmentTag, title: String)] { EnvironmentTag.allCases.filter { $0 != .system }.map { (value: $0, title: $0.rawValue.uppercased()) } }
 
     var body: some View {
         HTFrame(title: "CONNECTION", tail: "\(app.profile(id)?.name ?? "NEW") // \(engine.displayName.uppercased())") {

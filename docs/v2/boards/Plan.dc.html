@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SwiftUI implementation plan — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="max-width: 1440px; margin: 0 auto; padding: 24px 32px 40px; box-sizing: border-box">
+
+  <header style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px">
+    <h1 style="margin: 0; display: inline-flex; align-items: center; height: 26px; padding: 0 10px; background: var(--grad); color: var(--paper); border-radius: 6px; font-size: 14px; font-weight: 600">implementation plan</h1>
+    <span style="font-size: 12px; color: var(--ink3)">SwiftUI + AppKit · macOS 26 · Swift 6 strict concurrency</span>
+    <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--ruleStrong); min-width: 24px"></span>
+    <span style="display: inline-flex; align-items: baseline; gap: 6px; padding-left: 8px; border-left: 2px solid var(--accent)"><span style="font-size: 30px; font-weight: 300; letter-spacing: -1px; line-height: 1">14</span><span style="font-size: 11px; color: var(--ink3)">weeks to 1.0</span></span>
+  </header>
+
+  <!-- architecture -->
+  <section style="{{card}}; padding: 12px 14px; margin-bottom: 8px">
+    <div style="{{headRow}}"><span style="{{tab}}">architecture</span><span style="{{meta}}">five Swift packages, dependencies point down only</span><span aria-hidden="true" style="{{leader}}"></span></div>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; margin-top: 6px">
+      <sc-for list="{{layers}}" as="l" hint-placeholder-count="5">
+        <div style="{{l.style}}">
+          <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 26px; font-weight: 300; line-height: 1; color: var(--ink3)">{{l.n}}</span><span style="font-size: 13px; font-weight: 600">{{l.name}}</span></div>
+          <div style="font-size: 12px; color: var(--ink2); margin: 6px 0 8px; line-height: 1.45">{{l.role}}</div>
+          <sc-for list="{{l.items}}" as="it" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 8px; height: 22px; font-size: 12px; border-top: 1px solid var(--rule)"><span aria-hidden="true" style="width: 5px; height: 5px; background: var(--accent)"></span><span style="font-family: var(--code); font-size: 11px">{{it}}</span></div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size: 12px; color: var(--ink2); margin-top: 10px">App → Features → Halftone (design system) → Data → Platform. Features never import a driver; they talk to <span style="font-family: var(--code); font-size: 11px">DatabaseSession</span>.</div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 4px; margin-bottom: 8px">
+    <!-- component mapping -->
+    <section style="{{card}}; padding: 12px 14px">
+      <div style="{{headRow}}"><span style="{{tab}}">design → code</span><span style="{{meta}}">every artboard element has one owner</span><span aria-hidden="true" style="{{leader}}"></span></div>
+      <div role="table" aria-label="Design to code mapping" style="font-size: 12px">
+        <div role="row" style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 110px; gap: 10px; height: 26px; align-items: center; color: var(--ink3); border-bottom: 1px solid var(--ruleStrong)"><span role="columnheader">Element</span><span role="columnheader">Implementation</span><span role="columnheader">Budget</span></div>
+        <sc-for list="{{mapping}}" as="m" hint-placeholder-count="14">
+          <div role="row" style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 110px; gap: 10px; padding: 5px 0; align-items: baseline; border-bottom: 1px solid var(--rule); line-height: 1.4">
+            <span role="cell" style="font-weight: 600">{{m.el}}</span>
+            <span role="cell" style="color: var(--ink2)">{{m.impl}}</span>
+            <span role="cell" style="font-variant-numeric: tabular-nums">{{m.budget}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- code -->
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <section style="{{card}}; padding: 12px 14px">
+        <div style="{{headRow}}"><span style="{{tab}}">data flow</span><span style="{{meta}}">⌘⏎ to first row</span><span aria-hidden="true" style="{{leader}}"></span></div>
+        <pre style="{{pre}}"><span style="color: var(--ink3)">// Data/DatabaseSession.swift</span>
+actor DatabaseSession {
+  func run(_ sql: SQL, page: Int = 500)
+      -&gt; AsyncThrowingStream&lt;RowPage, Error&gt; { … }
+}
+
+<span style="color: var(--ink3)">// Features/Query/QueryRunner.swift</span>
+@MainActor @Observable final class QueryRunner {
+  var phase: Phase = .idle     <span style="color: var(--ink3)">// .idle .waiting .streaming .done .failed</span>
+  func run() async {
+    let slow = Task { try await Task.sleep(for: .ms(400)); phase = .waiting }
+    for try await page in session.run(sql) {
+      slow.cancel(); grid.append(page)   <span style="color: var(--ink3)">// NSTableView.insertRows</span>
+    }
+    withAnimation(Motion.enter) { phase = .done }
+  }
+}</pre>
+      </section>
+      <section style="{{card}}; padding: 12px 14px">
+        <div style="{{headRow}}"><span style="{{tab}}">motion</span><span style="{{meta}}">one source, Reduce Motion aware</span><span aria-hidden="true" style="{{leader}}"></span></div>
+        <pre style="{{pre}}">enum Motion {
+  static var reduce: Bool {
+    NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
+  static var snap:  Animation { reduce ? .smooth(duration: 0.12) : .snappy(duration: 0.18) }
+  static var glide: Animation { reduce ? .smooth(duration: 0.12) : .smooth(duration: 0.22) }
+  static var enter: Animation { reduce ? .smooth(duration: 0.12) : .snappy(duration: 0.20) }
+}
+extension AnyTransition {
+  static var rise: AnyTransition {
+    Motion.reduce ? .opacity : .offset(y: 6).combined(with: .opacity) }
+}</pre>
+      </section>
+      <section style="{{card}}; padding: 12px 14px">
+        <div style="{{headRow}}"><span style="{{tab}}">halftone</span><span style="{{meta}}">one Canvas pass, colours bucketed</span><span aria-hidden="true" style="{{leader}}"></span></div>
+        <pre style="{{pre}}">struct Halftone: View, Equatable {
+  let cells: [UInt8]; let cols: Int; let ramp: [Color]
+  var body: some View {
+    Canvas(rendersAsynchronously: true) { ctx, size in
+      var paths = Array(repeating: Path(), count: ramp.count)
+      for (i, level) in cells.enumerated() where level &gt; 0 {
+        paths[Int(level) - 1].addEllipse(in: rect(i, size))
+      }
+      for (p, c) in zip(paths, ramp) { ctx.fill(p, with: .color(c)) }
+    }
+  }
+}</pre>
+      </section>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 4px">
+    <!-- milestones -->
+    <section style="{{card}}; padding: 12px 14px">
+      <div style="{{headRow}}"><span style="{{tab}}">milestones</span><span style="{{meta}}">each ends with a shippable build and a gate</span><span aria-hidden="true" style="{{leader}}"></span></div>
+      <sc-for list="{{milestones}}" as="m" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 56px 140px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--rule); align-items: start">
+          <span style="font-size: 26px; font-weight: 300; line-height: 1">{{m.id}}</span>
+          <div>
+            <div style="font-size: 13px; font-weight: 600">{{m.name}}</div>
+            <div style="font-size: 11px; color: var(--ink3); margin-top: 2px">{{m.weeks}}</div>
+            <div aria-hidden="true" style="display: flex; height: 6px; margin-top: 6px"><span style="{{m.bar}}"></span></div>
+          </div>
+          <div style="font-size: 12px; line-height: 1.45"><span style="color: var(--ink)">{{m.ship}}</span><br><span style="color: var(--ink3)">Gate: {{m.gate}}</span></div>
+        </div>
+      </sc-for>
+    </section>
+
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <section style="{{card}}; padding: 12px 14px">
+        <div style="{{headRow}}"><span style="{{tab}}">performance gates</span><span style="{{meta}}">measured in CI with XCTest metrics + Instruments</span><span aria-hidden="true" style="{{leader}}"></span></div>
+        <sc-for list="{{gates}}" as="g" hint-placeholder-count="7">
+          <div style="display: flex; align-items: center; gap: 10px; height: 26px; border-bottom: 1px solid var(--rule); font-size: 12px">
+            <span style="flex: 1; color: var(--ink2)">{{g.k}}</span>
+            <span style="font-weight: 600; font-variant-numeric: tabular-nums">{{g.v}}</span>
+          </div>
+        </sc-for>
+      </section>
+      <section style="{{card}}; padding: 12px 14px">
+        <div style="{{headRow}}"><span style="{{tab}}">risks</span><span aria-hidden="true" style="{{leader}}"></span></div>
+        <sc-for list="{{risks}}" as="r" hint-placeholder-count="4">
+          <div style="padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 12px; line-height: 1.45"><b style="{{r.style}}">{{r.k}}</b> <span style="color: var(--ink2)">{{r.v}}</span></div>
+        </sc-for>
+      </section>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',grid:'rgba(11,11,12,0.06)',paper:'#FFFFFF',paperSolid:'#FFFFFF',chrome:'#FFFFFF',surface:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',rule:'rgba(11,11,12,0.14)',ruleStrong:'#0B0B0C',accent:'#2F2FE4',accentSoft:'rgba(47,47,228,0.08)',accentText:'#FFFFFF',grad:'#0B0B0C',dot:'rgba(11,11,12,0.12)',signal:'#2F2FE4',amber:'#A86400',alert:'#D21F1A',bracket:'transparent'};
+    const D = {backdrop:'#050506',grid:'rgba(255,255,255,0.06)',paper:'#0B0B0C',paperSolid:'#0B0B0C',chrome:'#0B0B0C',surface:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',rule:'rgba(255,255,255,0.14)',ruleStrong:'#F2F2F0',accent:'#8A8AFF',accentSoft:'rgba(138,138,255,0.12)',accentText:'#0B0B0C',grad:'#F2F2F0',dot:'rgba(255,255,255,0.12)',signal:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E',bracket:'transparent'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1,'case' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--grid) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:13px;-webkit-font-smoothing:antialiased;min-height:100%';
+    const K = 'linear-gradient(transparent, transparent)';
+    const corners = '';
+    const card = 'background-color: var(--paper); ' + corners + ' border-radius: 6px; border: 1px solid var(--rule); box-sizing: border-box; min-width: 0';
+    const headRow = 'display: flex; align-items: center; gap: 4px; margin-bottom: 4px; white-space: nowrap';
+    const tab = 'display: inline-flex; align-items: center; height: 20px; padding: 0 8px; background: var(--grad); color: var(--paper); border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase';
+    const meta = 'font-size: 11px; color: var(--ink3); overflow: hidden; text-overflow: ellipsis';
+    const leader = 'flex: 1; min-width: 12px; height: 1px; background: var(--ruleStrong)';
+    const pre = 'margin: 0; padding: 10px 12px; background: var(--sunken); border-radius: 6px; font-family: var(--code); font-size: 11px; line-height: 1.6; white-space: pre; overflow-x: auto';
+
+    const layers = [
+      {n: '1', name: 'App', role: 'Scenes, commands and windows. Thin.', items: ['WindowGroup(for: Conn.ID)', 'Settings scene', 'DatabaseCommands', 'StateRestoration', 'Spotlight indexer']},
+      {n: '2', name: 'Features', role: 'One folder per screen; @Observable stores, no drivers.', items: ['Connections', 'Overview', 'TableBrowser', 'QueryEditor', 'Palette · Safety']},
+      {n: '3', name: 'Halftone', role: 'The design system: tokens, components, instruments.', items: ['Tokens · Motion', 'Pane · TabLabel', 'TickMeter · Dial', 'Halftone (Canvas)', 'ERDiagram · PlanTree']},
+      {n: '4', name: 'Data', role: 'Sessions, schema, stats sampling, staged writes.', items: ['DatabaseSession (actor)', 'SchemaCache', 'StatsSampler', 'ChangeSet (staged)', 'SQLFormatter']},
+      {n: '5', name: 'Platform', role: 'Drivers and OS services behind protocols.', items: ['PostgresNIO', 'SQLite3 (system)', 'MySQLNIO', 'Keychain', 'NSTableView bridge']},
+    ].map((l, i) => ({...l, style: 'padding: 10px 14px 4px; ' + (i ? 'border-left: 1px solid var(--rule);' : 'padding-left: 0;')}));
+
+    const mapping = [
+      ['Window chrome', 'NavigationSplitView + .toolbar groups (.glassEffect) + custom backdrop grid layer', '—'],
+      ['Pane frame', 'Pane { } view: background, 1 pt hairline, corner brackets drawn in a Canvas overlay', '0 layout cost'],
+      ['Teal tab label', 'TabLabel(text) — Text + padding + accent fill; a11y: header trait', '—'],
+      ['Data grid', 'NSTableView via NSViewRepresentable; NSTableCellView reuse; 28 pt rows', '10M rows · 60 fps'],
+      ['Header halftone', 'NSTableHeaderCell subclass draws a 12×4 Halftone from StatsSampler', '< 1 ms / header'],
+      ['Brush on header', 'NSGestureRecognizer → ChangeSet of filters → WHERE text', '< 16 ms'],
+      ['Inspector', '.inspector(isPresented:) with Row, Customer, Distribution, Relations sections', '—'],
+      ['24 h clock', 'Canvas: 96 rotated rects + rings; TimelineView(.periodic(5 s))', '< 2 ms / frame'],
+      ['Tick meter', 'Canvas strokes, tick pitch 5 pt; accessibilityValue = percent', '—'],
+      ['ER diagram', 'Canvas edges + SwiftUI boxes; layout cached per schema hash', '< 30 ms'],
+      ['Explain plan', 'EXPLAIN (ANALYZE, FORMAT JSON) → PlanNode tree → PlanTree view', '< 50 ms'],
+      ['SQL editor', 'TextKit 2 NSTextView; per-paragraph highlight; schema-aware completion', '< 8 ms / key'],
+      ['⌘K palette', 'Overlay + .glassEffect; fuzzy index built off-main on connect', '< 16 ms / key'],
+      ['Staged writes', 'ChangeSet → BEGIN … COMMIT preview; typed confirm on production', '—'],
+    ].map(([el, impl, budget]) => ({el, impl, budget}));
+
+    const milestones = [
+      ['M0', 'Foundations', 'weeks 1–2', 'Halftone package, tokens, Pane/TabLabel/TickMeter, motion tokens, snapshot tests', 'every artboard component renders in a SwiftUI preview', 2],
+      ['M1', 'Connect + SQLite', 'weeks 3–4', 'Connections window, URL parser, Keychain, SQLite driver, schema cache', 'open a 1 GB SQLite file in < 300 ms', 2],
+      ['M2', 'Table workspace', 'weeks 5–7', 'NSTableView grid, header halftones, filters, inspector, console', '10M rows scroll at 60 fps, 0 hitches in Instruments', 3],
+      ['M3', 'Query + Explain', 'weeks 8–10', 'TextKit 2 editor, completion, streaming results, plan diagram, auto-chart', 'first row ≤ 100 ms after server responds', 3],
+      ['M4', 'Postgres, MySQL, safety', 'weeks 11–12', 'PostgresNIO/MySQLNIO, staged writes, production lock, review sheet', 'no write reaches a server without a preview', 2],
+      ['M5', 'Overview + polish', 'weeks 13–14', 'Ops dashboard, ⌘K, dark, Reduce Motion, VoiceOver, Spotlight, state restore', 'VoiceOver audit and Reduce Motion pass on every screen', 2],
+    ];
+    let start = 0;
+    const ms = milestones.map(([id, name, weeks, ship, gate, len]) => {
+      const bar = 'margin-left: ' + (start / 14 * 100) + '%; width: ' + (len / 14 * 100) + '%; background: repeating-linear-gradient(90deg, transparent 0 2px, var(--paperSolid) 2px 4px), var(--grad)';
+      start += len;
+      return {id, name, weeks, ship, gate, bar};
+    });
+
+    const gates = [
+      {k: 'Cold launch to window', v: '< 400 ms'},
+      {k: 'Keystroke to frame (editor, grid, palette)', v: '< 16 ms'},
+      {k: 'Grid scroll, 10M rows', v: '60 fps · 0 hitches'},
+      {k: 'Main-thread I/O', v: '0 calls'},
+      {k: 'Memory, 1M rows loaded', v: '< 350 MB'},
+      {k: 'Halftone redraw (largest)', v: '< 2 ms'},
+      {k: 'Animations under Reduce Motion', v: '≤ 120 ms fades'},
+    ];
+    const risks = [
+      {k: 'NSTableView ↔ SwiftUI seams.', v: 'Keep the bridge in one file; cells are AppKit, everything around them SwiftUI.', style: 'font-weight: 600'},
+      {k: 'Driver parity.', v: 'Explain diagrams ship Postgres-first; MySQL maps FORMAT=JSON in 1.1; SQLite gets a simplified tree.', style: 'font-weight: 600'},
+      {k: 'Stats cost on big tables.', v: 'TABLESAMPLE SYSTEM (1) with a 5,000-row cap, background priority, cached per table.', style: 'font-weight: 600'},
+      {k: 'Production safety.', v: 'Read-only by default; unlock expires on reconnect; typed confirmation required.', style: 'font-weight: 600; color: var(--amber)'},
+    ];
+    return {themeVars, card, headRow, tab, meta, leader, pre, layers, mapping, milestones: ms, gates, risks};
+  }
+}
+</script>
+</body>
+</html>

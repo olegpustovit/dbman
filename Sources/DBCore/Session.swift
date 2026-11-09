@@ -19,13 +19,15 @@ public actor DatabaseSession {
         switch profile.engine {
         case .sqlite:
             guard let path = profile.filePath else { throw DBError.connection("No SQLite file path") }
-            driver = try SQLiteDriver(path: path, readOnly: profile.startsReadOnly)
+            driver = try SQLiteDriver(path: path, readOnly: profile.openReadOnly) // the session lock guards writes; opening the file read-write lets Unlock work
         case .postgres:
             driver = try await PostgresDriver.connect(profile, password: password)
         case .mysql:
             driver = try await MySQLDriver.connect(profile, password: password)
         }
-        return DatabaseSession(profile: profile, driver: driver)
+        let session = DatabaseSession(profile: profile, driver: driver)
+        if profile.startsReadOnly { await session.lockWrites() }
+        return session
     }
 
     // MARK: read
@@ -49,8 +51,13 @@ public actor DatabaseSession {
     public func cancel() async { await driver.cancelCurrent() }
 
     // MARK: writes
-    public func unlockWrites() { writesUnlocked = true }
-    public func lockWrites() { writesUnlocked = false }
+    public func unlockWrites() async { writesUnlocked = true; await sqliteQueryOnly(false) }
+    public func lockWrites() async { writesUnlocked = false; await sqliteQueryOnly(true) }
+    /// SQLite files open read-write so Unlock can work; while locked, the engine itself refuses writes
+    /// (the SQLClassifier check alone misses e.g. `WITH … DELETE`).
+    private func sqliteQueryOnly(_ on: Bool) async {
+        if profile.engine == .sqlite { _ = try? await driver.execute("PRAGMA query_only = \(on ? 1 : 0)", limit: 0) }
+    }
 
     public func stage(_ change: StagedChange) { changes.add(change) }
     public func undoLastChange() { changes.undo() }

@@ -12,7 +12,8 @@ struct TableBrowserView: View {
     let tableName: String
 
     @State private var tab = DevHooks.view
-    @AppStorage("pageSize") private var pageSize = 500 // Settings → Results
+    @Environment(AppModel.self) private var app
+    private var pageSize: Int { app.pageSize } // Settings → Results
     @State private var whereText = ""
     @State private var applied = ""
     @State private var sort: TableSQL.Sort?

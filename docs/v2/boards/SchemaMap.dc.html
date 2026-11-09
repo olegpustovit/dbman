@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Schema map — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: stretch; gap: 4px">
+    <div aria-hidden="true" style="display: flex; align-items: center; gap: 7px; padding: 0 8px">
+      <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+    </div>
+    <nav aria-label="Sections" style="display: flex; gap: 4px">
+      <sc-for list="{{navs}}" as="n" hint-placeholder-count="6">
+        <a href="{{n.href}}" title="{{n.tip}}" aria-current="{{n.current}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg><span>{{n.t}}</span></a>
+      </sc-for>
+    </nav>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="5"><span style="display: inline-flex; gap: 5px"><span style="{{capDim}}">{{r.k}} //</span><span style="{{r.vs}}">{{r.v}}</span></span></sc-for>
+    </div>
+    <a href="Connect.dc.html" title="Agents  ⌘⇧A" style="{{agentsChip}}">AGENTS <span style="opacity: .7">// 2 LIVE</span></a>
+    <label style="display: flex; align-items: center; gap: 6px; width: 200px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" aria-label="Jump to table, column or query" placeholder="JUMP_TO" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+      <span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">⌘K</span>
+    </label>
+  </div>
+
+  <div style="height: 854px; flex: none; display: flex; gap: 4px; min-height: 0">
+
+    <!-- NAVIGATOR -->
+    <nav aria-label="Database navigator" style="{{navFrame}}">
+      <div style="padding: 10px; border-bottom: 1px solid var(--line)">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="{{cap}}">shop</span><span style="{{capDim}}">// local</span><span style="flex: 1"></span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--ink3)"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg></span>
+        <span style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px"><span style="font-size: 36px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">{{totalRows}}</span><span style="{{capDim}}">rows · 12 tables</span></span>
+        <span style="display: block; margin-top: 4px; {{capDim}}">postgres 17 · localhost:5432</span>
+      </div>
+      <label style="display: flex; align-items: center; gap: 6px; height: 26px; margin: 8px 8px 2px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="text" placeholder="FILTER" aria-label="Filter navigator" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+        <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">⌥⌘F</span>
+      </label>
+      <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 8px 8px">
+        <sc-for list="{{navSections}}" as="s" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 8px; padding: 0 2px">
+            <span style="{{cap}}">{{s.name}}</span><span style="{{capDim}}">// {{s.count}}</span>
+            <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+          </div>
+          <sc-for list="{{s.links}}" as="it" hint-placeholder-count="3">
+            <a href="{{it.href}}" aria-current="{{it.current}}" title="{{it.tip}}" style="{{it.style}}">
+              <span style="{{it.nameStyle}}">{{it.name}}</span>
+              <span style="{{it.countStyle}}">{{it.count}}</span>
+            </a>
+          </sc-for>
+          <sc-for list="{{s.tables}}" as="it" hint-placeholder-count="12">
+            <button type="button" aria-pressed="{{it.current}}" title="{{it.tip}}" onClick="{{it.pick}}" style="{{it.style}}">
+              <span style="{{it.nameStyle}}">{{it.name}}</span>
+              <span aria-hidden="true" style="display: inline-flex; gap: 1px"><sc-for list="{{it.meter}}" as="m" hint-placeholder-count="8"><span style="{{m}}"></span></sc-for></span>
+              <span style="{{it.countStyle}}">{{it.count}}</span>
+            </button>
+          </sc-for>
+        </sc-for>
+      </div>
+      <div style="height: 26px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-top: 1px solid var(--line)">
+        <span style="{{capDim}}">status //</span><span style="{{cap}}">connected · 4 ms</span>
+        <span style="flex: 1"></span>
+        <button type="button" aria-label="New connection (⌘N)" title="New connection  ⌘N" style="width: 20px; height: 18px; border: 1px solid var(--line); border-radius: 3px; background: transparent; color: var(--ink2); font-size: 13px; line-height: 1; cursor: pointer; padding: 0">+</button>
+      </div>
+    </nav>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+      <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+
+        <!-- CANVAS -->
+        <section aria-label="Schema map" style="{{frame}} flex: 1; display: flex; flex-direction: column; position: relative">
+          <div style="height: 34px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+            <h1 style="margin: 0; {{cap}}; font-size: 12px">schema map</h1>
+            <span aria-hidden="true" style="width: 1px; height: 18px; background: var(--line); margin: 0 2px"></span>
+            <div role="radiogroup" aria-label="Layout" style="display: flex; gap: 3px">
+              <sc-for list="{{layouts}}" as="l" hint-placeholder-count="4">
+                <button type="button" role="radio" aria-checked="{{l.on}}" title="{{l.tip}}" onClick="{{l.pick}}" style="{{l.style}}"><span style="{{l.keyStyle}}">{{l.k}}</span>{{l.t}}</button>
+              </sc-for>
+            </div>
+            <div role="radiogroup" aria-label="Card detail" style="display: flex; gap: 0">
+              <sc-for list="{{details}}" as="d" hint-placeholder-count="3">
+                <button type="button" role="radio" aria-checked="{{d.on}}" title="{{d.tip}}" onClick="{{d.pick}}" style="{{d.style}}">{{d.t}}</button>
+              </sc-for>
+            </div>
+            <span style="flex: 1"></span>
+            <button type="button" aria-haspopup="menu" aria-expanded="{{exportOpenAttr}}" title="Export map  ⇧⌘E" onClick="{{toggleExport}}" style="{{exportBtn}}">EXPORT <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 4l4 4 4-4"></path></svg></button>
+            <button type="button" aria-haspopup="dialog" aria-expanded="{{agentOpenAttr}}" title="Explain this schema — sends schema.graph to an agent" onClick="{{toggleAgent}}" style="{{agentBtn}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 9h8M8 12h5"></path></svg>EXPLAIN WITH AGENT</button>
+          </div>
+
+          <div style="height: 32px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+            <button type="button" title="Fuzzy filter tables and columns  ⌘F" aria-label="Filter map" onClick="{{toggleFilter}}" style="{{filterStyle}}">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3); flex: none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+              <span style="{{filterTextStyle}}">{{filterText}}</span>
+              <span style="flex: 1"></span>
+              <span style="{{filterKeyStyle}}">{{filterKey}}</span>
+            </button>
+            <sc-for list="{{toggles}}" as="tg" hint-placeholder-count="3">
+              <button type="button" role="switch" aria-checked="{{tg.on}}" title="{{tg.tip}}" onClick="{{tg.pick}}" style="{{tg.style}}"><span aria-hidden="true" style="{{tg.boxStyle}}">{{tg.mark}}</span>{{tg.t}}</button>
+            </sc-for>
+            <button type="button" aria-pressed="{{pathAttr}}" title="Path tool — pick two tables, get the join  P" onClick="{{togglePath}}" style="{{pathBtn}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="2.5"></circle><circle cx="19" cy="18" r="2.5"></circle><path d="M7.5 6H12a3 3 0 0 1 3 3v6a3 3 0 0 0 3 3"></path></svg>PATH</button>
+            <sc-if value="{{isFocus}}" hint-placeholder-val="{{false}}">
+              <span role="radiogroup" aria-label="Focus hops" style="display: inline-flex; align-items: center; gap: 3px; margin-left: 2px">
+                <span style="{{capDim}}; font-size: 10px; margin-right: 2px">hops</span>
+                <sc-for list="{{hopsSeg}}" as="h" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{h.on}}" title="{{h.tip}}" onClick="{{h.pick}}" style="{{h.style}}">{{h.t}}</button></sc-for>
+              </span>
+            </sc-if>
+            <span style="flex: 1"></span>
+            <div role="group" aria-label="Zoom" style="display: inline-flex; align-items: center; gap: 3px">
+              <button type="button" aria-label="Zoom out (⌘−)" title="Zoom out  ⌘−" onClick="{{zoomOut}}" style="{{zoomBtn}}">−</button>
+              <span style="{{zoomReadStyle}}">{{zoomText}}</span>
+              <button type="button" aria-label="Zoom in (⌘+)" title="Zoom in  ⌘+" onClick="{{zoomIn}}" style="{{zoomBtn}}">+</button>
+              <button type="button" title="Fit to window  F" onClick="{{zoomFit}}" style="{{fitBtn}}">FIT <span style="font-family: var(--code); font-weight: 400; opacity: .7">F</span></button>
+            </div>
+          </div>
+
+          <!-- viewport -->
+          <div role="application" aria-label="{{vpLabel}}" style="{{vpStyle}}">
+            <div style="{{captionStyle}}"><span style="{{cap}}">{{captionA}}</span><span style="{{capDim}}">{{captionB}}</span></div>
+            <div role="group" aria-label="Layer visibility" style="{{layerBarStyle}}">
+              <span style="{{capDim}}; font-size: 10px">layers //</span>
+              <sc-for list="{{layerTgls}}" as="ly" hint-placeholder-count="2">
+                <button type="button" role="switch" aria-checked="{{ly.on}}" title="{{ly.tip}}" onClick="{{ly.pick}}" style="{{ly.style}}">{{ly.t}}<span aria-hidden="true" style="{{ly.markStyle}}">{{ly.mark}}</span></button>
+              </sc-for>
+            </div>
+            <div style="{{worldStyle}}">
+              <sc-for list="{{boxes}}" as="b" hint-placeholder-count="4">
+                <div aria-label="{{b.aria}}" style="{{b.style}}">
+                  <div style="{{b.headStyle}}"><span style="{{cap}}">{{b.name}}</span><span style="{{capDim}}">// {{b.count}}</span><span style="flex: 1"></span><span style="{{b.rowsStyle}}">{{b.rows}}</span><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="color: var(--ink3)"><path d="M2 4l4 4 4-4"></path></svg></div>
+                </div>
+              </sc-for>
+              <svg aria-hidden="true" style="{{ringSvg}}"><path d="{{ringA}}" style="{{ringStyle}}"></path><path d="{{ringB}}" style="{{ringStyle}}"></path><path d="{{ringC}}" style="{{ringStyle}}"></path></svg>
+              <sc-for list="{{ringLabels}}" as="rl" hint-placeholder-count="2"><span style="{{rl.style}}">{{rl.t}}</span></sc-for>
+              <sc-for list="{{edges}}" as="e" hint-placeholder-count="11">
+                <svg aria-hidden="true" style="{{e.svg}}"><path d="{{e.d}}" style="{{e.line}}"></path><path d="{{e.m}}" style="{{e.mark}}"></path><path d="{{e.c}}" style="{{e.circ}}"></path></svg>
+              </sc-for>
+              <sc-for list="{{cards}}" as="c" hint-placeholder-count="12">
+                <div role="button" tabindex="0" aria-pressed="{{c.on}}" aria-label="{{c.label}}" title="{{c.tip}}" onClick="{{c.pick}}" style="{{c.style}}">
+                  <div style="{{c.head}}">
+                    <span style="{{c.nameStyle}}">{{c.name}}</span>
+                    <span style="flex: 1"></span>
+                    <span style="{{c.tagStyle}}">{{c.tag}}</span>
+                  </div>
+                  <sc-for list="{{c.cols}}" as="k" hint-placeholder-count="3">
+                    <div style="{{k.row}}">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{k.gStyle}}"><path d="{{k.g}}"></path></svg>
+                      <span style="{{k.nStyle}}">{{k.n}}</span>
+                      <span style="{{k.tStyle}}">{{k.t}}</span>
+                    </div>
+                  </sc-for>
+                  <div style="{{c.foot}}">
+                    <span aria-hidden="true" style="display: inline-flex; gap: 1px"><sc-for list="{{c.meter}}" as="m" hint-placeholder-count="12"><span style="{{m}}"></span></sc-for></span>
+                    <span style="flex: 1"></span>
+                    <span style="{{c.moreStyle}}">{{c.more}}</span>
+                    <span style="{{c.countStyle}}">{{c.count}}</span>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-for list="{{pills}}" as="p" hint-placeholder-count="1">
+                <button type="button" title="{{p.tip}}" onClick="{{p.pick}}" style="{{p.style}}"><svg width="14" height="6" viewBox="0 0 14 6" aria-hidden="true" style="{{p.glyphStyle}}"><path d="{{p.glyph}}"></path></svg>{{p.t}}</button>
+              </sc-for>
+            </div>
+
+            <!-- minimap -->
+            <div role="img" aria-label="{{mm.label}}" style="{{mm.style}}">
+              <div style="display: flex; align-items: center; gap: 4px; height: 16px; padding: 0 6px; border-bottom: 1px solid var(--line)"><span style="{{capDim}}; font-size: 9.5px">map</span><span style="flex: 1"></span><span style="font-family: var(--code); font-size: 9.5px; color: var(--ink3)">{{zoomText}}</span></div>
+              <div style="{{mm.innerStyle}}">
+                <sc-for list="{{mm.boxes}}" as="mb" hint-placeholder-count="4"><span style="{{mb}}"></span></sc-for>
+                <sc-for list="{{mm.cards}}" as="mc" hint-placeholder-count="12"><span style="{{mc}}"></span></sc-for>
+                <span style="{{mm.view}}"></span>
+              </div>
+            </div>
+
+            <!-- path drawer -->
+            <sc-if value="{{pathOn}}" hint-placeholder-val="{{false}}">
+              <div role="region" aria-label="Join path customers to products" style="{{drawerStyle}}">
+                <div style="flex: 0 0 236px; padding: 10px 12px; border-right: 1px solid var(--line); box-sizing: border-box">
+                  <div style="display: flex; gap: 6px"><span style="{{cap}}">path</span><span style="{{capDim}}">// 3 joins · shortest · 1 of 1</span></div>
+                  <div style="margin-top: 10px">
+                    <sc-for list="{{pathSteps}}" as="ps" hint-placeholder-count="4">
+                      <button type="button" onClick="{{ps.pick}}" style="{{ps.style}}"><span aria-hidden="true" style="{{ps.node}}">{{ps.n}}</span><span style="{{ps.nameStyle}}">{{ps.name}}</span><span style="flex: 1; height: 1px; background: var(--line)"></span><span style="{{ps.cardStyle}}">{{ps.card}}</span></button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="flex: 1; min-width: 0; padding: 10px 12px; display: flex; flex-direction: column">
+                  <div style="display: flex; gap: 6px; align-items: center"><span style="{{cap}}">join sql</span><span style="{{capDim}}">// postgres · aliases from table initials</span><span style="flex: 1"></span><span style="{{capDim}}">est. 168,214 rows</span></div>
+                  <div role="textbox" aria-readonly="true" aria-label="Join SQL" style="flex: 1; margin-top: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--sunken); font-family: var(--code); font-size: 11.5px; line-height: 18px; white-space: pre; overflow: hidden">
+                    <sc-for list="{{sqlLines}}" as="sl" hint-placeholder-count="5"><div><sc-for list="{{sl}}" as="tk" hint-placeholder-count="6"><span style="{{tk.s}}">{{tk.t}}</span></sc-for></div></sc-for>
+                  </div>
+                </div>
+                <div style="flex: 0 0 168px; padding: 10px 12px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; box-sizing: border-box">
+                  <div style="display: flex; align-items: center"><span style="{{capDim}}">from → to</span><span style="flex: 1"></span><button type="button" aria-label="Close path (Esc)" title="Close  Esc" onClick="{{togglePath}}" style="{{boxS}}">✕</button></div>
+                  <span style="font-size: 13px; font-weight: 600">customers <span style="color: var(--accent)">→</span> products</span>
+                  <span style="flex: 1"></span>
+                  <button type="button" title="Copy join SQL  ⌘C" onClick="{{copySql}}" style="{{copyBtn}}">{{copyText}}</button>
+                  <a href="Query.dc.html" title="Open as query  ⌘⏎" style="{{openQueryBtn}}">OPEN AS QUERY <span style="opacity: .6; letter-spacing: 0">⌘⏎</span></a>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- export menu -->
+            <sc-if value="{{exportOpen}}" hint-placeholder-val="{{false}}">
+              <div role="menu" aria-label="Export" style="{{exportMenuStyle}}">
+                <div style="display: flex; gap: 6px; padding: 8px 10px 6px"><span style="{{cap}}">export</span><span style="{{capDim}}">// {{exportScope}}</span></div>
+                <sc-for list="{{exportItems}}" as="x" hint-placeholder-count="4">
+                  <button type="button" role="menuitemradio" aria-checked="{{x.on}}" onClick="{{x.pick}}" style="{{x.style}}"><span style="{{x.tStyle}}">{{x.t}}</span><span style="{{x.dStyle}}">{{x.d}}</span><span style="flex: 1"></span><span style="{{x.kStyle}}">{{x.k}}</span></button>
+                </sc-for>
+                <div style="margin: 6px 10px 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--sunken); font-family: var(--code); font-size: 10.5px; line-height: 16px; white-space: pre; color: var(--ink2); overflow: hidden">
+                  <sc-for list="{{exportPreview}}" as="xp" hint-placeholder-count="5"><div>{{xp}}</div></sc-for>
+                </div>
+                <div style="display: flex; gap: 4px; padding: 8px 10px 10px"><span style="flex: 1"></span><button type="button" onClick="{{toggleExport}}" style="{{boxS}}">COPY</button><button type="button" onClick="{{toggleExport}}" style="{{boxSPrimary}}">SAVE… ⌘S</button></div>
+              </div>
+            </sc-if>
+
+            <!-- explain with agent -->
+            <sc-if value="{{agentOpen}}" hint-placeholder-val="{{false}}">
+              <div role="dialog" aria-label="Explain this schema" style="{{agentPopStyle}}">
+                <div style="display: flex; gap: 6px; padding: 8px 10px 0"><span style="{{cap}}">explain this schema</span><span style="flex: 1"></span><span style="{{capDim}}">mcp // dbman</span></div>
+                <div style="padding: 6px 10px 0; font-size: 12px; line-height: 1.45; color: var(--ink2)">Sends <span style="font-family: var(--code); color: var(--ink)">schema.graph</span> — {{graphSummary}} — to the agent. The answer lands in the inspector’s AGENTS tab.</div>
+                <div style="padding: 8px 10px 0">
+                  <sc-for list="{{agentRows}}" as="ag" hint-placeholder-count="2">
+                    <button type="button" role="radio" aria-checked="{{ag.on}}" onClick="{{ag.pick}}" style="{{ag.style}}"><span style="{{ag.tile}}">{{ag.mono}}</span><span style="display: flex; flex-direction: column; align-items: flex-start; gap: 1px"><span style="font-size: 12px; font-weight: 600">{{ag.name}}</span><span style="{{capDim}}; font-size: 10px">{{ag.sub}}</span></span><span style="flex: 1"></span><span style="{{ag.permStyle}}">{{ag.perm}}</span></button>
+                  </sc-for>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: baseline; margin: 6px 10px 0; padding-top: 6px; border-top: 1px solid var(--line)"><span style="{{capDim}}; font-size: 10px">redacted //</span><span style="font-family: var(--code); font-size: 10.5px; color: var(--ink2)">customers.email · customers.phone · addresses.*</span></div>
+                <div style="display: flex; align-items: center; gap: 4px; padding: 10px">
+                  <span style="{{sentStyle}}">{{sentText}}</span>
+                  <span style="flex: 1"></span>
+                  <button type="button" onClick="{{toggleAgent}}" style="{{boxS}}">COPY PROMPT</button>
+                  <button type="button" onClick="{{sendAgent}}" style="{{boxSPrimary}}">SEND ⏎</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </section>
+
+        <!-- INSPECTOR -->
+        <aside aria-label="Table inspector" style="{{frame}} flex: 0 0 288px; display: flex; flex-direction: column">
+          <sc-if value="{{hasSel}}" hint-placeholder-val="{{true}}">
+            <div style="flex: 1; min-height: 0; overflow: auto">
+              <div style="padding: 10px 12px 0">
+                <div style="display: flex; align-items: center; gap: 6px">
+                  <span style="{{cap}}">table</span><span style="{{capDim}}">// {{ins.dom}} · ⌥⌘I</span>
+                  <span style="flex: 1"></span>
+                  <button type="button" aria-label="Clear selection (Esc)" title="Clear selection  Esc" onClick="{{clearSel}}" style="{{boxS}}">✕</button>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px"><span style="font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.05">{{ins.name}}</span><span style="{{ins.kindStyle}}">{{ins.kind}}</span></div>
+                <div style="{{capDim}}; margin-top: 4px">{{ins.sub}}</div>
+              </div>
+
+              <div style="margin: 10px 12px 0; padding: 8px; border: 1px solid var(--line); border-radius: 3px">
+                <div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 26px; font-weight: 300; letter-spacing: -0.02em; line-height: 1">{{ins.rows}}</span><span style="{{capDim}}">rows // {{ins.rowsNote}}</span><span style="flex: 1"></span><span style="{{capDim}}">{{ins.rank}}</span></div>
+                <div role="img" aria-label="{{ins.barLabel}}" style="display: grid; grid-template-columns: repeat(44, minmax(0, 1fr)); margin-top: 8px">
+                  <sc-for list="{{ins.bar}}" as="d" hint-placeholder-count="132"><span style="aspect-ratio: 1; background: radial-gradient(circle closest-side, {{d}} 0 72%, transparent 82%)"></span></sc-for>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 3px; font-family: var(--code); font-size: 10px; color: var(--ink3)"><span>10</span><span>1K</span><span>100K</span><span>10M</span></div>
+              </div>
+
+              <div style="padding: 10px 12px 0">
+                <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">columns</span><span style="{{capDim}}">// {{ins.colCount}}</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <sc-for list="{{ins.cols}}" as="ic" hint-placeholder-count="7">
+                  <div style="display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 6px; align-items: center; height: 21px; border-bottom: 1px solid var(--line)">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{ic.gStyle}}"><path d="{{ic.g}}"></path></svg>
+                    <span style="{{ic.nStyle}}">{{ic.n}}</span>
+                    <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3); white-space: nowrap">{{ic.t}}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="padding: 10px 12px 0">
+                <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">relations</span><span style="{{capDim}}">// {{ins.relCount}}</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <sc-for list="{{ins.rels}}" as="rr" hint-placeholder-count="4">
+                  <div style="{{rr.wrap}}">
+                    <span style="{{rr.dirStyle}}">{{rr.dir}}</span>
+                    <span style="{{rr.colStyle}}">{{rr.col}}</span>
+                    <button type="button" title="{{rr.tip}}" onClick="{{rr.pick}}" style="{{rr.tblStyle}}">{{rr.tbl}}</button>
+                    <span style="{{rr.cardStyle}}">{{rr.card}}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ins.hasInferred}}" hint-placeholder-val="{{false}}">
+                  <div style="margin-top: 6px; padding: 6px 8px; border: 1px dashed var(--accent); border-radius: 3px">
+                    <div style="{{cap}}; color: var(--accent); font-size: 10.5px">{{ins.infTitle}}</div>
+                    <div style="font-family: var(--code); font-size: 10.5px; line-height: 16px; color: var(--ink2); margin-top: 3px; white-space: pre">{{ins.infBody}}</div>
+                    <button type="button" onClick="{{acceptInferred}}" style="{{ins.infBtn}}">{{ins.infBtnText}}</button>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="padding: 10px 12px 12px">
+                <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">indexes</span><span style="{{capDim}}">// {{ins.idxCount}}</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <sc-for list="{{ins.idx}}" as="ix" hint-placeholder-count="3">
+                  <div style="{{ix.row}}"><span style="{{ix.nStyle}}">{{ix.n}}</span><span style="{{ix.dStyle}}">{{ix.d}}</span></div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex: none; display: flex; gap: 4px; padding: 8px 12px; border-top: 1px solid var(--lineStrong)">
+              <a href="Table.dc.html" title="Open table  ⏎" style="{{insPrimary}}">OPEN TABLE ⏎</a>
+              <button type="button" title="Focus this table  Space" onClick="{{focusSel}}" style="{{insBtn}}">FOCUS ⎵</button>
+              <a href="Query.dc.html" title="New query on this table  ⌘N" style="{{insBtn}}">NEW QUERY</a>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{noSel}}" hint-placeholder-val="{{false}}">
+            <div style="padding: 10px 12px 0">
+              <div style="display: flex; gap: 6px"><span style="{{cap}}">schema</span><span style="{{capDim}}">// shop.public · nothing selected</span></div>
+              <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 10px"><span style="font-size: 52px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">12</span><span style="{{capDim}}">tables // {{totalRows}} rows</span></div>
+              <div style="{{capDim}}; margin-top: 4px">10 declared fk · 1 inferred · 1 isolated</div>
+            </div>
+            <div style="padding: 12px 12px 0">
+              <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">domains</span><span style="{{capDim}}">// 4</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+              <sc-for list="{{domainRows}}" as="dr" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: 84px minmax(0, 1fr) 52px; gap: 8px; align-items: center; height: 24px; border-bottom: 1px solid var(--line)">
+                  <span style="{{cap}}; font-size: 10.5px">{{dr.n}}</span>
+                  <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 1px; height: 7px"><sc-for list="{{dr.seg}}" as="s" hint-placeholder-count="24"><span style="background: {{s}}"></span></sc-for></span>
+                  <span style="font-family: var(--code); font-size: 11px; color: var(--ink3); text-align: right">{{dr.v}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="padding: 14px 12px 0; font-size: 12px; line-height: 1.5; color: var(--ink2)">Click a card to inspect its columns, keys and indexes. Arrow keys walk the selection along edges; Space focuses it; P picks a join path.</div>
+          </sc-if>
+        </aside>
+      </div>
+
+      <!-- STATUS LINE -->
+      <div style="height: 20px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 4px; white-space: nowrap; overflow: hidden">
+        <span style="{{cap}}; font-size: 10.5px">{{statusCounts}}</span>
+        <span style="{{capDim}}; font-size: 10.5px">{{statusMode}}</span>
+        <span aria-hidden="true" style="display: inline-flex; align-items: center; gap: 12px">
+          <span style="display: inline-flex; align-items: center; gap: 5px"><svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true"><path d="M1 5h20" style="stroke: var(--ink); stroke-width: 1.2"></path></svg><span style="{{capDim}}; font-size: 10px">declared</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true"><path d="M1 5h20" style="stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 3 2"></path></svg><span style="{{capDim}}; font-size: 10px">inferred</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true"><path d="M1 5h20M7 5L1 1M7 5L1 9" style="stroke: var(--ink); stroke-width: 1.2; fill: none"></path></svg><span style="{{capDim}}; font-size: 10px">many</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true"><path d="M1 5h20M15 1v8M18 1v8" style="stroke: var(--ink); stroke-width: 1.2; fill: none"></path></svg><span style="{{capDim}}; font-size: 10px">one</span></span>
+        </span>
+        <span style="flex: 1"></span>
+        <span style="{{capDim}}; font-size: 10.5px">←→ walk · ⎵ focus · F fit · 1–4 layout · ⌘F filter</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {layout: 'layered', detail: 'keys', sel: 'orders', focusOn: 'orders', hops: 2, hideJ: false, hideI: false, inferred: true, accepted: false, layerMine: true, layerCC: true,
+      path: false, filter: false, zoom: null, exportOpen: false, exportFmt: 'MERMAID', agentOpen: false, agent: 'claude-code', sent: false, copied: false};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    // ---------------------------------------------------------------- shared styles
+    const S = this.state;
+    const set = (o) => this.setState(o);
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;';
+    const boxS = box;
+    const boxSPrimary = boxBase + 'height: 20px; padding: 0 8px; font-size: 10.5px; background: var(--ink); color: var(--paper);';
+    const segStyle = (on, first, last, h) => CAPS + 'font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; height: ' + (h || 22) + 'px; padding: 0 8px; box-sizing: border-box; cursor: pointer; border: 1px solid var(--lineStrong); border-radius: ' + (first && last ? '2px' : first ? '2px 0 0 2px' : last ? '0 2px 2px 0' : '0') + ';' + (first ? '' : 'margin-left: -1px;') + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);');
+    const mono = (sz, extra) => 'font-family: var(--code); font-size: ' + sz + 'px; white-space: nowrap;' + (extra || '');
+
+    // ---------------------------------------------------------------- data (V2-SPEC §0 / §1.8)
+    const TB = {
+      customers: {rows: 2400, size: '0.4 MB', dom: 'SALES', cols: [['id', 'int8', 'pk'], ['email', 'text'], ['name', 'text'], ['plan', 'text'], ['phone', 'text'], ['created_at', 'timestamptz']],
+        idx: [['customers_pkey', 'btree (id)'], ['customers_email_key', 'unique (email)']]},
+      addresses: {rows: 3120, size: '0.5 MB', dom: 'SALES', cols: [['id', 'int8', 'pk'], ['customer_id', 'int8', 'fk'], ['line1', 'text'], ['city', 'text'], ['country', 'char(2)'], ['is_default', 'bool']],
+        idx: [['addresses_pkey', 'btree (id)'], ['addresses_customer_id_idx', 'btree (customer_id)']]},
+      orders: {rows: 48000, size: '6.1 MB', dom: 'SALES', cols: [['id', 'int8', 'pk'], ['customer_id', 'int8', 'fk'], ['status', 'order_status'], ['total', 'numeric'], ['items', 'int4'], ['created_at', 'timestamptz'], ['shipped_at', 'timestamptz']],
+        idx: [['orders_pkey', 'btree (id)'], ['orders_customer_id_idx', 'btree (customer_id)'], ['orders_created_at_idx', 'btree (created_at desc)']]},
+      order_items: {rows: 168214, size: '14.8 MB', dom: 'SALES', cols: [['id', 'int8', 'pk'], ['order_id', 'int8', 'fk'], ['product_id', 'int8', 'fk'], ['qty', 'int4'], ['unit_price', 'numeric']],
+        idx: [['order_items_pkey', 'btree (id)'], ['order_items_order_id_idx', 'btree (order_id)'], ['order_items_product_id_idx', 'btree (product_id)']]},
+      order_coupons: {rows: 5206, size: '0.3 MB', dom: 'SALES', junction: true, cols: [['order_id', 'int8', 'pkfk'], ['coupon_id', 'int4', 'pkfk'], ['applied_at', 'timestamptz']],
+        idx: [['order_coupons_pkey', 'btree (order_id, coupon_id)'], ['order_coupons_coupon_id_idx', 'btree (coupon_id)']]},
+      coupons: {rows: 64, size: '16 KB', dom: 'SALES', cols: [['id', 'int4', 'pk'], ['code', 'text'], ['pct_off', 'int2'], ['valid_until', 'date']],
+        idx: [['coupons_pkey', 'btree (id)'], ['coupons_code_key', 'unique (code)']]},
+      products: {rows: 240, size: '64 KB', dom: 'CATALOG', cols: [['id', 'int8', 'pk'], ['category_id', 'int4', 'fk'], ['sku', 'text'], ['name', 'text'], ['price', 'numeric'], ['stock', 'int4']],
+        idx: [['products_pkey', 'btree (id)'], ['products_sku_key', 'unique (sku)'], ['products_category_id_idx', 'btree (category_id)']]},
+      categories: {rows: 18, size: '16 KB', dom: 'CATALOG', cols: [['id', 'int4', 'pk'], ['parent_id', 'int4', 'fk'], ['name', 'text'], ['slug', 'text']],
+        idx: [['categories_pkey', 'btree (id)'], ['categories_slug_key', 'unique (slug)']]},
+      invoices: {rows: 9812, size: '1.2 MB', dom: 'BILLING', cols: [['id', 'int8', 'pk'], ['order_id', 'int8', 'fk'], ['customer_ref', 'int8', 'vfk'], ['number', 'text'], ['amount', 'numeric'], ['status', 'text'], ['issued_at', 'timestamptz']],
+        idx: [['invoices_pkey', 'btree (id)'], ['invoices_order_id_idx', 'btree (order_id)'], ['invoices_number_key', 'unique (number)']]},
+      refunds: {rows: 412, size: '72 KB', dom: 'BILLING', cols: [['id', 'int8', 'pk'], ['invoice_id', 'int8', 'fk'], ['amount', 'numeric'], ['reason', 'text'], ['created_at', 'timestamptz']],
+        idx: [['refunds_pkey', 'btree (id)'], ['— no index on invoice_id', 'fk lookups seq-scan', 'warn']]},
+      events: {rows: 61532, size: '18.4 MB', dom: 'TELEMETRY', cols: [['id', 'int8', 'pk'], ['customer_id', 'int8', 'inf'], ['kind', 'text'], ['payload', 'jsonb'], ['at', 'timestamptz']],
+        idx: [['events_pkey', 'btree (id)'], ['events_customer_id_idx', 'btree (customer_id)'], ['events_at_brin', 'brin (at)']]},
+      audit_log: {rows: 1200000, approx: true, size: '212 MB', dom: 'TELEMETRY', isolated: true, cols: [['id', 'int8', 'pk'], ['actor', 'text'], ['action', 'text'], ['entity', 'text'], ['diff', 'jsonb'], ['at', 'timestamptz']],
+        idx: [['audit_log_pkey', 'btree (id)'], ['audit_log_at_brin', 'brin (at)']]},
+    };
+    const NAMES = Object.keys(TB);
+    const E_ALL = [
+      {id: 'oc', from: 'orders', fc: 'customer_id', to: 'customers', tc: 'id'},
+      {id: 'ac', from: 'addresses', fc: 'customer_id', to: 'customers', tc: 'id'},
+      {id: 'io', from: 'order_items', fc: 'order_id', to: 'orders', tc: 'id'},
+      {id: 'ip', from: 'order_items', fc: 'product_id', to: 'products', tc: 'id'},
+      {id: 'pc', from: 'products', fc: 'category_id', to: 'categories', tc: 'id'},
+      {id: 'cc', from: 'categories', fc: 'parent_id', to: 'categories', tc: 'id', opt: true},
+      {id: 'vo', from: 'invoices', fc: 'order_id', to: 'orders', tc: 'id'},
+      {id: 'ri', from: 'refunds', fc: 'invoice_id', to: 'invoices', tc: 'id'},
+      {id: 'jo', from: 'order_coupons', fc: 'order_id', to: 'orders', tc: 'id'},
+      {id: 'jc', from: 'order_coupons', fc: 'coupon_id', to: 'coupons', tc: 'id'},
+      {id: 'ec', from: 'events', fc: 'customer_id', to: 'customers', tc: 'id', inferred: true, opt: true},
+      {id: 'vc', from: 'invoices', fc: 'customer_ref', to: 'customers', tc: 'id', layer: 'cc', opt: true}, // virtual relation in claude-code's layer
+    ];
+    const PATH = ['customers', 'orders', 'order_items', 'products'];
+    const PATH_E = ['oc', 'io', 'ip'];
+    const MAXR = 1200000;
+    const fmtK = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace('.0', '') + 'K' : String(n);
+    const fmtN = (n) => n.toLocaleString('en-US');
+    const logFrac = (n) => Math.log10(Math.max(1, n)) / 7; // 10^0 .. 10^7
+    const totalRowsN = NAMES.reduce((a, n) => a + TB[n].rows, 0);
+    const totalRows = fmtK(totalRowsN);
+
+    // ---------------------------------------------------------------- visibility
+    const isVis = (n) => !(S.hideJ && TB[n].junction) && !(S.hideI && TB[n].isolated);
+    const VIS = NAMES.filter(isVis);
+    const inferredLive = S.accepted ? S.layerMine : S.inferred;
+    const layerOk = (e) => e.layer === 'cc' ? S.layerCC : true;
+    let EV = E_ALL.filter((e) => isVis(e.from) && isVis(e.to) && (!e.inferred || inferredLive) && layerOk(e)).map((e) => ({...e, inferred: e.inferred && !S.accepted, virtual: (e.inferred && S.accepted) || e.layer === 'cc'}));
+    if (S.hideJ) EV.push({id: 'mn', from: 'orders', fc: 'id', to: 'coupons', tc: 'id', mn: true});
+    const nbrs = (n) => EV.filter((e) => e.from !== e.to && (e.from === n || e.to === n)).map((e) => e.from === n ? e.to : e.from);
+    // layouts ignore agent-layer overlay edges, so toggling a layer never reshuffles the map
+    const layoutNbrs = (n) => EV.filter((e) => !e.layer && e.from !== e.to && (e.from === n || e.to === n)).map((e) => e.from === n ? e.to : e.from);
+
+    // ---------------------------------------------------------------- card geometry
+    const CW = {names: 140, keys: 176, all: 200}[S.detail];
+    const HEAD = 24, ROW = 18, FOOT = 16;
+    const shownCols = (n) => S.detail === 'names' ? [] : S.detail === 'keys' ? TB[n].cols.filter((c) => c[2] && (c[2] !== 'vfk' || S.layerCC)) : TB[n].cols;
+    const H = {};
+    NAMES.forEach((n) => { H[n] = HEAD + shownCols(n).length * ROW + FOOT; });
+
+    // ---------------------------------------------------------------- layouts
+    const P = {};
+    let boxesW = [];
+    let rings = [];
+    const resolve = (cx, cy, M) => {
+      for (let it = 0; it < 240; it++) {
+        let moved = false;
+        for (let i = 0; i < VIS.length; i++) for (let j = i + 1; j < VIS.length; j++) {
+          const a = VIS[i], b = VIS[j], A = P[a], B = P[b];
+          const ox = Math.min(A.x + CW, B.x + CW) - Math.max(A.x, B.x) + M;
+          const oy = Math.min(A.y + H[a], B.y + H[b]) - Math.max(A.y, B.y) + M;
+          if (ox <= 0 || oy <= 0) continue;
+          moved = true;
+          const da = Math.hypot(A.x + CW / 2 - cx, A.y + H[a] / 2 - cy), db = Math.hypot(B.x + CW / 2 - cx, B.y + H[b] / 2 - cy);
+          const far = da > db ? a : b, near = far === a ? b : a;
+          const F = P[far], N = P[near];
+          if (oy <= ox) F.y += (F.y + H[far] / 2 >= N.y + H[near] / 2 ? 1 : -1) * oy;
+          else F.x += (F.x >= N.x ? 1 : -1) * ox;
+        }
+        if (!moved) break;
+      }
+      // settle: anything still touching is pushed straight down (always converges)
+      const ord = [...VIS].sort((a, b) => P[a].y - P[b].y);
+      for (let i = 0; i < ord.length; i++) for (let j = 0; j < i; j++) {
+        const A = P[ord[j]], B = P[ord[i]];
+        if (A.x < B.x + CW + M && B.x < A.x + CW + M && B.y < A.y + H[ord[j]] + M) { B.y = A.y + H[ord[j]] + M; j = -1; }
+      }
+    };
+
+    if (S.layout === 'layered') {
+      const GX = 60, GY = 24;
+      const lanes = [['categories', 'customers'], ['products', 'orders', 'coupons', 'addresses', 'events'], ['order_items', 'order_coupons', 'invoices'], ['refunds', 'audit_log']].map((l) => l.filter(isVis));
+      let y = 0;
+      lanes[1].forEach((n) => { P[n] = {x: CW + GX, y}; y += H[n] + GY; });
+      const place = (li, ref) => {
+        const items = lanes[li].map((n) => {
+          const nb = layoutNbrs(n).filter((m) => P[m] && lanes[ref].includes(m));
+          return {n, want: nb.length ? nb.reduce((a, m) => a + P[m].y + H[m] / 2, 0) / nb.length - H[n] / 2 : -1e9};
+        }).sort((a, b) => a.want - b.want);
+        let bottom = -1e9;
+        items.forEach((o) => { const yy = Math.max(o.want === -1e9 ? 0 : o.want, bottom + GY); P[o.n] = {x: li * (CW + GX), y: yy}; bottom = yy + H[o.n]; });
+      };
+      place(0, 1); place(2, 1); place(3, 2);
+    } else if (S.layout === 'clusters') {
+      const PD = 12, HD = 26, GX2 = 32, GY2 = 30, BG = 32;
+      const slot = (n, x, y) => { if (isVis(n)) P[n] = {x, y}; };
+      const rowH = (arr) => Math.max(0, ...arr.filter(isVis).map((n) => H[n]));
+      const telH = rowH(['events', 'audit_log']);
+      const sy = telH ? HD + PD * 2 + telH + BG : 0;
+      const r1 = rowH(['addresses', 'customers', 'orders']), r2 = rowH(['coupons', 'order_coupons', 'order_items']);
+      const colX = (c) => PD + c * (CW + GX2);
+      ['addresses', 'customers', 'orders'].forEach((n, c) => slot(n, colX(c), sy + HD + PD));
+      (S.hideJ ? ['', 'coupons', 'order_items'] : ['coupons', 'order_coupons', 'order_items']).forEach((n, c) => n && slot(n, colX(c), sy + HD + PD + r1 + GY2));
+      const salesR = PD * 2 + 3 * CW + 2 * GX2, salesB = sy + HD + PD * 2 + r1 + GY2 + r2;
+      slot('events', colX(1), HD + PD); slot('audit_log', colX(2), HD + PD);
+      const bx = salesR + BG;
+      slot('invoices', bx + PD, sy + HD + PD); slot('refunds', bx + PD, sy + HD + PD + H.invoices + GY2);
+      const cy = salesB + BG;
+      slot('categories', colX(1), cy + HD + PD); slot('products', colX(2), cy + HD + PD);
+      const boxOf = (name, members) => {
+        const m = members.filter(isVis);
+        if (!m.length) return null;
+        const x0 = Math.min(...m.map((n) => P[n].x)) - PD, y0 = Math.min(...m.map((n) => P[n].y)) - PD - HD;
+        const x1 = Math.max(...m.map((n) => P[n].x + CW)) + PD, y1 = Math.max(...m.map((n) => P[n].y + H[n])) + PD;
+        return {name, x: x0, y: y0, w: x1 - x0, h: y1 - y0, members: m};
+      };
+      boxesW = [boxOf('telemetry', ['events', 'audit_log']), boxOf('sales', ['addresses', 'customers', 'orders', 'coupons', 'order_coupons', 'order_items']), boxOf('billing', ['invoices', 'refunds']), boxOf('catalog', ['products', 'categories'])].filter(Boolean);
+      const sales = boxesW.find((b) => b.name === 'sales');
+      if (sales) { sales.x = 0; sales.w = salesR; sales.y = sy; sales.h = salesB - sy; }
+    } else if (S.layout === 'focus') {
+      const c = S.focusOn;
+      const hop = {}; hop[c] = 0;
+      const q = [c];
+      while (q.length) { const n = q.shift(); layoutNbrs(n).forEach((m) => { if (hop[m] === undefined) { hop[m] = hop[n] + 1; q.push(m); } }); }
+      const maxH = Math.max(...VIS.map((n) => H[n]));
+      const rx1 = CW + 52, ry1 = (H[c] + maxH) / 2 + 26;
+      const rx = [0, rx1, rx1 + CW * 0.82, rx1 + CW * 1.25, rx1 + CW * 1.9, rx1 + CW * 2.5], ry = [0, ry1, ry1 + maxH * 0.62 + 34, ry1 + maxH * 1.1 + 56, ry1 + maxH * 1.7 + 80, ry1 + maxH * 2.3 + 100];
+      const tuned = {customers: [1, 180], order_items: [1, 0], invoices: [1, 90], order_coupons: [1, 270], addresses: [2, 146], events: [2, 222], products: [2, -16], refunds: [2, 58], coupons: [2, 294], categories: [3, -34], audit_log: [3, 122]};
+      const ang = {};
+      if (c === 'orders') { VIS.forEach((n) => { if (tuned[n]) ang[n] = tuned[n]; }); if (!VIS.includes('order_coupons') && VIS.includes('coupons')) ang.coupons = [1, 270]; }
+      else {
+        // radial tree: each subtree gets an angular sector proportional to its leaves
+        const kids = {};
+        const byHop = [...VIS].filter((n) => n !== c && hop[n] !== undefined).sort((a, b) => hop[a] - hop[b] || (a < b ? -1 : 1));
+        byHop.forEach((n) => { const par = layoutNbrs(n).filter((m) => hop[m] === hop[n] - 1).sort()[0]; (kids[par] = kids[par] || []).push(n); });
+        const lone = VIS.filter((n) => hop[n] === undefined);
+        const leaves = (n) => (kids[n] || []).reduce((a, k) => a + leaves(k), 0) || 1;
+        const total = leaves(c) + lone.length;
+        const assign = (n, a0, a1, depth) => {
+          let a = a0;
+          (kids[n] || []).forEach((k) => { const span = (a1 - a0) * leaves(k) / leaves(n); ang[k] = [depth + 1, a + span / 2]; assign(k, a, a + span, depth + 1); a += span; });
+        };
+        const rootSpan = 360 * leaves(c) / total;
+        assign(c, 180 - rootSpan / 2, 180 + rootSpan / 2, 0);
+        lone.forEach((n, i) => { ang[n] = [3, 180 + rootSpan / 2 + (i + 0.5) * (360 - rootSpan) / Math.max(1, lone.length)]; });
+      }
+      P[c] = {x: -CW / 2, y: -H[c] / 2};
+      VIS.forEach((n) => { if (n === c) return; const [r, a] = ang[n] || [3, 120], rr = Math.min(r, 5); const rad = a * Math.PI / 180; P[n] = {x: Math.cos(rad) * rx[rr] - CW / 2, y: Math.sin(rad) * ry[rr] - H[n] / 2}; });
+      resolve(0, 0, 26);
+      rings = [1, 2].map((k) => ({k, rx: rx[k], ry: ry[k]}));
+      this._hop = hop;
+    } else {
+      const FREE = {events: [24, 30], audit_log: [36, 640], customers: [44, 236], addresses: [22, 420], orders: [300, 222], order_coupons: [318, 418], coupons: [292, 566],
+        order_items: [560, 300], invoices: [548, 70], refunds: [800, 24], products: [806, 330], categories: [800, 500]};
+      VIS.forEach((n) => { P[n] = {x: FREE[n][0] * 0.85 * (CW / 176), y: FREE[n][1] * 0.94}; });
+      resolve(480, 340, 20);
+    }
+    const hop = S.layout === 'focus' ? this._hop : {};
+
+    // ---------------------------------------------------------------- normalise to world coordinates
+    const PAD = 20;
+    const xs = [], ys = [];
+    VIS.forEach((n) => { xs.push(P[n].x, P[n].x + CW + (n === 'categories' ? 50 : 0)); ys.push(P[n].y, P[n].y + H[n]); });
+    boxesW.forEach((b) => { xs.push(b.x, b.x + b.w); ys.push(b.y, b.y + b.h); });
+    const minX = Math.min(...xs) - PAD, minY = Math.min(...ys) - PAD;
+    VIS.forEach((n) => { P[n].x = Math.round(P[n].x - minX); P[n].y = Math.round(P[n].y - minY); });
+    boxesW.forEach((b) => { b.x = Math.round(b.x - minX); b.y = Math.round(b.y - minY); });
+    let WW = Math.max(...xs) - minX + PAD, WH = Math.max(...ys) - minY + PAD;
+    const focusC = S.layout === 'focus' ? {x: P[S.focusOn].x + CW / 2, y: P[S.focusOn].y + H[S.focusOn] / 2} : null;
+
+    // ---------------------------------------------------------------- edge routing
+    const rect = (n) => ({l: P[n].x, t: P[n].y, r: P[n].x + CW, b: P[n].y + H[n]});
+    const rowCY = (n, col) => { const i = shownCols(n).findIndex((c) => c[0] === col); return i < 0 ? null : P[n].y + HEAD + i * ROW + ROW / 2; };
+    const N = {L: [-1, 0], R: [1, 0], T: [0, -1], B: [0, 1]};
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const anchor = (n, col, side, other) => {
+      const R = rect(n), cx = (R.l + R.r) / 2, cy = (R.t + R.b) / 2;
+      if (side === 'L' || side === 'R') {
+        const ry = rowCY(n, col);
+        const y = ry !== null ? ry : clamp(cy + (other.y - cy) * 0.12, R.t + 8, R.b - 8);
+        return {x: side === 'L' ? R.l : R.r, y, n: N[side]};
+      }
+      return {x: clamp(cx + (other.x - cx) * 0.3, R.l + 16, R.r - 16), y: side === 'T' ? R.t : R.b, n: N[side]};
+    };
+    const bez = (a, b, k) => [a.x, a.y, a.x + a.n[0] * k, a.y + a.n[1] * k, b.x + b.n[0] * k, b.y + b.n[1] * k, b.x, b.y];
+    const at = (c, u) => { const v = 1 - u; return [v * v * v * c[0] + 3 * v * v * u * c[2] + 3 * v * u * u * c[4] + u * u * u * c[6], v * v * v * c[1] + 3 * v * v * u * c[3] + 3 * v * u * u * c[5] + u * u * u * c[7]]; };
+    const inR = (p, R, m) => p[0] > R.l - m && p[0] < R.r + m && p[1] > R.t - m && p[1] < R.b + m;
+    const hits = (c, ends) => {
+      let h = 0;
+      for (let i = 1; i < 32; i++) {
+        const u = i / 32, p = at(c, u);
+        VIS.forEach((n) => {
+          const own = ends.includes(n);
+          if (own) { if (u > 0.1 && u < 0.9 && inR(p, rect(n), -2)) h++; } else if (inR(p, rect(n), 5)) h++;
+        });
+      }
+      return h;
+    };
+    const route = (e) => {
+      if (e.from === e.to) {
+        const R = rect(e.from);
+        const y1 = rowCY(e.from, e.fc) ?? R.t + H[e.from] - FOOT - 2, y2 = rowCY(e.to, e.tc) ?? R.t + 9;
+        const loop = (sx, sgn) => { const a = {x: sx, y: y1, n: [sgn, 0]}, b = {x: sx, y: y2, n: [sgn, 0]}; const c = [a.x, a.y, a.x + 42 * sgn, a.y + 6, b.x + 42 * sgn, b.y - 6, b.x, b.y]; return {c, a, b, h: hits(c, [e.from])}; };
+        const lr = loop(R.r, 1), ll = loop(R.l, -1);
+        return ll.h < lr.h ? ll : lr;
+      }
+      const cf = {x: P[e.from].x + CW / 2, y: P[e.from].y + H[e.from] / 2}, ct = {x: P[e.to].x + CW / 2, y: P[e.to].y + H[e.to] / 2};
+      let best = null;
+      ['L', 'R', 'T', 'B'].forEach((s1) => ['L', 'R', 'T', 'B'].forEach((s2) => {
+        const a = anchor(e.from, e.fc, s1, ct), b = anchor(e.to, e.tc, s2, cf);
+        const dx = b.x - a.x, dy = b.y - a.y, dist = Math.hypot(dx, dy) || 1;
+        const face = (p, q, nn) => ((q.x - p.x) * nn[0] + (q.y - p.y) * nn[1]) / dist;
+        [0.42, 0.24].forEach((kf, ki) => {
+          const c = bez(a, b, clamp(dist * kf, 14 + 12 * (1 - ki), 150));
+          let score = hits(c, [e.from, e.to]) * 5000 + dist + ki * 40;
+          if (face(a, b, a.n) < 0.15) score += 600;
+          if (face(b, a, b.n) < 0.15) score += 600;
+          if (S.detail !== 'names') { if (s1 === 'T' || s1 === 'B') score += 90; if (s2 === 'T' || s2 === 'B') score += 90; }
+          if (!best || score < best.score) best = {score, c, a, b};
+        });
+      }));
+      // overlay (agent-layer) edges skip ranks, so a single curve may cut through cards: fall back to a
+      // channel route — out of the side 16/30 px, straight along a gap between cards, back into the other side
+      if (e.layer && best.score >= 5000) {
+        // ax 0: leave L/R, run along a horizontal gap · ax 1: leave T/B, run along a vertical gap
+        [0, 1].forEach((ax) => {
+          const lo = [], hi = [];
+          VIS.forEach((n) => { const R = rect(n); lo.push(ax ? R.l : R.t); hi.push(ax ? R.r : R.b); });
+          const gs = [Math.min(...lo) - 16, Math.max(...hi) + 16];
+          hi.forEach((h0) => { const nxt = lo.filter((l0) => l0 >= h0 + 12); if (nxt.length) gs.push((h0 + Math.min(...nxt)) / 2); });
+          const sides = ax ? ['T', 'B'] : ['L', 'R'];
+          const P2 = (u, v) => ax ? [v, u] : [u, v]; // u runs along the gap, v across it
+          sides.forEach((s1) => sides.forEach((s2) => [16, 30].forEach((off) => gs.forEach((G) => {
+            const a = anchor(e.from, e.fc, s1, ct), b = anchor(e.to, e.tc, s2, cf);
+            const au = ax ? a.y : a.x, av = ax ? a.x : a.y, bu = ax ? b.y : b.x, bv = ax ? b.x : b.y, an = a.n[ax ? 1 : 0], bn = b.n[ax ? 1 : 0];
+            const w1 = au + an * off, w2 = bu + bn * off;
+            const dir = Math.sign(w2 - w1) || 1;
+            if (dir * an < 0 || dir * bn > 0) return; // must leave a and enter b along their normals
+            const k1 = off / 2, km = Math.abs(w2 - w1) / 3;
+            const c1 = [...P2(au, av), ...P2(au + an * k1, av), ...P2(w1 - dir * k1, G), ...P2(w1, G)];
+            const cm = [...P2(w1, G), ...P2(w1 + dir * km, G), ...P2(w2 - dir * km, G), ...P2(w2, G)];
+            const c3 = [...P2(w2, G), ...P2(w2 + dir * k1, G), ...P2(bu + bn * k1, bv), ...P2(bu, bv)];
+            const h = hits(c1, [e.from]) + hits(cm, []) + hits(c3, [e.to]);
+            const score = h * 5000 + Math.abs(w2 - w1) + Math.abs(G - av) + Math.abs(G - bv) + 2 * off;
+            if (score < best.score) best = {score, c: cm, segs: [c1, cm, c3], a, b};
+          }))));
+        });
+      }
+      return best;
+    };
+    const sel = S.sel && isVis(S.sel) ? S.sel : null;
+    const fmatch = (n) => !S.filter || n.indexOf('ord') >= 0;
+    const dimmed = (n) => (S.path && !PATH.includes(n)) || (S.layout === 'focus' && (hop[n] === undefined || hop[n] > S.hops)) || (S.filter && !fmatch(n));
+    const f1 = (v) => Math.round(v * 10) / 10;
+    const pt = (p) => f1(p[0]) + ' ' + f1(p[1]);
+    const add = (p, n, s, tn, ts) => [p.x + n[0] * s + (tn ? -n[1] * tn : 0), p.y + n[1] * s + (tn ? n[0] * tn : 0)];
+    const crow = (p) => { const q = add(p, p.n, 11); return 'M' + pt(q) + 'L' + pt(add(p, p.n, 0, 5.5)) + 'M' + pt(q) + 'L' + pt(add(p, p.n, 0, -5.5)); };
+    const bar = (p, s) => 'M' + pt(add(p, p.n, s, 5)) + 'L' + pt(add(p, p.n, s, -5));
+    const circ = (p, s) => { const c = add(p, p.n, s); return 'M' + f1(c[0] - 3) + ' ' + f1(c[1]) + 'a3 3 0 1 0 6 0a3 3 0 1 0 -6 0'; };
+    const routed = EV.map((e) => ({e, ...route(e)}));
+    const edges = routed.map(({e, c, segs, a, b}) => {
+      const onPath = S.path && PATH_E.includes(e.id);
+      const inc = sel && (e.from === sel || e.to === sel);
+      const dim = dimmed(e.from) || dimmed(e.to) || (S.path && !onPath);
+      const col = onPath || e.inferred || e.layer === 'cc' ? 'var(--accent)' : 'var(--ink)';
+      const w = onPath ? 2.2 : inc ? 1.8 : 1.1;
+      const op = dim ? 0.18 : sel && !inc && !S.path ? 0.38 : 1;
+      const d = 'M' + f1((segs || [c])[0][0]) + ' ' + f1((segs || [c])[0][1]) + (segs || [c]).map((q) => 'C' + f1(q[2]) + ' ' + f1(q[3]) + ' ' + f1(q[4]) + ' ' + f1(q[5]) + ' ' + f1(q[6]) + ' ' + f1(q[7])).join('');
+      // child end (a) = many: crow + ring (zero-or-many); parent end (b) = one: double bar, or bar + ring when optional
+      let m = crow(a), ci = circ(a, 17);
+      if (e.mn) { m += crow(b); ci += circ(b, 17); } else { m += bar(b, 6); if (e.opt) ci += circ(b, 13); else m += bar(b, 10); }
+      return {d, m, c: ci,
+        svg: 'position: absolute; left: 0; top: 0; width: ' + WW + 'px; height: ' + WH + 'px; overflow: visible; pointer-events: none; opacity: ' + op + ';',
+        line: 'fill: none; stroke: ' + col + '; stroke-width: ' + w + ';' + (e.inferred ? ' stroke-dasharray: 5 4;' : e.layer === 'cc' ? ' stroke-dasharray: 7 3 1.5 3;' : e.mn ? ' stroke-dasharray: 1.5 3; stroke-linecap: round;' : ''),
+        mark: 'fill: none; stroke: ' + col + '; stroke-width: ' + Math.max(1.2, w * 0.85) + ';',
+        circ: 'fill: var(--paper); stroke: ' + col + '; stroke-width: 1.2;'};
+    });
+
+    // ---------------------------------------------------------------- pills on edges (inferred → accept, m:n label)
+    const pills = [];
+    const taken = VIS.map((n) => rect(n));
+    routed.forEach(({e, c}) => {
+      const cc = e.layer === 'cc';
+      if (!(e.inferred || e.mn || cc)) return;
+      const t0 = e.inferred ? 'ACCEPT AS RELATION' : cc ? 'CC' : 'M:N';
+      const pw = e.inferred ? 136 : cc ? 40 : 50, ph = 18;
+      let best = null;
+      [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82].forEach((u, ui) => [0, -16, 16, -30, 30, -46, 46].forEach((dy, di) => [0, -40, 40, -80, 80].forEach((dx, xi) => {
+        const p = at(c, u);
+        const R = {l: p[0] + dx - pw / 2, t: p[1] + dy - ph / 2, r: p[0] + dx + pw / 2, b: p[1] + dy + ph / 2};
+        const clash = taken.filter((q) => R.l < q.r + 3 && R.r > q.l - 3 && R.t < q.b + 3 && R.b > q.t - 3).length;
+        const score = clash * 1000 + ui * 3 + di * 4 + xi * 6;
+        if (!best || score < best.score) best = {score, R};
+      })));
+      taken.push(best.R);
+      const dim = dimmed(e.from) || dimmed(e.to) || S.path;
+      pills.push({t: t0, tip: e.inferred ? 'events.customer_id → customers.id — name + type match. Accept stores it as a virtual relation in your layer: VIRTUAL // MINE. Never DDL.' : cc ? 'VIRTUAL // CLAUDE-CODE — invoices.customer_ref → customers.id, added by claude-code in its own layer (relations.add). Lives only in DBMan, never DDL. Select invoices to review; adopt into MINE from the layer switcher.' : 'Junction hidden: orders ⟷ coupons through order_coupons',
+        glyph: e.inferred ? 'M1 3h3M6 3h3M11 3h2' : cc ? 'M1 3h5M8 3h1M11 3h2' : 'M1 3h12', glyphStyle: 'flex: none; stroke: currentColor; stroke-width: 1.4; fill: none;',
+        pick: e.inferred ? () => set({accepted: true, sel: 'events'}) : cc ? () => set({sel: 'invoices'}) : () => set({hideJ: false}),
+        style: CAPS + 'font-size: 9.5px; position: absolute; left: ' + Math.round(best.R.l) + 'px; top: ' + Math.round(best.R.t) + 'px; width: ' + pw + 'px; height: ' + ph + 'px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 6px; border-radius: 9px; cursor: pointer; white-space: nowrap;' +
+          (e.inferred || cc ? 'border: 1px solid var(--accent); background: var(--paper); color: var(--accent);' + (cc ? 'border-radius: 3px; letter-spacing: .04em;' : '') : 'border: 1px solid var(--line); background: var(--paper); color: var(--ink3);') + (dim ? 'opacity: .25;' : '')});
+      WW = Math.max(WW, best.R.r + 8); WH = Math.max(WH, best.R.b + 8);
+    });
+
+    // ---------------------------------------------------------------- viewport fit (avoid caption + minimap)
+    const VW = 910, VH0 = 760, DRAWER = 172;
+    const VH = S.path ? VH0 - DRAWER : VH0;
+    const MMW = 168, MMH = 16 + Math.round(Math.min(96, 152 * WH / WW));
+    const mmRect = {l: VW - 10 - MMW, t: VH - 10 - MMH, r: VW - 10, b: VH - 10};
+    const TOPPAD = 34;
+    const fitZ = Math.min(1.1, (VW - 24) / WW, (VH - TOPPAD - 12) / WH);
+    const place = (z) => ({z, ox: Math.round((VW - WW * z) / 2), oy: Math.round(TOPPAD + (VH - TOPPAD - 12 - WH * z) / 2)});
+    const clashMM = (v) => VIS.some((n) => { const R = rect(n); const l = v.ox + R.l * v.z, tt = v.oy + R.t * v.z, r = v.ox + R.r * v.z, b = v.oy + R.b * v.z; return l < mmRect.r + 6 && r > mmRect.l - 6 && tt < mmRect.b + 6 && b > mmRect.t - 6; });
+    let V = place(fitZ);
+    if (!S.zoom) {
+      // first try sliding the world left, then shrink until the minimap is clear
+      let z = Math.floor(fitZ * 100) / 100;
+      for (let i = 0; i < 40; i++) {
+        const v0 = place(z);
+        const vl = {z, ox: Math.min(v0.ox, 12), oy: v0.oy};
+        if (!clashMM(v0)) { V = v0; break; }
+        if (!clashMM(vl)) { V = vl; break; }
+        z -= 0.01; V = place(z);
+      }
+    } else V = place(S.zoom);
+    const Z = V.z;
+    const zoomPct = Math.round(Z * 100);
+    const STEPS = [25, 33, 50, 67, 75, 90, 100, 125, 150, 200, 300, 400];
+
+    // ---------------------------------------------------------------- cards
+    const G = {pk: 'M1.5 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5.5 6H11M9 6v2.2M11 6v1.6', fk: 'M1 6h8.5M6.5 3l3 3-3 3', inf: 'M1 6h2M4.5 6h2M8 6h1.5M6.8 3.2l2.8 2.8-2.8 2.8'};
+    const glyphOf = (k) => k === 'pk' || k === 'pkfk' ? G.pk : k === 'fk' ? G.fk : k === 'inf' || k === 'vfk' ? G.inf : '';
+    const meter = (n, onInk, inv) => { const k = Math.max(1, Math.round(logFrac(n) * 12)); return Array.from({length: 12}, (_, i) => 'width: 3px; height: 6px; background: ' + (i < k ? (inv ? 'var(--paper)' : onInk) : (inv ? 'rgba(127,127,127,0.45)' : 'var(--fill12)'))); };
+    const nbrSet = sel ? new Set(nbrs(sel)) : new Set();
+    const cards = VIS.map((n) => {
+      const T0 = TB[n], R = rect(n);
+      const on = n === sel;
+      const pIdx = S.path ? PATH.indexOf(n) : -1;
+      const dim = dimmed(n);
+      const cols = shownCols(n).map(([cn, ty, k]) => {
+        const isK = k === 'pk' || k === 'pkfk', isF = k === 'fk' || k === 'pkfk' || k === 'inf' || k === 'vfk';
+        const infLive = (k === 'inf' && inferredLive) || (k === 'vfk' && S.layerCC);
+        return {n: cn, t: ty, g: glyphOf(k),
+          row: 'display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 6px; align-items: center; height: ' + ROW + 'px; padding: 0 8px 0 7px; box-sizing: border-box;' + (S.path && pIdx >= 0 && ((n === 'orders' && (cn === 'customer_id' || cn === 'id')) || (n === 'order_items' && (cn === 'order_id' || cn === 'product_id')) || (n !== 'orders' && n !== 'order_items' && cn === 'id')) ? 'background: var(--fill12);' : ''),
+          gStyle: 'flex: none; color: ' + (k === 'inf' || k === 'vfk' ? (infLive ? 'var(--accent)' : 'var(--ink3)') : isK ? 'var(--ink)' : 'var(--ink2)') + ';',
+          nStyle: mono(11, ' overflow: hidden; text-overflow: ellipsis; color: var(--ink);' + (isK ? ' font-weight: 700;' : '') + (isF ? ' text-decoration: underline dotted; text-underline-offset: 3px;' : '') + ((k === 'inf' || k === 'vfk') && infLive ? ' color: var(--accent);' : '')),
+          tStyle: mono(10, ' color: var(--ink3);')};
+      });
+      const hidden = TB[n].cols.length - shownCols(n).length;
+      const tag = pIdx >= 0 ? String(pIdx + 1).padStart(2, '0') : T0.junction ? 'junction' : T0.isolated ? 'isolated' : S.layout === 'free' ? 'pinned' : S.layout === 'focus' && hop[n] !== undefined && n !== S.focusOn ? hop[n] + ' hop' : '';
+      const border = pIdx >= 0 ? '1.5px solid var(--accent)' : T0.isolated ? '1px dashed var(--ink3)' : on || nbrSet.has(n) ? '1px solid var(--lineStrong)' : '1px solid var(--ink3)';
+      return {
+        name: n, on: on ? 'true' : 'false', tag, cols, more: hidden > 0 && S.detail === 'keys' ? '+' + hidden + ' cols' : '', count: T0.approx ? '≈' + fmtK(T0.rows) : fmtK(T0.rows),
+        meter: meter(T0.rows, 'var(--ink)', false),
+        label: n + ', ' + fmtN(T0.rows) + ' rows' + (T0.junction ? ', junction table' : '') + (T0.isolated ? ', no relations' : ''),
+        tip: n + ' · ' + fmtN(T0.rows) + ' rows · ' + T0.cols.length + ' columns · click to inspect',
+        pick: () => set({sel: on ? null : n}),
+        style: 'position: absolute; left: ' + R.l + 'px; top: ' + R.t + 'px; width: ' + CW + 'px; height: ' + H[n] + 'px; box-sizing: border-box; display: flex; flex-direction: column; background: var(--paper); border: ' + border + '; border-radius: 3px; overflow: hidden; cursor: pointer; color: var(--ink);' +
+          (on ? 'box-shadow: 5px 5px 0 var(--fill12);' : '') + (dim ? 'opacity: .28;' : ''),
+        head: 'display: flex; align-items: center; gap: 6px; height: ' + HEAD + 'px; flex: none; padding: 0 8px; box-sizing: border-box;' + (on ? 'background: var(--ink); color: var(--paper);' : 'border-bottom: 1px solid var(--line);'),
+        nameStyle: CAPS + 'font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit;',
+        tagStyle: CAPS + 'font-size: 9.5px; white-space: nowrap;' + (pIdx >= 0 ? 'color: ' + (on ? 'var(--paper)' : 'var(--accent)') + '; font-family: var(--code); letter-spacing: 0;' : on ? 'color: var(--paper); opacity: .7;' : 'color: var(--ink3);'),
+        foot: 'display: flex; align-items: center; gap: 6px; height: ' + FOOT + 'px; flex: none; margin-top: auto; padding: 0 8px; box-sizing: border-box;' + (cols.length ? 'border-top: 1px solid var(--line);' : ''),
+        moreStyle: CAPS + 'font-size: 9.5px; color: var(--ink3);',
+        countStyle: mono(10, ' color: var(--ink2);'),
+      };
+    });
+
+    // cluster boxes, focus rings
+    const boxes = boxesW.map((b) => ({name: b.name, count: String(b.members.length).padStart(2, '0'), rows: fmtK(b.members.reduce((a, n) => a + TB[n].rows, 0)) + ' rows',
+      aria: b.name + ' domain, ' + b.members.length + ' tables',
+      style: 'position: absolute; left: ' + b.x + 'px; top: ' + b.y + 'px; width: ' + b.w + 'px; height: ' + b.h + 'px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px; background: var(--sunken);',
+      headStyle: 'display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-bottom: 1px dashed var(--line);',
+      rowsStyle: mono(10, ' color: var(--ink3);')}));
+    const ell = (cx, cy, rx, ry) => 'M' + f1(cx - rx) + ' ' + f1(cy) + 'a' + f1(rx) + ' ' + f1(ry) + ' 0 1 0 ' + f1(2 * rx) + ' 0a' + f1(rx) + ' ' + f1(ry) + ' 0 1 0 ' + f1(-2 * rx) + ' 0';
+    const ringD = rings.map((r) => focusC ? ell(focusC.x, focusC.y, r.rx, r.ry) : 'M0 0');
+    const ringLabels = [];
+    rings.forEach((r) => {
+      const lbl = r.k + (r.k === 1 ? ' hop' : ' hops');
+      for (const a of [-90, -70, -110, -50, -130, 90, 70, 110]) {
+        const x = focusC.x + Math.cos(a * Math.PI / 180) * r.rx, y = focusC.y + Math.sin(a * Math.PI / 180) * r.ry;
+        const RR = {l: x - 26, t: y - 8, r: x + 26, b: y + 8};
+        if (!taken.some((q) => RR.l < q.r + 4 && RR.r > q.l - 4 && RR.t < q.b + 4 && RR.b > q.t - 4)) {
+          taken.push(RR);
+          ringLabels.push({t: lbl, style: CAPS + 'font-size: 9.5px; position: absolute; left: ' + Math.round(RR.l) + 'px; top: ' + Math.round(RR.t) + 'px; width: 52px; height: 16px; display: flex; align-items: center; justify-content: center; background: var(--paper); color: ' + (r.k <= S.hops ? 'var(--ink2)' : 'var(--ink3)') + '; border-radius: 8px; border: 1px solid var(--line); box-sizing: border-box;'});
+          break;
+        }
+      }
+    });
+
+    // ---------------------------------------------------------------- minimap
+    const mmS = Math.min((MMW - 12) / WW, (MMH - 16 - 10) / WH);
+    const mmOx = Math.round((MMW - WW * mmS) / 2), mmOy = 5;
+    const mmBox = (x, y, w, h) => 'position: absolute; left: ' + f1(mmOx + x * mmS) + 'px; top: ' + f1(mmOy + y * mmS) + 'px; width: ' + f1(Math.max(2, w * mmS)) + 'px; height: ' + f1(Math.max(2, h * mmS)) + 'px;';
+    const vx0 = Math.max(0, -V.ox / Z), vy0 = Math.max(0, (TOPPAD - V.oy) / Z), vx1 = Math.min(WW, (VW - V.ox) / Z), vy1 = Math.min(WH, (VH - V.oy) / Z);
+    const mm = {
+      label: 'Minimap: ' + VIS.length + ' tables, viewport at ' + zoomPct + ' %',
+      style: 'position: absolute; left: ' + mmRect.l + 'px; top: ' + mmRect.t + 'px; width: ' + MMW + 'px; height: ' + MMH + 'px; box-sizing: border-box; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; z-index: 3;',
+      innerStyle: 'position: relative; height: ' + (MMH - 18) + 'px;',
+      boxes: boxesW.map((b) => mmBox(b.x, b.y, b.w, b.h) + 'border: 1px solid var(--line); box-sizing: border-box;'),
+      cards: VIS.map((n) => mmBox(P[n].x, P[n].y, CW, H[n]) + 'background: ' + (n === sel ? 'var(--ink)' : S.path && PATH.includes(n) ? 'var(--accent)' : dimmed(n) ? 'var(--fill12)' : 'var(--fill30)') + ';'),
+      view: mmBox(vx0, vy0, vx1 - vx0, vy1 - vy0) + 'border: 1px solid var(--accent); box-sizing: border-box;',
+    };
+
+    // ---------------------------------------------------------------- viewport + caption
+    const g = Math.round(16 * Z * 100) / 100;
+    const vpStyle = 'position: relative; flex: 1; min-height: 0; overflow: hidden; background-color: var(--paper); background-image: radial-gradient(circle, var(--fill30) 0.8px, transparent 1.1px); background-size: ' + g + 'px ' + g + 'px; background-position: ' + V.ox + 'px ' + V.oy + 'px;';
+    const worldStyle = 'position: absolute; left: ' + V.ox + 'px; top: ' + V.oy + 'px; width: ' + WW + 'px; height: ' + WH + 'px; transform: scale(' + Z + '); transform-origin: 0 0;';
+    const ringSvg = 'position: absolute; left: 0; top: 0; width: ' + WW + 'px; height: ' + WH + 'px; overflow: visible; pointer-events: none; display: ' + (rings.length ? 'block' : 'none') + ';';
+    const ringStyle = 'fill: none; stroke: var(--ink3); stroke-width: 1; stroke-dasharray: 2 4; opacity: .7;';
+    const inRange = S.layout === 'focus' ? VIS.filter((n) => hop[n] !== undefined && hop[n] <= S.hops).length : 0;
+    const CAPTION = {
+      layered: ['layered', ' // fk direction · parents left · 4 ranks'],
+      clusters: ['clusters', ' // 4 domains · user-named · double-click a label to rename'],
+      focus: ['focus', ' // ' + S.focusOn + ' · ' + S.hops + (S.hops === 1 ? ' hop' : ' hops') + ' · ' + inRange + ' of ' + VIS.length + ' in range'],
+      free: ['free', ' // pinned positions · saved per connection (shop)'],
+    }[S.layout];
+    let captionA = CAPTION[0], captionB = CAPTION[1];
+    if (S.path) { captionA = 'path'; captionB = ' // customers → orders → order_items → products · 3 joins · shop.public'; }
+    else if (S.filter) { captionB += ' · filter “ord” · 3 matches'; }
+    const captionStyle = 'position: absolute; left: 12px; top: 10px; display: flex; gap: 0; z-index: 2; pointer-events: none;';
+    // layer visibility (DBMan store overlays): DATABASE is always on; MINE + agent layers can be hidden
+    const layerBarStyle = 'position: absolute; right: 10px; top: 7px; height: 20px; display: flex; align-items: center; gap: 4px; z-index: 2;';
+    const layerTgls = [['layerMine', 'MINE', 'Your layer — virtual relations you accepted (' + (S.accepted ? 1 : 0) + ')', false], ['layerCC', 'CC', 'claude-code layer — virtual relations it added (1: invoices.customer_ref → customers.id)', true]].map(([key, label, tip, agent]) => {
+      const on = !!S[key];
+      return {t: label, on: on ? 'true' : 'false', mark: on ? '✓' : '–', tip: (on ? 'Hide ' : 'Show ') + tip,
+        markStyle: 'font-family: var(--code); font-weight: 400; letter-spacing: 0;' + (on ? '' : 'opacity: .6;'),
+        style: CAPS + 'font-size: 10px; display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 6px; box-sizing: border-box; border-radius: 2px; cursor: pointer; background: var(--paper); border: 1px solid ' + (on ? (agent ? 'var(--accent)' : 'var(--lineStrong)') : 'var(--line)') + '; color: ' + (on ? (agent ? 'var(--accent)' : 'var(--ink)') : 'var(--ink3)') + ';' + (on ? '' : ' border-style: dashed;'),
+        pick: () => set({[key]: !S[key], zoom: null})};
+    });
+
+    // ---------------------------------------------------------------- toolbar
+    const LAYS = [['layered', 'LAYERED', 'FK direction, parents left'], ['clusters', 'CLUSTERS', 'Grouped by domain box'], ['focus', 'FOCUS', 'Selected table centre, N hops'], ['free', 'FREE', 'Manual, pinned positions']];
+    const layouts = LAYS.map(([id, label, tip], i) => {
+      const on = S.layout === id;
+      return {t: label, k: String(i + 1), on: on ? 'true' : 'false', tip: label + ' — ' + tip + '  ' + (i + 1),
+        keyStyle: 'font-family: var(--code); font-weight: 400; letter-spacing: 0; font-size: 10px; opacity: ' + (on ? '.7' : '.55') + ';',
+        style: segStyle(on, true, true),
+        pick: () => set({layout: id, zoom: null, focusOn: id === 'focus' ? (S.focusOn || 'orders') : S.focusOn})};
+    });
+    const details = [['names', 'NAMES', 'Table names only'], ['keys', 'KEYS', 'PK + FK columns'], ['all', 'ALL', 'All columns']].map(([id, label, tip], i) => ({
+      t: label, on: S.detail === id ? 'true' : 'false', tip: 'Detail: ' + tip, style: segStyle(S.detail === id, i === 0, i === 2), pick: () => set({detail: id, zoom: null})}));
+    const tgl = (key, label, tip, onVal) => {
+      const on = !!onVal;
+      return {t: label, on: on ? 'true' : 'false', tip, mark: on ? '✓' : '',
+        boxStyle: 'display: inline-flex; align-items: center; justify-content: center; width: 11px; height: 11px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--ink3)') + '; border-radius: 2px; font-size: 9px; line-height: 1; letter-spacing: 0;' + (on ? 'background: var(--ink); color: var(--paper);' : ''),
+        style: CAPS + 'font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 7px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--lineStrong)' : 'var(--line)') + '; border-radius: 2px; background: var(--paper); color: ' + (on ? 'var(--ink)' : 'var(--ink2)') + '; cursor: pointer;',
+        pick: () => set({[key]: !S[key], zoom: null})};
+    };
+    const toggles = [
+      tgl('hideJ', 'hide junctions', 'Hide junction tables — draws orders ⟷ coupons as M:N', S.hideJ),
+      tgl('hideI', 'hide isolated', 'Hide tables without relations (audit_log)', S.hideI),
+      tgl('inferred', 'show inferred', 'Show inferred relations (name + type match)', S.inferred),
+    ];
+    const hopsSeg = [1, 2, 3].map((h, i) => ({t: String(h), on: S.hops === h ? 'true' : 'false', tip: h + (h === 1 ? ' hop' : ' hops') + ' from ' + S.focusOn, style: segStyle(S.hops === h, i === 0, i === 2, 22).replace('padding: 0 8px', 'padding: 0 7px'), pick: () => set({hops: h})}));
+    const pathBtn = CAPS + 'font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; box-sizing: border-box; border-radius: 2px; cursor: pointer;' + (S.path ? 'border: 1px solid var(--accent); background: var(--accent); color: var(--paper);' : 'border: 1px solid var(--lineStrong); background: var(--paper); color: var(--ink);');
+    const filterStyle = 'display: inline-flex; align-items: center; gap: 6px; width: 150px; height: 22px; padding: 0 7px; box-sizing: border-box; border: 1px solid ' + (S.filter ? 'var(--lineStrong)' : 'var(--line)') + '; border-radius: 3px; background: var(--paper); cursor: text; color: var(--ink);';
+    const filterText = S.filter ? 'ord' : 'filter tables, columns';
+    const filterTextStyle = S.filter ? mono(11.5, ' color: var(--ink);') : CAPS + 'font-size: 10.5px; color: var(--ink3); white-space: nowrap;';
+    const filterKey = S.filter ? '3 / 12  ✕' : '⌘F';
+    const filterKeyStyle = mono(10, ' color: var(--ink3);');
+    const zoomBtn = box + 'width: 20px; justify-content: center; padding: 0; font-size: 12px;';
+    const zoomReadStyle = mono(11, ' min-width: 42px; text-align: center; color: var(--ink);');
+    const fitBtn = box + (S.zoom ? '' : 'background: var(--ink); color: var(--paper);');
+    const zoomIn = () => set({zoom: (STEPS.find((s) => s > zoomPct) || 400) / 100});
+    const zoomOut = () => set({zoom: ([...STEPS].reverse().find((s) => s < zoomPct) || 25) / 100});
+    const zoomFit = () => set({zoom: null});
+    const exportBtn = box + 'height: 24px;' + (S.exportOpen ? 'background: var(--ink); color: var(--paper);' : '');
+    const agentBtn = box + 'height: 24px; padding: 0 9px;' + (S.agentOpen ? 'background: var(--ink); color: var(--paper);' : '');
+
+    // ---------------------------------------------------------------- navigator + top strip
+    const NAVI = {overview: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', tables: 'M3 4h18v16H3zM3 10h18M9 4v16', query: 'M4 17l6-5-6-5M12 19h8',
+      schema: 'M3 4h6v5H3zM15 4h6v5h-6zM9 15h6v5H9zM9 6.5h6M6 9v3.5h6V15M18 9v3.5h-6', activity: 'M3 12h4l3-8 4 16 3-8h4'};
+    const navCap = CAPS + 'white-space: nowrap;';
+    const navs = [['overview', 'Overview', 'Overview.dc.html', '⌘0'], ['tables', 'Tables', 'Table.dc.html', '⌘T'], ['query', 'Query', 'Query.dc.html', '⌘⏎'], ['schema', 'Schema map', 'SchemaMap.dc.html', '⌘4'], ['activity', 'Activity', 'Overview.dc.html', '⇧⌘A']].map(([id, label, href, key]) => {
+      const on = id === 'schema';
+      return {t: label, href, icon: NAVI[id], tip: label + '  ' + key, current: on ? 'page' : 'false',
+        style: navCap + ' display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px; text-decoration: none;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [['session', 'shop'], ['engine', 'pg 17.2'], ['latency', '4 ms'], ['graph', '12 · 11'], ['clock', '14:32:09']].map(([k, v], i) => ({k, v, vs: cap + '; color: ' + (i === 3 ? 'var(--accent)' : 'var(--ink)')}));
+    const agentsChip = CAPS + 'display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); text-decoration: none; white-space: nowrap;';
+    const navFrame = 'flex: 0 0 220px; height: 854px; display: flex; flex-direction: column; box-sizing: border-box; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; overflow: hidden;';
+    const navItem = (id, name, href, o) => {
+      const on = id === 'schema' || (o.table && id === sel);
+      const strong = id === 'schema';
+      const filled = o.rows ? Math.max(1, Math.round(logFrac(o.rows) * 8)) : 0;
+      return {name, href, current: strong ? 'page' : o.table ? (on ? 'true' : 'false') : 'false', tip: o.tip || name, count: o.count || '',
+        pick: o.table ? () => set({sel: id}) : () => {},
+        meter: o.rows ? Array.from({length: 8}, (_, k) => 'width: 3px; height: 8px; background: ' + (k < filled ? (strong ? 'var(--paper)' : 'var(--ink)') : 'var(--fill12)')) : [],
+        nameStyle: 'flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (o.table && TB[id].junction ? ' color: var(--ink2);' : ''),
+        countStyle: 'font-family: var(--code); font-size: 11px; min-width: 34px; text-align: right;' + (strong ? 'color: var(--paper); opacity: .75' : 'color: var(--ink3)'),
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 6px; border: 0; border-radius: 2px; background: transparent; text-align: left; font-family: var(--ui); text-decoration: none; font-size: 12px; box-sizing: border-box; cursor: pointer;' +
+          (strong ? 'background: var(--ink); color: var(--paper); font-weight: 600;' : on ? 'color: var(--ink); font-weight: 600; box-shadow: inset 2px 0 0 var(--ink); background: var(--fill12);' : 'color: var(--ink);' + (o.table && !isVis(id) ? ' opacity: .4;' : ''))};
+    };
+    const navSections = [
+      {name: 'workspace', count: '03', tables: [], links: [navItem('overview', 'Overview', 'Overview.dc.html', {count: '⌘0'}), navItem('query', 'Query 1 *', 'Query.dc.html', {count: 'edited'}), navItem('schema', 'Schema map', 'SchemaMap.dc.html', {count: '⌘4'})]},
+      {name: 'tables', count: '12', links: [], tables: [...NAMES].sort().map((n) => navItem(n, n, '', {table: true, rows: TB[n].rows, count: fmtK(TB[n].rows), tip: n + ' · ' + fmtN(TB[n].rows) + ' rows — select on map'}))},
+      {name: 'saved', count: '03', tables: [], links: [navItem('s1', 'Revenue by plan', 'Query.dc.html', {}), navItem('s2', 'Pending > 3 days', 'Query.dc.html', {}), navItem('s3', 'Slow events p95', 'Query.dc.html', {})]},
+    ];
+
+    // ---------------------------------------------------------------- inspector
+    const hasSel = !!sel;
+    let ins = {name: '', dom: '', kind: '', kindStyle: '', sub: '', rows: '', rowsNote: '', rank: '', bar: [], barLabel: '', colCount: '', cols: [], relCount: '', rels: [], hasInferred: false, infTitle: '', infBody: '', infBtn: '', infBtnText: '', idxCount: '', idx: []};
+    if (sel) {
+      const T0 = TB[sel];
+      const rank = [...NAMES].sort((a, b) => TB[b].rows - TB[a].rows).indexOf(sel) + 1;
+      const fr = logFrac(T0.rows);
+      const bar = [];
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 44; c++) {
+        const v = (c + 0.5) / 44;
+        bar.push(v <= fr ? (v > fr - 0.035 ? (r === 1 ? t.ink : t.ink2) : t.ink) : t.fill12);
+      }
+      const rels = [];
+      E_ALL.forEach((e) => {
+        if (e.inferred && !inferredLive) return;
+        if (!layerOk(e)) return;
+        const cc = e.layer === 'cc';
+        const infl = (e.inferred && !S.accepted) || cc;
+        const card = e.opt ? 'N:0..1' : 'N:1';
+        const vcard = cc ? 'virtual // cc' : 'virtual // mine';
+        if (e.from === sel) rels.push({dir: '→', col: e.fc, tbl: e.to + '.' + e.tc, other: e.to, card: e.inferred && !S.accepted ? 'inferred' : e.inferred || cc ? vcard : card, inf: infl});
+        if (e.to === sel && e.from !== e.to) rels.push({dir: '←', col: e.tc, tbl: e.from + '.' + e.fc, other: e.from, card: e.inferred && !S.accepted ? 'inferred' : e.inferred || cc ? vcard : '1:N', inf: infl});
+        if (e.to === sel && e.from === e.to) rels.push({dir: '←', col: e.tc, tbl: e.from + '.' + e.fc, other: e.from, card: '1:N', inf: false});
+      });
+      const hasInf = sel === 'events' || (sel === 'customers' && inferredLive);
+      ins = {
+        name: sel, dom: T0.dom.toLowerCase() + ' · public', kind: T0.junction ? 'junction' : T0.isolated ? 'isolated' : '',
+        kindStyle: CAPS + 'font-size: 10px; padding: 0 5px; height: 16px; display: ' + (T0.junction || T0.isolated ? 'inline-flex' : 'none') + '; align-items: center; border: 1px solid var(--ink3); border-radius: 2px; color: var(--ink3);',
+        sub: T0.cols.length + ' columns · ' + T0.idx.filter((x) => !x[2]).length + ' indexes · ' + T0.size,
+        rows: T0.approx ? '≈' + fmtK(T0.rows) : fmtN(T0.rows), rowsNote: T0.approx ? 'pg_class estimate' : 'exact · 25 s ago', rank: '#' + rank + ' of 12',
+        bar, barLabel: sel + ': ' + fmtN(T0.rows) + ' rows on a log scale from 10 to 10 million.',
+        colCount: String(T0.cols.length).padStart(2, '0'),
+        cols: T0.cols.map(([cn, ty, k]) => ({n: cn, t: ty, g: glyphOf(k),
+          gStyle: 'color: ' + (k === 'inf' || k === 'vfk' ? 'var(--accent)' : k ? 'var(--ink)' : 'transparent') + ';',
+          nStyle: mono(11.5, ' overflow: hidden; text-overflow: ellipsis;' + (k === 'pk' || k === 'pkfk' ? ' font-weight: 700;' : '') + (k && k !== 'pk' ? ' text-decoration: underline dotted; text-underline-offset: 3px;' : '') + (k === 'inf' || k === 'vfk' ? ' color: var(--accent);' : ''))})),
+        relCount: rels.filter((r) => r.dir === '→').length + ' out · ' + rels.filter((r) => r.dir === '←').length + ' in',
+        rels: rels.map((r) => ({...r,
+          tip: 'Select ' + r.other, pick: () => set({sel: r.other}),
+          wrap: 'display: grid; grid-template-columns: 14px minmax(0, 92px) minmax(0, 1fr) auto; gap: 6px; align-items: center; height: 22px; border-bottom: 1px solid var(--line);',
+          dirStyle: mono(11, ' color: ' + (r.inf ? 'var(--accent)' : 'var(--ink3)') + ';'),
+          colStyle: mono(11, ' overflow: hidden; text-overflow: ellipsis; color: var(--ink2);'),
+          tblStyle: mono(11, ' overflow: hidden; text-overflow: ellipsis; text-align: left; padding: 0; border: 0; background: transparent; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; color: ' + (r.inf ? 'var(--accent)' : 'var(--ink)') + ';'),
+          cardStyle: CAPS + 'font-size: 9.5px; color: ' + (r.inf ? 'var(--accent)' : 'var(--ink3)') + '; white-space: nowrap;'})),
+        hasInferred: hasInf && inferredLive,
+        infTitle: S.accepted ? 'virtual // mine · stored in dbman, not in the database' : 'inferred // events.customer_id → customers.id',
+        infBody: 'name   customer_id ~ customers.id   ✓\ntype   int8 = int8                  ✓\nvalues 2,288 distinct · all resolve  ✓',
+        infBtn: (S.accepted ? box + 'margin-top: 6px; color: var(--ink3); border-color: var(--line); cursor: default;' : box + 'margin-top: 6px; border-color: var(--accent); background: var(--accent); color: var(--paper);'),
+        infBtnText: S.accepted ? 'VIRTUAL // MINE · NEVER DDL' : 'ACCEPT AS RELATION',
+        idxCount: String(T0.idx.filter((x) => !x[2]).length).padStart(2, '0'),
+        idx: T0.idx.map(([n, d, w]) => ({n, d,
+          row: 'display: flex; align-items: center; gap: 8px; height: 22px; border-bottom: 1px solid var(--line);',
+          nStyle: mono(11, ' flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: ' + (w ? 'var(--amber); font-weight: 700' : 'var(--ink)') + ';'),
+          dStyle: mono(10.5, ' color: ' + (w ? 'var(--amber)' : 'var(--ink3)') + ';')})),
+      };
+    }
+    const insPrimary = boxSPrimary + 'height: 26px; flex: 1; justify-content: center;';
+    const insBtn = box + 'height: 26px; justify-content: center;';
+    const domainRows = ['SALES', 'CATALOG', 'BILLING', 'TELEMETRY'].map((d) => {
+      const m = NAMES.filter((n) => TB[n].dom === d);
+      const rows = m.reduce((a, n) => a + TB[n].rows, 0);
+      const k = Math.max(1, Math.round(logFrac(rows) * 24));
+      return {n: d.toLowerCase() + ' · ' + m.length, v: fmtK(rows), seg: Array.from({length: 24}, (_, i) => i < k ? t.ink : t.fill12)};
+    });
+
+    // ---------------------------------------------------------------- path drawer
+    const pathSteps = PATH.map((n, i) => ({n: String(i + 1).padStart(2, '0'), name: n, card: ['start', 'via customer_id', 'via order_id', 'via product_id'][i],
+      pick: () => set({sel: n}),
+      style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 0 0 12px; margin-left: 6px; box-sizing: border-box; border: 0; border-left: 1.5px solid var(--accent); background: transparent; cursor: pointer; color: var(--ink); font-family: var(--ui);',
+      node: 'flex: none; width: 18px; height: 14px; margin-left: -22px; display: inline-flex; align-items: center; justify-content: center; font-family: var(--code); font-size: 9.5px; border-radius: 2px; background: var(--accent); color: var(--paper);',
+      nameStyle: mono(11.5, ' font-weight: ' + (i === 0 || i === 3 ? 700 : 400) + ';'),
+      cardStyle: CAPS + 'font-size: 9.5px; color: var(--ink3);'}));
+    const KW = 'font-weight: 700; color: var(--ink);', ID = 'color: var(--ink2);', TBs = 'color: var(--accent); font-weight: 600;', PUN = 'color: var(--ink3);';
+    const sqlLines = [
+      [['SELECT ', KW], ['c.name, p.sku, p.name ', ID], ['AS ', KW], ['product, oi.qty', ID]],
+      [['FROM ', KW], ['customers ', TBs], ['c', ID]],
+      [['JOIN ', KW], ['orders      ', TBs], ['o  ', ID], ['ON ', KW], ['o.customer_id ', ID], ['= ', PUN], ['c.id', ID]],
+      [['JOIN ', KW], ['order_items ', TBs], ['oi ', ID], ['ON ', KW], ['oi.order_id   ', ID], ['= ', PUN], ['o.id', ID]],
+      [['JOIN ', KW], ['products    ', TBs], ['p  ', ID], ['ON ', KW], ['p.id          ', ID], ['= ', PUN], ['oi.product_id', ID], [';', PUN]],
+    ].map((ln) => ln.map(([tt, s]) => ({t: tt, s})));
+    const drawerStyle = 'position: absolute; left: 0; right: 0; bottom: 0; height: ' + DRAWER + 'px; display: flex; box-sizing: border-box; background: var(--paper); border-top: 1px solid var(--lineStrong); z-index: 4;';
+    const copyBtn = box + 'height: 26px; justify-content: center;' + (S.copied ? 'border-color: var(--accent); color: var(--accent);' : '');
+    const copyText = S.copied ? 'COPIED ✓ 5 LINES' : 'COPY JOIN SQL ⌘C';
+    const openQueryBtn = boxSPrimary + 'height: 26px; justify-content: center;';
+
+    // ---------------------------------------------------------------- export + agent popovers
+    const fmts = [['PNG', '2× · transparent', '⇧⌘E'], ['SVG', 'vector · live text', ''], ['MERMAID', 'erDiagram · copy', ''], ['DBML', 'dbdiagram.io', '']];
+    const exportItems = fmts.map(([f, d, k]) => {
+      const on = S.exportFmt === f;
+      return {t: f, d, k, on: on ? 'true' : 'false', pick: () => set({exportFmt: f}),
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 26px; padding: 0 10px; box-sizing: border-box; border: 0; cursor: pointer; text-align: left; font-family: var(--ui);' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);'),
+        tStyle: CAPS + 'font-size: 10.5px; width: 62px; color: inherit;', dStyle: 'font-size: 11.5px; opacity: ' + (on ? '.75' : '1') + '; color: ' + (on ? 'inherit' : 'var(--ink2)') + ';', kStyle: mono(10, ' opacity: .6;')};
+    });
+    const decl = EV.filter((e) => !e.inferred && !e.mn);
+    const PREV = {
+      MERMAID: ['erDiagram', '  customers ||--o{ orders : customer_id', '  orders ||--o{ order_items : order_id', '  products ||--o{ order_items : product_id', '  %% + ' + (decl.length - 3) + ' more · inferred as comments'],
+      DBML: ['Ref: orders.customer_id > customers.id', 'Ref: order_items.order_id > orders.id', 'Ref: order_items.product_id > products.id', 'Ref: invoices.order_id > orders.id', '// + ' + (decl.length - 4) + ' more'],
+      PNG: [WW + ' × ' + WH + ' pt  →  ' + WW * 2 + ' × ' + WH * 2 + ' px', 'layout   ' + S.layout + ' · detail ' + S.detail, 'tables   ' + VIS.length + ' visible', 'theme    ' + (dark ? 'dark' : 'light') + ' · dot grid off', ''],
+      SVG: ['<svg width="' + WW + '" height="' + WH + '">', '  <g id="customers">…</g>', '  <path class="fk" d="M…"/>', '  <!-- ' + VIS.length + ' tables, ' + EV.length + ' edges -->', '</svg>'],
+    };
+    const exportPreview = PREV[S.exportFmt];
+    const exportScope = S.layout + ' · ' + VIS.length + ' tables';
+    const exportMenuStyle = 'position: absolute; right: 168px; top: 4px; width: 300px; box-sizing: border-box; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 6px 6px 0 var(--fill12); z-index: 6;';
+    const agentPopStyle = 'position: absolute; right: 10px; top: 4px; width: 340px; box-sizing: border-box; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 6px 6px 0 var(--fill12); z-index: 6;';
+    const agentRows = [['claude-code', 'CC', 'connected · claude-code 2.4.1', 'READ'], ['codex', 'CX', 'connected · 1 call today', 'READ']].map(([name, m, sub, perm]) => {
+      const on = S.agent === name;
+      return {name, mono: m, sub, perm, on: on ? 'true' : 'false', pick: () => set({agent: name, sent: false}),
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 38px; padding: 0 8px; margin-bottom: 4px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--lineStrong)' : 'var(--line)') + '; border-radius: 3px; background: ' + (on ? 'var(--fill12)' : 'var(--paper)') + '; cursor: pointer; color: var(--ink); font-family: var(--ui); text-align: left;',
+        tile: 'flex: none; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--ink); border-radius: 3px; font-size: 10px; font-weight: 700; letter-spacing: .04em;',
+        permStyle: CAPS + 'font-size: 10px; padding: 0 5px; height: 16px; display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 2px; color: var(--ink2);'};
+    });
+    const graphSummary = VIS.length + ' nodes, ' + EV.filter((e) => !e.mn).length + ' edges incl. ' + EV.filter((e) => e.inferred).length + ' inferred';
+    const sentText = S.sent ? 'sent // ' + S.agent + ' · answer in agents tab' : 'agents never see row data';
+    const sentStyle = CAPS + 'font-size: 10px; white-space: nowrap; color: ' + (S.sent ? 'var(--accent)' : 'var(--ink3)') + ';';
+
+    // ---------------------------------------------------------------- status
+    const nInf = EV.filter((e) => e.inferred).length;
+    const nRel = EV.filter((e) => !e.mn).length;
+    const statusCounts = (VIS.length === 12 ? '12 tables' : VIS.length + ' of 12 tables') + ' // ' + nRel + ' relations // ' + nInf + ' inferred' + (S.accepted && S.layerMine ? ' // 1 virtual // mine' : '');
+    const statusMode = S.layout + ' · ' + S.detail + ' · ' + zoomPct + ' %' + (sel ? ' · selected ' + sel : '');
+    const vpLabel = 'Schema map canvas, ' + S.layout + ' layout, ' + VIS.length + ' tables, ' + nRel + ' relations';
+
+    return {
+      themeVars, cap, capDim, box, boxL, boxPrimary, field, frame, boxS, boxSPrimary, navs, readouts, agentsChip, navFrame, navSections, totalRows,
+      layouts, details, toggles, hopsSeg, isFocus: S.layout === 'focus', pathBtn, pathAttr: S.path ? 'true' : 'false', togglePath: () => set({path: !S.path, copied: false, zoom: null, exportOpen: false, agentOpen: false}),
+      filterStyle, filterText, filterTextStyle, filterKey, filterKeyStyle, toggleFilter: () => set({filter: !S.filter}),
+      zoomBtn, zoomReadStyle, zoomText: zoomPct + ' %', fitBtn, zoomIn, zoomOut, zoomFit,
+      exportBtn, agentBtn, exportOpenAttr: S.exportOpen ? 'true' : 'false', agentOpenAttr: S.agentOpen ? 'true' : 'false',
+      toggleExport: () => set({exportOpen: !S.exportOpen, agentOpen: false}), toggleAgent: () => set({agentOpen: !S.agentOpen, exportOpen: false, sent: false}),
+      vpLabel, vpStyle, captionStyle, captionA, captionB, layerBarStyle, layerTgls, worldStyle, boxes, ringSvg, ringStyle, ringA: ringD[0] || 'M0 0', ringB: ringD[1] || 'M0 0', ringC: 'M0 0', ringLabels,
+      edges, cards, pills, mm,
+      pathOn: S.path, drawerStyle, pathSteps, sqlLines, copySql: () => set({copied: true}), copyBtn, copyText, openQueryBtn,
+      exportOpen: S.exportOpen, exportMenuStyle, exportScope, exportItems, exportPreview,
+      agentOpen: S.agentOpen, agentPopStyle, graphSummary, agentRows, sentText, sentStyle, sendAgent: () => set({sent: true}),
+      hasSel, noSel: !hasSel, ins, clearSel: () => set({sel: null}), focusSel: () => set({layout: 'focus', focusOn: sel || 'orders', zoom: null}),
+      acceptInferred: () => set({accepted: true}), insPrimary, insBtn, domainRows,
+      statusCounts, statusMode,
+    };
+  }
+}
+</script>
+</body>
+</html>

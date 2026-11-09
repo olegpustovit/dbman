@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DBMan 2 — v2 brief</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="width: 100%; max-width: 1440px; margin: 0 auto; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+
+  <!-- TOP STRIP -->
+  <div style="{{strip}}">
+    <span style="{{navOn}}">V2 BRIEF</span>
+    <sc-for list="{{navs}}" as="n" hint-placeholder-count="6"><span style="{{nav}}">{{n}}</span></sc-for>
+    <span style="flex: 1"></span>
+    <span style="{{capDim}}">SERVER // <span style="color: var(--ink)">dbman</span></span>
+    <span style="{{capDim}}; margin-left: 10px">PROTOCOL // <span style="color: var(--ink)">2025-06-18 · STDIO</span></span>
+    <span style="{{capDim}}; margin: 0 8px 0 10px">FOR REVIEW // <span style="color: var(--ink)">9 NOV 2026</span></span>
+  </div>
+
+  <!-- MASTHEAD -->
+  <section aria-label="DBMan 2" style="{{frame}}; padding: 16px 18px 16px; display: flex; gap: 28px; align-items: flex-end">
+    <div style="flex: 1 1 auto; min-width: 0">
+      <div style="{{capDim}}">12 // V2 BRIEF // AGENTS · MCP · DASHBOARDS · SCHEMA MAP · ICON</div>
+      <h1 style="margin: 12px 0 0; font-size: 132px; font-weight: 300; letter-spacing: -0.045em; line-height: 0.86; white-space: nowrap">DBMAN 2</h1>
+      <div style="{{capDim}}; margin-top: 12px">MACOS 26 // SWIFTUI + APPKIT // POSTGRES · MYSQL · SQLITE</div>
+    </div>
+    <div style="flex: 0 0 700px; min-width: 0">
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink2)"><b style="font-weight: 600; color: var(--ink)">v2 makes the DB browser the agent’s safe hands.</b> Claude Code, Codex, Cursor and seven more platforms reach your databases only through DBMan’s MCP server. <b style="font-weight: 600; color: var(--ink)">Agents never write to a database</b>: they read, and write only into their own layer of the DBMan store (row patches, virtual views, relations, notes, dashboards); <b style="font-weight: 600; color: var(--ink)">only a human adopts or applies</b> to the database. Passwords never leave DBMan’s Keychain, sensitive columns are hidden by default, production sits behind an EXPLAIN guard, and every call is visible in the app. Plus: composable dashboards, a schema map and the first app icon.</p>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 12px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+          <div style="border: 1px solid var(--line); border-radius: 3px; padding: 8px 12px">
+            <div style="{{capDim}}">{{s.k}}</div>
+            <div style="font-size: 44px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 4px">{{s.v}}</div>
+            <div style="font-size: 11px; color: var(--ink3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.d}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 ARCHITECTURE -->
+  <section aria-label="Architecture" style="{{frame}}">
+    <div style="{{head}}"><span>01 // ARCHITECTURE</span><span style="{{meta}}">AGENT ⇄ STDIO ⇄ SHIM ⇄ UNIX SOCKET ⇄ DBMAN.APP ⇄ DRIVERS ⇄ DATABASES</span><span style="flex: 1"></span><span style="{{chipAmber}}">1 CREDENTIAL BOUNDARY</span><span style="{{chip}}">0 PASSWORDS IN AGENT CONFIG</span><span style="{{chipOn}}">0 AGENT WRITES TO A DATABASE</span></div>
+    <div style="padding: 4px 12px 8px">
+      <svg width="1400" height="470" viewBox="0 0 1400 470" role="img" aria-label="Architecture: agent talks stdio to the dbman-mcp shim, which talks over a Unix socket to DBMan.app; the app holds credentials, permissions, prod guard, redaction and approval sheets, and the DBMan store: layers DATABASE, MINE and one overlay layer per agent. Agent writes stop at the store; agents never write to the database. The app reads Postgres, MySQL and SQLite through its drivers; only a human applies changes to a database." style="display: block; font-family: var(--ui)">
+        <defs>
+          <marker id="v2bA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" style="fill: var(--ink)"></path></marker>
+          <marker id="v2bC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" style="fill: var(--accent)"></path></marker>
+        </defs>
+
+        <!-- credential boundary -->
+        <line x1="545" y1="36" x2="545" y2="464" style="stroke: var(--amber); stroke-width: 1.5; stroke-dasharray: 5 4"></line>
+        <text x="553" y="28" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--amber)">CREDENTIAL BOUNDARY // PASSWORDS NEVER CROSS THIS LINE</text>
+        <text x="537" y="28" text-anchor="end" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">AGENT SIDE</text>
+
+        <!-- agent -->
+        <rect x="20" y="40" width="210" height="172" rx="3" style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1"></rect>
+        <text x="34" y="62" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">AGENT <tspan style="fill: var(--ink3)">// MCP CLIENT</tspan></text>
+        <g style="font-size: 10px; font-weight: 600; letter-spacing: .06em">
+          <rect x="34" y="74" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="49" y="89" text-anchor="middle" style="fill: var(--ink)">CC</text>
+          <rect x="72" y="74" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="87" y="89" text-anchor="middle" style="fill: var(--ink)">CD</text>
+          <rect x="110" y="74" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="125" y="89" text-anchor="middle" style="fill: var(--ink)">CX</text>
+          <rect x="148" y="74" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="163" y="89" text-anchor="middle" style="fill: var(--ink)">CU</text>
+          <rect x="186" y="74" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="201" y="89" text-anchor="middle" style="fill: var(--ink)">OC</text>
+          <rect x="34" y="102" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="49" y="117" text-anchor="middle" style="fill: var(--ink)">VS</text>
+          <rect x="72" y="102" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="87" y="117" text-anchor="middle" style="fill: var(--ink)">ZD</text>
+          <rect x="110" y="102" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="125" y="117" text-anchor="middle" style="fill: var(--ink)">GK</text>
+          <rect x="148" y="102" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="163" y="117" text-anchor="middle" style="fill: var(--ink)">AG</text>
+          <rect x="186" y="102" width="30" height="22" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="201" y="117" text-anchor="middle" style="fill: var(--ink)">WS</text>
+        </g>
+        <text x="34" y="146" style="font-size: 12px; fill: var(--ink)">Claude Code, Codex, Cursor…</text>
+        <text x="34" y="163" style="font-size: 11px; fill: var(--ink3)">10 platforms + Other (JSON)</text>
+        <text x="34" y="190" style="font-family: var(--code); font-size: 10.5px; fill: var(--ink2)">spawns dbman-mcp --stdio</text>
+
+        <!-- agent <-> shim -->
+        <line x1="232" y1="125" x2="308" y2="125" marker-start="url(#v2bA)" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <text x="270" y="115" text-anchor="middle" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">STDIO</text>
+        <text x="270" y="142" text-anchor="middle" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">JSON-RPC</text>
+
+        <!-- shim -->
+        <rect x="310" y="70" width="180" height="112" rx="3" style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1"></rect>
+        <text x="324" y="92" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DBMAN-MCP <tspan style="fill: var(--ink3)">// SHIM</tspan></text>
+        <text x="324" y="112" style="font-family: var(--code); font-size: 10.5px; fill: var(--ink2)">Helpers/dbman-mcp</text>
+        <text x="324" y="132" style="font-size: 12px; fill: var(--ink)">holds no credentials</text>
+        <text x="324" y="150" style="font-size: 11.5px; fill: var(--ink2)">launches app: open -g -j</text>
+        <text x="324" y="170" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">ONE PROCESS PER CLIENT</text>
+
+        <!-- shim <-> app -->
+        <line x1="492" y1="125" x2="598" y2="125" marker-start="url(#v2bA)" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <text x="538" y="115" text-anchor="end" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">UNIX SOCKET</text>
+        <text x="538" y="142" text-anchor="end" style="font-family: var(--code); font-size: 10.5px; fill: var(--ink3)">mcp.sock</text>
+        <text x="553" y="142" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">0600</text>
+
+        <!-- app -->
+        <rect x="600" y="40" width="420" height="362" rx="3" style="fill: var(--paper); stroke: var(--accent); stroke-width: 1.5"></rect>
+        <text x="614" y="62" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DBMAN.APP <tspan style="fill: var(--ink3)">// EVERY CALL VISIBLE IN THE APP</tspan></text>
+        <g>
+          <rect x="614" y="76" width="192" height="46" rx="2" style="fill: none; stroke: var(--accent)"></rect>
+          <text x="624" y="94" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">PERMISSION GATE</text>
+          <text x="624" y="112" style="font-size: 11px; fill: var(--ink2)">agent × connection level</text>
+          <rect x="814" y="76" width="192" height="46" rx="2" style="fill: none; stroke: var(--line)"></rect>
+          <text x="824" y="94" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">PROD GUARD</text>
+          <text x="824" y="112" style="font-size: 11px; fill: var(--ink2)">EXPLAIN first; &gt; 1e6 blocks</text>
+          <rect x="614" y="130" width="192" height="46" rx="2" style="fill: none; stroke: var(--line)"></rect>
+          <text x="624" y="148" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">REDACTION</text>
+          <text x="624" y="166" style="font-size: 11px; fill: var(--ink2)">email, phone → «redacted»</text>
+          <rect x="814" y="130" width="192" height="46" rx="2" style="fill: none; stroke: var(--line)"></rect>
+          <text x="824" y="148" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">APPROVAL SHEETS</text>
+          <text x="824" y="166" style="font-size: 11px; fill: var(--ink2)">credentials · prod overrides</text>
+          <rect x="614" y="184" width="192" height="46" rx="2" style="fill: none; stroke: var(--line)"></rect>
+          <text x="624" y="202" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">KEYCHAIN</text>
+          <text x="624" y="220" style="font-size: 11px; fill: var(--ink2)">passwords stay here</text>
+          <rect x="814" y="184" width="192" height="46" rx="2" style="fill: none; stroke: var(--line)"></rect>
+          <text x="824" y="202" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">ACTIVITY FEED</text>
+          <text x="824" y="220" style="font-size: 11px; fill: var(--ink2)">client · tool · ms · rows</text>
+        </g>
+        <!-- DBMan store: DATABASE ← MINE ← agent layers -->
+        <rect x="614" y="240" width="392" height="136" rx="2" style="fill: none; stroke: var(--accent); stroke-width: 1"></rect>
+        <text x="624" y="258" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">DBMAN STORE <tspan style="fill: var(--ink3)">// PER-AGENT OVERLAYS</tspan> <tspan style="font-family: var(--code); font-size: 10px; font-weight: 400; letter-spacing: 0; fill: var(--ink3)">store.sqlite</tspan></text>
+        <path d="M854 268 H949" style="fill: none; stroke: var(--accent); stroke-width: 1.5"></path>
+        <line x1="854" y1="268" x2="854" y2="290" marker-end="url(#v2bC)" style="stroke: var(--accent); stroke-width: 1.5"></line>
+        <line x1="949" y1="268" x2="949" y2="290" marker-end="url(#v2bC)" style="stroke: var(--accent); stroke-width: 1.5"></line>
+        <text x="846" y="282" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">AGENT WRITES</text>
+        <g style="font-size: 10px; font-weight: 600; letter-spacing: .08em">
+          <rect x="624" y="292" width="81" height="40" rx="2" style="fill: var(--sunken); stroke: var(--line); stroke-dasharray: 3 2"></rect>
+          <text x="631" y="309" style="fill: var(--ink)">DATABASE</text>
+          <rect x="719" y="292" width="81" height="40" rx="2" style="fill: var(--paper); stroke: var(--lineStrong)"></rect>
+          <text x="726" y="309" style="fill: var(--ink)">MINE</text>
+          <rect x="814" y="292" width="81" height="40" rx="2" style="fill: var(--paper); stroke: var(--accent)"></rect>
+          <text x="821" y="309" style="fill: var(--accent)">CC LAYER</text>
+          <rect x="909" y="292" width="81" height="40" rx="2" style="fill: var(--paper); stroke: var(--accent)"></rect>
+          <text x="916" y="309" style="fill: var(--accent)">CX LAYER</text>
+        </g>
+        <g style="font-size: 10.5px; fill: var(--ink2)">
+          <text x="631" y="325">read-only</text>
+          <text x="726" y="325">human · base</text>
+          <text x="821" y="325" style="font-family: var(--code); font-size: 10px">claude-code</text>
+          <text x="916" y="325" style="font-family: var(--code); font-size: 10px">codex</text>
+        </g>
+        <line x1="719" y1="312" x2="707" y2="312" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <line x1="814" y1="312" x2="802" y2="312" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <line x1="909" y1="312" x2="897" y2="312" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <!-- stop: agent writes never cross into DATABASE -->
+        <line x1="712" y1="270" x2="712" y2="340" style="stroke: var(--ink); stroke-width: 2.5"></line>
+        <text x="708" y="282" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">STOP</text>
+        <text x="624" y="353" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">AGENT WRITES STOP AT THE STORE</text>
+        <text x="624" y="367" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">AGENTS NEVER WRITE TO THE DATABASE <tspan style="fill: var(--ink3)">// HUMAN APPLIES</tspan></text>
+
+        <text x="614" y="392" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">AGENTS WINDOW ⌘⇧A // CONNECT · VERIFY · PERMISSIONS · LAYERS</text>
+
+        <!-- human -->
+        <line x1="810" y1="404" x2="810" y2="424" marker-start="url(#v2bC)" style="stroke: var(--accent); stroke-width: 1.5"></line>
+        <rect x="660" y="426" width="300" height="34" rx="3" style="fill: var(--ink); stroke: var(--lineStrong)"></rect>
+        <text x="674" y="447" style="font-size: 10.5px; font-weight: 600; letter-spacing: .08em; fill: var(--paper)">HUMAN <tspan style="opacity: .7">// ADOPTS · APPLIES TO DATABASE</tspan></text>
+
+        <!-- Agents window writes native config back to the agent -->
+        <path d="M598 252 H214 V214" marker-end="url(#v2bA)" style="fill: none; stroke: var(--ink); stroke-width: 1; stroke-dasharray: 2 3"></path>
+        <text x="390" y="244" text-anchor="middle" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">WRITES NATIVE CONFIG // DIFF PREVIEW FIRST</text>
+        <text x="390" y="268" text-anchor="middle" style="font-family: var(--code); font-size: 10.5px; fill: var(--ink3)">config holds a path, never a password</text>
+
+        <!-- agentpack -->
+        <rect x="20" y="270" width="180" height="62" rx="3" style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1"></rect>
+        <text x="32" y="290" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">AGENTPACK <tspan style="fill: var(--ink3)">// OPTIONAL</tspan></text>
+        <text x="32" y="307" style="font-family: var(--code); font-size: 10.5px; fill: var(--ink2)">agentpack.toml + pack.lock</text>
+        <text x="32" y="323" style="font-size: 11px; fill: var(--ink3)">one definition, every agent</text>
+        <line x1="60" y1="268" x2="60" y2="214" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <text x="68" y="246" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">SYNC <tspan style="fill: var(--ink3)">// MCP CONFIG</tspan></text>
+
+        <!-- app <-> drivers -->
+        <line x1="1022" y1="150" x2="1078" y2="150" marker-start="url(#v2bA)" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <text x="1050" y="140" text-anchor="middle" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">SQL</text>
+
+        <!-- drivers -->
+        <rect x="1080" y="86" width="124" height="128" rx="3" style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1"></rect>
+        <text x="1092" y="106" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DB DRIVERS</text>
+        <text x="1092" y="128" style="font-family: var(--code); font-size: 11px; fill: var(--ink2)">PostgresNIO</text>
+        <text x="1092" y="146" style="font-family: var(--code); font-size: 11px; fill: var(--ink2)">MySQLNIO</text>
+        <text x="1092" y="164" style="font-family: var(--code); font-size: 11px; fill: var(--ink2)">SQLite3</text>
+        <text x="1092" y="198" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">SESSION LOCK</text>
+
+        <!-- drivers -> databases -->
+        <line x1="1206" y1="150" x2="1248" y2="72" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <line x1="1206" y1="150" x2="1248" y2="140" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <line x1="1206" y1="150" x2="1248" y2="208" marker-end="url(#v2bA)" style="stroke: var(--amber); stroke-width: 1"></line>
+        <line x1="1206" y1="150" x2="1248" y2="276" marker-end="url(#v2bA)" style="stroke: var(--ink); stroke-width: 1"></line>
+
+        <!-- databases -->
+        <g style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1">
+          <path d="M1250 50 V94 A68 6 0 0 0 1386 94 V50"></path><ellipse cx="1318" cy="50" rx="68" ry="6"></ellipse>
+          <path d="M1250 118 V162 A68 6 0 0 0 1386 162 V118"></path><ellipse cx="1318" cy="118" rx="68" ry="6"></ellipse>
+          <path d="M1250 254 V298 A68 6 0 0 0 1386 298 V254"></path><ellipse cx="1318" cy="254" rx="68" ry="6"></ellipse>
+        </g>
+        <g style="fill: var(--paper); stroke: var(--amber); stroke-width: 1.5">
+          <path d="M1250 186 V230 A68 6 0 0 0 1386 230 V186"></path><ellipse cx="1318" cy="186" rx="68" ry="6"></ellipse>
+        </g>
+        <text x="1262" y="76" style="font-size: 12px; font-weight: 600; fill: var(--ink)">shop</text>
+        <text x="1262" y="91" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">POSTGRES // LOCAL</text>
+        <text x="1262" y="144" style="font-size: 12px; font-weight: 600; fill: var(--ink)">crm</text>
+        <text x="1262" y="159" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">MYSQL // STAGING</text>
+        <text x="1262" y="212" style="font-size: 12px; font-weight: 600; fill: var(--ink)">analytics</text>
+        <text x="1262" y="227" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--amber)">POSTGRES // PROD</text>
+        <text x="1262" y="280" style="font-size: 12px; font-weight: 600; fill: var(--ink)">notes.sqlite</text>
+        <text x="1262" y="295" style="font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">SQLITE // LOCAL</text>
+      </svg>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: 764px minmax(0, 1fr); gap: 4px; align-items: stretch">
+
+    <!-- 02 MCP SURFACE -->
+    <section aria-label="MCP surface" style="{{frame}}">
+      <div style="{{head}}"><span>02 // MCP SURFACE</span><span style="{{meta}}">SERVER dbman // TOOLS NAMESPACED BY DOT // MIN LEVEL PER TOOL</span><span style="flex: 1"></span><span style="{{chipOn}}">{{toolCount}} TOOLS</span></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 6px 12px 10px">
+        <sc-for list="{{toolCols}}" as="col" hint-placeholder-count="2">
+          <div role="table" aria-label="MCP tools" style="min-width: 0">
+            <sc-for list="{{col}}" as="g" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 6px; height: 22px; margin-top: 2px">
+                <span style="{{cap}}">{{g.name}}</span><span style="{{capDim}}">// {{g.count}}</span>
+                <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+              </div>
+              <sc-for list="{{g.tools}}" as="t" hint-placeholder-count="4">
+                <div role="row" style="display: grid; grid-template-columns: 132px minmax(0, 1fr) 116px; gap: 8px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)">
+                  <span role="cell" style="font-family: var(--code); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.n}}</span>
+                  <span role="cell" style="font-size: 11px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.d}}</span>
+                  <span role="cell" style="display: flex; justify-content: flex-end; gap: 3px"><span style="{{t.lvStyle}}">{{t.lv}}</span><span style="{{t.flagStyle}}">{{t.flag}}</span></span>
+                </div>
+              </sc-for>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding: 0 12px 12px">
+        <div style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px">
+          <div>
+            <div style="display: flex; gap: 6px; height: 22px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">RESOURCES</span><span style="{{capDim}}">// 4</span></div>
+            <sc-for list="{{resources}}" as="r" hint-placeholder-count="4"><div style="font-family: var(--code); font-size: 10.5px; height: 20px; line-height: 20px; border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r}}</div></sc-for>
+          </div>
+          <div>
+            <div style="display: flex; gap: 6px; height: 22px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">PROMPTS</span><span style="{{capDim}}">// 4</span></div>
+            <sc-for list="{{prompts}}" as="p" hint-placeholder-count="4"><div style="font-family: var(--code); font-size: 10.5px; height: 20px; line-height: 20px; border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p}}</div></sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="display: flex; gap: 6px; height: 22px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">TYPED ERRORS</span><span style="{{capDim}}">// HUMAN-READABLE</span></div>
+          <sc-for list="{{errors}}" as="e" hint-placeholder-count="4">
+            <div style="padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 11px; line-height: 1.35">
+              <span style="{{e.codeStyle}}">{{e.code}}</span> <span style="color: var(--ink2)">{{e.msg}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 PERMISSIONS -->
+    <section aria-label="Permission matrix" style="{{frame}}">
+      <div style="{{head}}"><span>03 // PERMISSIONS</span><span style="{{meta}}">AGENT × CONNECTION // 3 LEVELS // THE CORE SAFETY MODEL</span><span style="flex: 1"></span><span style="{{chipAmber}}">PROD DEFAULT = READ</span><span style="{{chipOn}}">NO WRITE LEVEL</span></div>
+      <div style="padding: 8px 12px 0">
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{conns}}" as="c" hint-placeholder-count="3">
+            <div style="display: flex; align-items: baseline; gap: 6px; height: 22px; border-bottom: 1px solid {{c.rule}}"><span style="font-size: 13px; font-weight: 600">{{c.n}}</span><span style="{{c.envStyle}}">// {{c.env}}</span><span style="flex: 1"></span><span style="{{capDim}}">{{c.engine}}</span></div>
+          </sc-for>
+        </div>
+        <sc-for list="{{agents}}" as="a" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 8px; height: 26px; margin-top: 6px">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 18px; border: 1px solid var(--lineStrong); border-radius: 2px; font-size: 9.5px; font-weight: 600; letter-spacing: .06em">{{a.m}}</span>
+            <span style="font-size: 12.5px; font-weight: 600">{{a.id}}</span><span style="{{capDim}}">// {{a.sub}}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+            <sc-for list="{{a.cells}}" as="c" hint-placeholder-count="3">
+              <div style="{{c.box}}">
+                <div style="display: flex; align-items: center; gap: 6px; height: 16px"><span style="{{c.lvStyle}}">{{c.lv}}</span><span style="flex: 1"></span><span style="{{capDim}}; font-size: 10px">{{c.note}}</span></div>
+                <div role="radiogroup" aria-label="{{c.label}}" style="{{c.track}}">
+                  <sc-for list="{{c.segs}}" as="s" hint-placeholder-count="3"><span role="radio" aria-checked="{{s.on}}" aria-disabled="{{s.off}}" style="{{s.style}}">{{s.t}}</span></sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; padding: 12px 12px 12px">
+        <div>
+          <div style="display: flex; gap: 6px; height: 22px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">LEVELS</span><span style="{{capDim}}">// 3 · LOW → HIGH</span></div>
+          <sc-for list="{{levels}}" as="l" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 11px; line-height: 1.35; align-items: baseline">
+              <span style="{{cap}}; font-size: 10.5px">{{l.k}}</span><span style="color: var(--ink2)">{{l.v}}</span>
+            </div>
+          </sc-for>
+          <div style="font-size: 11px; color: var(--ink3); margin-top: 6px; line-height: 1.35">Defaults: every connection → OVERLAY · PRODUCTION → READ (OVERLAY opt-in). No agent level writes to a database; only a human applies.</div>
+        </div>
+        <div>
+          <div style="display: flex; gap: 6px; height: 22px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">GUARDS</span><span style="{{capDim}}">// PER CONNECTION</span></div>
+          <sc-for list="{{guards}}" as="g" hint-placeholder-count="6">
+            <div style="display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 11px; line-height: 1.35; align-items: baseline">
+              <span style="{{g.kStyle}}">{{g.k}}</span><span style="color: var(--ink2)">{{g.v}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 04 FLOWS -->
+  <section aria-label="Flows" style="{{frame}}">
+    <div style="{{head}}"><span>04 // FLOWS</span><span style="{{meta}}">F1–F7 // EACH ≤ 3 DECISIONS // FEEDBACK &lt; 400 MS</span><span style="flex: 1"></span><span style="{{chipOn}}">01</span><span style="{{capDim}}">= A HUMAN DECISION</span></div>
+    <sc-for list="{{flows}}" as="f" hint-placeholder-count="7">
+      <div style="display: grid; grid-template-columns: 250px repeat(4, minmax(0, 1fr)); gap: 8px; padding: 5px 12px; border-bottom: 1px solid var(--line)">
+        <div style="min-width: 0; display: flex; flex-direction: column; gap: 5px; padding-top: 2px">
+          <div style="display: flex; align-items: baseline; gap: 8px; min-width: 0"><span style="font-size: 24px; font-weight: 300; letter-spacing: -0.02em; line-height: 1">{{f.id}}</span><span style="font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.t}}</span></div>
+          <div style="display: flex; align-items: center; gap: 6px"><span style="{{capDim}}">DECISIONS //</span><span style="{{cap}}">{{f.dec}}</span><span style="display: inline-flex; gap: 2px"><sc-for list="{{f.decSegs}}" as="d" hint-placeholder-count="3"><span style="{{d}}"></span></sc-for></span><span style="{{capDim}}">OF ≤ 3</span></div>
+          <div style="display: flex; gap: 3px"><sc-for list="{{f.laws}}" as="l" hint-placeholder-count="2"><span style="{{chip}}">{{l}}</span></sc-for></div>
+        </div>
+        <sc-for list="{{f.steps}}" as="s" hint-placeholder-count="4">
+          <div style="display: flex; gap: 10px; min-width: 0; padding: 6px; border: 1px solid {{s.border}}; border-radius: 3px">
+            <div aria-hidden="true" style="position: relative; flex: 0 0 112px; height: 52px; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; background: var(--paper)">
+              <sc-for list="{{s.thumb}}" as="r" hint-placeholder-count="8"><span style="{{r.s}}">{{r.x}}</span></sc-for>
+            </div>
+            <div style="min-width: 0; flex: 1">
+              <div style="display: flex; align-items: center; gap: 5px; height: 16px; overflow: hidden"><span style="{{s.nStyle}}">{{s.n}}</span><span style="{{capDim}}">// {{s.k}}</span></div>
+              <div style="font-size: 11.5px; line-height: 1.3; color: var(--ink2); margin-top: 3px; max-height: 30px; overflow: hidden">{{s.c}}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </section>
+
+  <div style="display: grid; grid-template-columns: 1004px minmax(0, 1fr); gap: 4px; align-items: stretch">
+
+    <!-- 05 GAP AUDIT -->
+    <section aria-label="Gap audit" style="{{frame}}">
+      <div style="{{head}}"><span>05 // GAP AUDIT</span><span style="{{meta}}">V1 → V2 // {{sevSummary}}</span><span style="flex: 1"></span><span style="{{chipOn}}">{{gapCount}} GAPS CLOSED</span></div>
+      <div role="table" aria-label="Gap audit G1 to G20" style="padding: 0 12px 8px">
+        <div role="row" style="{{gapGrid}}; height: 24px; align-items: center; border-bottom: 1px solid var(--lineStrong)">
+          <span role="columnheader" style="{{capDim}}">#</span><span role="columnheader" style="{{capDim}}">GAP IN V1</span><span role="columnheader" style="{{capDim}}">SEV</span><span role="columnheader" style="{{capDim}}">FIX IN V2</span><span role="columnheader" style="{{capDim}}">DESIGNED ON</span>
+        </div>
+        <sc-for list="{{gaps}}" as="g" hint-placeholder-count="20">
+          <div role="row" style="{{gapGrid}}; padding: 4px 0; border-bottom: 1px solid var(--line); align-items: baseline; font-size: 11.5px; line-height: 1.35">
+            <span role="cell" style="{{cap}}">{{g.n}}</span>
+            <span role="cell" style="font-weight: 500">{{g.gap}}</span>
+            <span role="cell"><span style="{{g.sevStyle}}">{{g.sev}}</span></span>
+            <span role="cell" style="color: var(--ink2)">{{g.fix}}</span>
+            <span role="cell" style="display: flex; flex-wrap: wrap; gap: 3px"><sc-for list="{{g.boards}}" as="b" hint-placeholder-count="1"><span style="{{chip}}">{{b}}</span></sc-for></span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 06 DECISIONS -->
+    <section aria-label="Open questions" style="{{frame}}">
+      <div style="{{head}}"><span>06 // DECISIONS</span><span style="{{meta}}">FOR YOU // ANSWERS LOGGED</span><span style="flex: 1"></span><span style="{{chipOn}}">{{decidedCount}} DECIDED</span><span style="{{chip}}">{{askCount}} OPEN</span></div>
+      <sc-for list="{{asks}}" as="a" hint-placeholder-count="6">
+        <div style="padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 12px; line-height: 1.45">
+          <div style="display: flex; align-items: baseline; gap: 8px"><span style="{{capDim}}">{{a.n}}</span><span style="font-weight: 600">{{a.q}}</span></div>
+          <div style="margin-top: 3px; padding-left: 26px"><span style="{{a.tagStyle}}">{{a.tag}}</span> <span style="color: var(--ink)">{{a.rec}}</span></div>
+          <div style="margin-top: 2px; padding-left: 26px; color: var(--ink2); font-size: 11.5px">{{a.why}}</div>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+
+  <div style="{{strip}}; justify-content: space-between; padding: 0 10px">
+    <span style="{{capDim}}">DBMAN 2 // V2 BRIEF // HALFTONE 0.7 // SPEC = V2-SPEC.MD</span>
+    <span style="{{capDim}}">NEXT // 13 ICON · 14 AGENTS · 15 APPROVALS · 16 SCHEMA MAP · 17 DASHBOARD · 18 PROPOSAL · 19 COMPONENTS · 20 STORE</span>
+  </div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":2900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:2900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    // board chrome (Halftone 0.7 frames, as in UIKit)
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; overflow: hidden';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; white-space: nowrap; overflow: hidden; border-bottom: 1px solid var(--line); ' + CAPS + ' color: var(--ink)';
+    const meta = 'color: var(--ink3); font-weight: 500; overflow: hidden; text-overflow: ellipsis';
+    const chipBase = 'display: inline-flex; align-items: center; height: 18px; padding: 0 5px; border-radius: 2px; box-sizing: border-box; white-space: nowrap; ' + CAPS + ' font-size: 10px;';
+    const chip = chipBase + 'border: 1px solid var(--lineStrong); color: var(--ink)';
+    const chipOff = chipBase + 'border: 1px solid var(--line); color: var(--ink3)';
+    const chipOn = chipBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const chipAmber = chipBase + 'border: 1px solid var(--amber); color: var(--amber)';
+    const chipAccent = chipBase + 'border: 1px solid var(--accent); color: var(--accent)';
+    const hidden = 'display: none';
+    const strip = 'display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 4px; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; box-sizing: border-box';
+    const navBase = 'display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 2px; box-sizing: border-box; ' + CAPS + ' font-size: 10.5px;';
+    const nav = navBase + 'border: 1px solid var(--line); color: var(--ink)';
+    const navOn = navBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const navs = ['01 ARCHITECTURE', '02 MCP', '03 PERMISSIONS', '04 FLOWS', '05 GAPS', '06 DECISIONS'];
+
+    // ---------- 02 MCP surface (spec §2) ----------
+    const groupsSpec = [
+      ['CONNECTIONS', [['connections.list', 'env + your level', 'ANY'], ['connections.add', 'credential sheet', 'ANY', 'APPROVAL'], ['connections.test', 'reachability', 'READ'], ['connections.remove', 'forget saved conn', 'READ', 'APPROVAL']]],
+      ['SCHEMA', [['schema.tables', 'all tables', 'READ'], ['schema.describe', 'cols, keys, indexes', 'READ'], ['schema.graph', 'edges + inferred', 'READ'], ['schema.search', '{text}', 'READ']]],
+      ['QUERY', [['query.run', 'read-only, layer?', 'READ'], ['query.explain', 'plan tree + cost', 'READ'], ['query.sample', '{table, n}', 'READ'], ['stats.column', 'nulls, histogram', 'READ']]],
+      ['OVERLAY', [['overlay.status', 'counts, stale items', 'OVERLAY'], ['overlay.patch_rows', 'patches by PK', 'OVERLAY'], ['overlay.diff', 'my layer vs DB', 'OVERLAY'], ['overlay.reset', 'clear my layer', 'OVERLAY']]],
+      ['VIEWS', [['views.list', 'all views', 'READ'], ['views.create', 'virtual, no DDL', 'OVERLAY'], ['views.replace', '{name, sql}', 'OVERLAY'], ['views.drop', 'from my layer', 'OVERLAY']]],
+      ['RELATIONS · NOTES', [['relations.add', 'virtual FK', 'OVERLAY'], ['notes.set', '{table, column?, text}', 'OVERLAY']]],
+      ['SAVED', [['saved.list', 'saved queries', 'READ'], ['saved.save', '{name, sql}', 'OVERLAY']]],
+      ['DASHBOARD', [['dashboard.components', 'catalog + schema', 'READ'], ['dashboard.list', 'all dashboards', 'READ'], ['dashboard.get', 'spec by id', 'READ'], ['dashboard.create', '{spec} → my layer', 'OVERLAY', 'ADOPT'], ['dashboard.update', 'JSON-patch ops', 'OVERLAY', 'ADOPT']]],
+      ['UI', [['ui.open', 'show me', 'ANY']]],
+    ];
+    const lvChip = {ANY: chipOff, READ: chip, OVERLAY: chipOn};
+    const groups = groupsSpec.map(([name, tools]) => ({name, count: String(tools.length).padStart(2, '0'),
+      tools: tools.map(([n, d, lv, flag]) => ({n, d, lv, lvStyle: lvChip[lv], flag: flag || '', flagStyle: flag ? chipAccent : hidden}))}));
+    const toolCount = groups.reduce((s, g) => s + g.tools.length, 0);
+    const toolCols = [groups.slice(0, 4), groups.slice(4)];
+    const resources = ['dbman://connections', 'dbman://{conn}/schema', 'dbman://{conn}/tables/{t}', 'dbman://dashboards/{id}'];
+    const prompts = ['build-dashboard', 'explain-schema', 'investigate-table', 'write-migration-review'];
+    const codeStyle = (c) => 'font-family: var(--code); font-size: 10.5px; font-weight: 600; color: ' + c;
+    const errors = [
+      {code: 'PERMISSION_DENIED', msg: '(READ on analytics; needs OVERLAY)', codeStyle: codeStyle('var(--alert)')},
+      {code: 'BLOCKED_BY_PROD_GUARD', msg: '(seq scan on events, 61,532 rows est. cost 2.1e6)', codeStyle: codeStyle('var(--amber)')},
+      {code: 'WRITE_REDIRECTED', msg: 'write SQL never reaches the DB; use overlay.patch_rows', codeStyle: codeStyle('var(--ink)')},
+      {code: 'NEEDS_APPROVAL', msg: '(pending in DBMan)', codeStyle: codeStyle('var(--accent)')},
+      {code: 'APP_LOCKED', msg: 'DBMan is locked; unlock in the app, the agent retries', codeStyle: codeStyle('var(--ink)')},
+    ];
+
+    // ---------- 03 permission matrix ----------
+    const LEVELS = ['OFF', 'READ', 'OVERLAY'];
+    const conns = [
+      {n: 'shop', env: 'LOCAL', engine: 'POSTGRES', prod: false, def: 'OVERLAY', note: '15 S · 500 ROWS'},
+      {n: 'crm', env: 'STAGING', engine: 'MYSQL', prod: false, def: 'OVERLAY', note: '15 S · 500 ROWS'},
+      {n: 'analytics', env: 'PROD', engine: 'POSTGRES', prod: true, def: 'READ', note: '5 S · EXPLAIN GUARD'},
+    ].map((c) => Object.assign(c, {rule: c.prod ? 'var(--amber)' : 'var(--lineStrong)', envStyle: CAPS + 'white-space: nowrap; color: ' + (c.prod ? 'var(--amber)' : 'var(--ink3)')}));
+    const cell = (agent, c, lv) => {
+      const segs = LEVELS.map((x, i) => {
+        const off = false; // every level is offered on every connection; PROD defaults to READ
+        const on = x === lv;
+        return {t: x, on: on ? 'true' : 'false', off: off ? 'true' : 'false',
+          style: 'flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; height: 100%; box-sizing: border-box; ' + CAPS + 'font-size: 9.5px; letter-spacing: .05em; overflow: hidden;' +
+            (i ? 'border-left: 1px solid ' + (c.prod ? 'var(--amber)' : 'var(--line)') + ';' : '') +
+            (on ? 'background: ' + (c.prod ? 'var(--amber)' : 'var(--ink)') + '; color: var(--paper);' : off ? 'color: var(--ink3); opacity: .45; text-decoration: line-through;' : 'color: var(--ink2);')};
+      });
+      return {lv, label: agent + ' on ' + c.n, note: lv === 'OFF' ? 'NO ACCESS' : c.note,
+        lvStyle: CAPS + 'font-size: 10.5px; white-space: nowrap; color: ' + (lv === 'OFF' ? 'var(--ink3)' : c.prod ? 'var(--amber)' : 'var(--ink)'),
+        box: 'padding: 6px 7px 7px; border: 1px solid ' + (c.prod ? 'var(--amber)' : 'var(--line)') + '; border-radius: 3px; display: flex; flex-direction: column; gap: 6px; min-width: 0',
+        track: 'display: flex; height: 20px; border: 1px solid ' + (c.prod ? 'var(--amber)' : 'var(--lineStrong)') + '; border-radius: 2px; overflow: hidden',
+        segs};
+    };
+    const agents = [
+      ['CC', 'claude-code', 'CLAUDE CODE 2.4.1 · USER SCOPE', ['OVERLAY', 'OVERLAY', 'READ']],
+      ['CX', 'codex', 'CODEX · USER SCOPE', ['OVERLAY', 'READ', 'OFF']],
+      ['CU', 'cursor', 'CURSOR · PROJECT ~/projects/shop', ['READ', 'OFF', 'OFF']],
+    ].map(([m, id, sub, lv]) => ({m, id, sub, cells: conns.map((c, i) => cell(id, c, lv[i]))}));
+    const levels = [
+      {k: 'OFF', v: 'Connection not offered to this agent.'},
+      {k: 'READ', v: 'SELECT, EXPLAIN, schema, stats.'},
+      {k: 'OVERLAY', v: 'READ + writes into its own layer of the DBMan store. Never the database.'},
+    ];
+    const gk = CAPS + 'font-size: 10.5px; white-space: nowrap; color: var(--ink)';
+    const guards = [
+      {k: 'SENSITIVE', v: 'Hidden by default: email, phone, ssn, address, name, token… auto-marked → «redacted». AUTO // 7 COLUMNS HIDDEN.', kStyle: gk},
+      {k: 'TIMEOUT', v: 'Statement timeout 15 s by default; PROD 5 s.', kStyle: gk},
+      {k: 'ROW CAP', v: '500 rows per call, cursor for more, truncated:true.', kStyle: gk},
+      {k: 'PROD GUARD', v: 'Every agent query EXPLAINed first. Est. cost > 1e6 or seq scan on > 1M rows → blocked with reason.', kStyle: CAPS + 'font-size: 10.5px; white-space: nowrap; color: var(--amber)'},
+      {k: 'DB WRITES', v: 'None from agents. APPLY TO DATABASE is human-only.', kStyle: gk},
+      {k: 'APPROVALS', v: 'Credentials, prod-guard overrides, human promotion; expire after 10 min.', kStyle: gk},
+    ];
+
+    // ---------- 04 flows: tiny div thumbnails (112 × 52) ----------
+    const R = (l, tp, w, h, css, x) => ({s: 'position: absolute; left: ' + l + 'px; top: ' + tp + 'px; width: ' + w + 'px; height: ' + h + 'px; box-sizing: border-box; ' + (css || ''), x: x || ''});
+    const bar = (l, tp, w, c) => R(l, tp, w, 3, 'border-radius: 1px; background: ' + (c || 'var(--fill12)'));
+    const tx = (l, tp, w, h, s, c, size, align) => R(l, tp, w, h, 'display: flex; align-items: center; justify-content: ' + (align || 'center') + '; font: 600 ' + (size || 7) + 'px/1 var(--ui); letter-spacing: .06em; white-space: nowrap; overflow: hidden; color: ' + (c || 'var(--ink)'), s);
+    const btn = (l, tp, w, s, on) => R(l, tp, w, 10, 'display: flex; align-items: center; justify-content: center; border: 1px solid var(--lineStrong); border-radius: 1.5px; font: 600 5.5px/1 var(--ui); letter-spacing: .04em; white-space: nowrap; overflow: hidden; background: ' + (on ? 'var(--ink)' : 'transparent') + '; color: ' + (on ? 'var(--paper)' : 'var(--ink)'), s);
+    const lights = () => [0, 1, 2].map((i) => R(5 + i * 6, 4, 4, 4, 'border-radius: 50%; background: var(--fill30)'));
+    const bx = (l, tp, w, h, c, extra) => R(l, tp, w, h, 'border: 1px solid ' + (c || 'var(--lineStrong)') + '; border-radius: 1.5px; ' + (extra || ''));
+    const TH = {
+      agents: () => [...lights(), tx(30, 2, 52, 8, 'AGENTS', 'var(--ink3)', 6),
+        ...[0, 1, 2, 3].flatMap((i) => [bx(6, 14 + i * 9, 8, 7, 'var(--line)'), bar(18, 16 + i * 9, i ? 46 : 54)]),
+        bx(3, 12, 106, 11, 'var(--accent)'), btn(80, 12.5, 26, 'CONNECT', true)],
+      diff: () => [...lights(), tx(30, 2, 52, 8, '~/.claude.json', 'var(--ink3)', 6),
+        ...[0, 1, 2, 3, 4].map((i) => bar(6, 14 + i * 6, 40 - (i % 2) * 10)),
+        ...[0, 1, 2, 3, 4].map((i) => bar(58, 14 + i * 6, 44 - (i % 3) * 8, i === 2 || i === 3 ? 'var(--accent)' : null)),
+        R(54, 12, 1, 30, 'background: var(--line)'), btn(80, 39, 26, 'APPLY', true)],
+      wait: () => [tx(0, 12, 112, 10, 'WAITING FOR HANDSHAKE…', 'var(--ink3)', 6.5),
+        ...Array.from({length: 10}, (_, i) => R(16 + i * 8, 30, 6, 5, 'border-radius: 1px; background: ' + (i < 4 ? 'var(--ink)' : 'var(--fill12)')))],
+      status: (big, small, c) => [tx(0, 12, 112, 12, big, c || 'var(--ink)', 9), tx(0, 27, 112, 8, small, 'var(--ink3)', 6.5), bar(36, 40, 40, c || 'var(--accent)')],
+      term: (hl) => [R(0, 0, 112, 52, 'background: var(--sunken)'), bar(6, 7, 26, 'var(--fill30)'), bar(6, 14, 74, hl || 'var(--accent)'), bar(10, 21, 52), bar(10, 28, 64), bar(10, 35, 40), bar(6, 42, 30, 'var(--fill30)')],
+      sheet: (fieldTxt, two) => [...[0, 1, 2, 3, 4].map((i) => bar(6, 8 + i * 8, 100)),
+        R(20, 6, 72, 42, 'background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 2px'),
+        bar(26, 11, 40, 'var(--ink)'), bar(26, 17, 54),
+        R(26, 23, 60, 9, 'border: 1px solid var(--accent); border-radius: 1px; display: flex; align-items: center; padding-left: 2px; font: 600 6px/1 var(--ui); color: var(--ink)', fieldTxt),
+        ...(two ? [btn(42, 35, 20, two, false)] : []), btn(64, 35, 22, '', true)],
+      plan: () => [bx(6, 6, 34, 10), bx(40, 21, 34, 10), bx(74, 36, 34, 10, 'var(--amber)', 'border-width: 1.5px'),
+        R(22, 16, 1, 10, 'background: var(--line)'), R(22, 25, 18, 1, 'background: var(--line)'), R(56, 31, 1, 10, 'background: var(--line)'), R(56, 40, 18, 1, 'background: var(--line)'),
+        tx(76, 38, 30, 6, 'SEQ SCAN', 'var(--amber)', 5)],
+      feed: () => [...[0, 1, 2, 3, 4].map((i) => bar(6, 6 + i * 9, 100)),
+        R(3, 22, 106, 10, 'border: 1px solid var(--alert); border-radius: 1.5px; background: var(--paper)'), bar(7, 25.5, 54, 'var(--alert)'), tx(64, 23, 42, 8, 'BLOCKED', 'var(--alert)', 5.5, 'flex-end')],
+      choices: () => [tx(0, 8, 112, 10, 'BLOCKED_BY_PROD_GUARD', 'var(--alert)', 6),
+        btn(5, 28, 32, 'ALLOW ONCE', false), btn(40, 28, 32, 'RAISE TIMEOUT', false), btn(75, 28, 32, 'KEEP BLOCKED', true)],
+      emptyDash: () => [R(6, 5, 100, 42, 'border: 1px dashed var(--fill30); border-radius: 2px'), btn(30, 21, 52, 'GENERATE WITH AGENT', true)],
+      dash: (mode) => [0, 1, 2, 3, 4, 5].map((i) => {
+        const l = 5 + (i % 3) * 35, tp = 5 + Math.floor(i / 3) * 22;
+        if (mode === 'ghost') return bx(l, tp, 32, 19, i === 4 ? 'var(--alert)' : 'var(--accent)', 'border-style: dashed');
+        if (i === 4) return bx(l, tp, 32, 19, 'var(--line)', 'background: var(--fill12)');
+        return bx(l, tp, 32, 19, i === 1 && mode === 'edit' ? 'var(--accent)' : 'var(--line)', i === 1 && mode === 'edit' ? 'border-width: 1.5px' : '');
+      }).concat(mode === 'ghost' ? [] : [bar(9, 13, 18, 'var(--ink)'), bar(44, 16, 22, 'var(--fill30)'), bar(79, 13, 16, 'var(--ink)')]),
+      grid: () => [R(0, 0, 112, 9, 'background: var(--sunken)'), tx(92, 1, 16, 7, 'CC', 'var(--accent)', 5.5),
+        ...[0, 1, 2, 3, 4].flatMap((i) => [bar(12, 14 + i * 7, 26), bar(44, 14 + i * 7, 28, [1, 2, 4].includes(i) ? 'var(--accent)' : null), bar(78, 14 + i * 7, 26)]),
+        ...[1, 2, 4].map((i) => R(4, 13 + i * 7, 3, 5, 'background: var(--accent); border-radius: 0.5px'))],
+      layerDiff: () => [tx(4, 3, 50, 7, 'DATABASE', 'var(--ink3)', 5.5, 'flex-start'), tx(59, 3, 50, 7, 'CC LAYER', 'var(--accent)', 5.5, 'flex-start'),
+        R(55, 3, 1, 31, 'background: var(--line)'),
+        ...[0, 1, 2].map((i) => bar(4, 14 + i * 6, 46 - i * 6)), ...[0, 1, 2].map((i) => bar(59, 14 + i * 6, 46 - i * 6, 'var(--accent)')),
+        btn(4, 39, 32, 'DISCARD', false), btn(39, 39, 34, 'APPLY TO DB', false), btn(76, 39, 32, 'ADOPT', true)],
+      layers: () => [bx(6, 32, 74, 14, 'var(--line)', 'background: var(--sunken); border-style: dashed'), tx(10, 32, 66, 14, 'DATABASE', 'var(--ink3)', 5.5, 'flex-start'),
+        bx(18, 19, 74, 14, 'var(--lineStrong)', 'background: var(--paper)'), tx(22, 19, 66, 14, 'MINE + 7 WIDGETS', 'var(--ink)', 5.5, 'flex-start'),
+        bx(30, 6, 74, 14, 'var(--accent)', 'background: var(--paper)'), tx(34, 6, 66, 14, 'CC LAYER', 'var(--accent)', 5.5, 'flex-start')],
+      map: (mode) => {
+        const N = [[6, 6], [42, 4], [80, 8], [6, 38], [44, 22], [80, 38], [44, 41]];
+        const E = [[0, 4], [1, 4], [2, 4], [3, 4], [4, 5], [4, 6]];
+        const hot = mode === 'focus' ? [4] : mode === 'path' ? [0, 4, 5] : [];
+        const hotE = mode === 'path' ? [0, 4] : mode === 'focus' ? [0, 1, 2, 3, 4, 5] : [];
+        const lines = E.map(([a, b], i) => {
+          const [x1, y1] = N[a], [x2, y2] = N[b];
+          const cx1 = x1 + 13, cy1 = y1 + 4, cx2 = x2 + 13, cy2 = y2 + 4;
+          const len = Math.hypot(cx2 - cx1, cy2 - cy1), ang = Math.atan2(cy2 - cy1, cx2 - cx1) * 180 / Math.PI;
+          const c = hotE.includes(i) ? 'var(--accent)' : 'var(--fill30)';
+          return R(cx1, cy1, len, 1, 'transform-origin: 0 0; transform: rotate(' + ang.toFixed(1) + 'deg); background: ' + c);
+        });
+        const nodes = N.map(([l, tp], i) => bx(l, tp, 26, 8, hot.includes(i) ? 'var(--accent)' : 'var(--lineStrong)', 'background: var(--paper);' + (hot.includes(i) ? 'border-width: 1.5px' : '')));
+        return lines.concat(nodes);
+      },
+      query: () => [R(0, 0, 112, 20, 'background: var(--sunken)'), bar(6, 5, 30, 'var(--accent)'), bar(38, 5, 40), bar(6, 12, 60, 'var(--fill30)'),
+        ...[0, 1, 2].flatMap((i) => [bar(6, 26 + i * 8, 22), bar(32, 26 + i * 8, 34), bar(70, 26 + i * 8, 34)])],
+      menu: () => [R(0, 0, 112, 9, 'border-bottom: 1px solid var(--line)'), tx(6, 0, 40, 9, 'AGENTS', 'var(--ink)', 6, 'flex-start'),
+        R(4, 9, 64, 40, 'background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 1.5px'),
+        bar(9, 15, 44), R(6, 22, 60, 9, 'background: var(--ink); border-radius: 1px'), tx(9, 22, 56, 9, 'AGENTPACK', 'var(--paper)', 5.5, 'flex-start'), bar(9, 36, 38), bar(9, 42, 30)],
+      folder: () => [bx(5, 5, 102, 9, 'var(--line)'), tx(8, 5, 96, 9, '~/projects/shop', 'var(--ink2)', 6, 'flex-start'),
+        ...[0, 1, 2].flatMap((i) => [bx(6, 19 + i * 9, 7, 6, 'var(--line)'), bar(17, 20.5 + i * 9, 50 - i * 6)]),
+        R(4, 17, 104, 10, 'border: 1px solid var(--accent); border-radius: 1.5px'), btn(80, 40, 26, 'CHOOSE', true)],
+      sync: () => [btn(8, 8, 40, 'ADD', true), tx(48, 8, 16, 10, '→', 'var(--ink3)', 8), btn(64, 8, 40, 'SYNC', true),
+        bar(8, 26, 70, 'var(--fill30)'), bar(8, 32, 54), bar(8, 38, 62, 'var(--accent)'), bar(8, 44, 40)],
+      six: () => ['CC', 'CX', 'CU', 'OC', 'GK', 'AG'].map((m, i) => R(6 + (i % 3) * 35, 6 + Math.floor(i / 3) * 22, 30, 18, 'display: flex; align-items: center; justify-content: center; border: 1px solid var(--lineStrong); border-radius: 1.5px; font: 600 7px/1 var(--ui); letter-spacing: .06em; color: var(--ink)', m)),
+    };
+    const segOn = 'display: inline-block; width: 9px; height: 9px; border-radius: 1px; background: var(--ink)';
+    const segOff = 'display: inline-block; width: 9px; height: 9px; border-radius: 1px; box-sizing: border-box; border: 1px solid var(--line)';
+    const st = (k, c, thumb, decide) => ({k, c, thumb, decide});
+    const flowsSpec = [
+      ['F1', 'Connect Claude Code', 2, ['TESLER', 'DOHERTY'], [
+        st('⌘⇧A', 'Row “Claude Code // DETECTED” → CONNECT', TH.agents(), true),
+        st('DIFF', 'Diff preview of ~/.claude.json → APPLY', TH.diff(), true),
+        st('VERIFY', 'WAITING FOR HANDSHAKE… first initialize', TH.wait()),
+        st('LIVE', 'CONNECTED // claude-code 2.4.1', TH.status('CONNECTED', 'claude-code 2.4.1'))]],
+      ['F2', 'Agent adds a connection', 2, ['TESLER', 'FITTS'], [
+        st('AGENT', 'connections.add {url, name, env}, no password', TH.term()),
+        st('SHEET', 'claude-code wants to add billing-replica', TH.sheet('', '')),
+        st('TEST', 'Human types the password → TEST', TH.sheet('••••••••', 'TEST'), true),
+        st('SAVE', 'SAVE → agent gets the id, never the secret', TH.status('SAVED', 'id → claude-code'), true)]],
+      ['F3', 'Patch 3 rows in a layer', 1, ['HICK', 'FITTS'], [
+        st('PATCH', 'overlay.patch_rows: 3 rows of shop', TH.term()),
+        st('GRID', 'Merged over real rows with a CC layer mark', TH.grid()),
+        st('DIFF', 'Layer diff: ADOPT, APPLY TO DB or DISCARD', TH.layerDiff(), true),
+        st('AGENT', 'overlay.status returns the note', TH.term('var(--ink)'))]],
+      ['F4', 'Agent blocked on PROD', 1, ['HICK', 'DOHERTY'], [
+        st('QUERY', 'query.run on analytics → EXPLAIN first', TH.plan()),
+        st('GUARD', 'Seq scan on events, est. cost 2.1e6', TH.status('BLOCKED', 'est. cost 2.1e6', 'var(--alert)')),
+        st('FEED', 'Feed row in alert, with the reason', TH.feed()),
+        st('DECIDE', 'Allow once, raise timeout or keep blocked', TH.choices(), true)]],
+      ['F5', 'Generate a dashboard', 3, ['TESLER', 'DOHERTY'], [
+        st('EMPTY', 'New dashboard → GENERATE WITH AGENT', TH.emptyDash(), true),
+        st('PROPOSAL', 'Ghost preview, every widget’s SQL inspectable', TH.dash('ghost')),
+        st('ACCEPT', 'ACCEPT 7 OF 8, then edit one widget', TH.dash('edit'), true),
+        st('ADOPT', 'ADOPT into MINE, kept in the DBMan store', TH.layers(), true)]],
+      ['F6', 'Explore relations', 3, ['HICK', 'FITTS'], [
+        st('⌘4', 'SCHEMA MAP from the navigator', TH.map('')),
+        st('FOCUS', 'FOCUS orders, 2 hops', TH.map('focus'), true),
+        st('PATH', 'PATH customers → products', TH.map('path'), true),
+        st('QUERY', 'OPEN AS QUERY with the join SQL', TH.query(), true)]],
+      ['F7', 'Agentpack', 3, ['TESLER', 'HICK'], [
+        st('MENU', 'Agents ▸ Agentpack', TH.menu()),
+        st('PROJECT', 'Choose ~/projects/shop', TH.folder(), true),
+        st('ADD → SYNC', 'ADD DBMan MCP server, then SYNC', TH.sync(), true),
+        st('STAGED', '6 agents staged from one definition', TH.six())]],
+    ];
+    const flows = flowsSpec.map(([id, title, dec, laws, steps]) => ({id, t: title, dec: String(dec), laws,
+      decSegs: [0, 1, 2].map((i) => i < dec ? segOn : segOff),
+      steps: steps.map((s, i) => ({n: String(i + 1).padStart(2, '0'), k: s.k, c: s.c, thumb: s.thumb,
+        border: s.decide ? 'var(--lineStrong)' : 'var(--line)', nStyle: s.decide ? chipOn : cap}))}));
+
+    // ---------- 05 gap audit (spec §4) ----------
+    const gapGrid = 'display: grid; grid-template-columns: 30px 214px 46px minmax(0, 1fr) 156px; gap: 10px';
+    const sevStyle = {HIGH: chipOn, MED: chip, LOW: chipOff};
+    const gaps = [
+      ['G1', 'No whole-schema relational view', 'HIGH', 'Schema map: LAYERED / CLUSTERS / FOCUS / FREE layouts, PATH, inferred edges.', ['16 SCHEMA MAP']],
+      ['G2', 'Overview is fixed; no user dashboards', 'HIGH', 'Configurable dashboards, 12-column grid, edit mode ⌘E + component library.', ['17 DASHBOARD', '19 COMPONENT LIBRARY']],
+      ['G3', 'No icon', 'LOW', 'Layered macOS 26 icon that works in Default, Dark, Clear and Tinted.', ['13 ICON']],
+      ['G4', 'Agent sees credentials?', 'HIGH', 'Never: secure credential sheet, socket bridge.', ['15 AGENT APPROVALS']],
+      ['G5', 'App not running when agent calls', 'MED', 'Shim launches it hidden; in the Dock only while an approval is pending.', ['14 AGENTS WINDOW']],
+      ['G6', 'Multiple agents at once', 'MED', 'Each MCP client is a named session (clientInfo): own feed row, own permissions.', ['14 AGENTS WINDOW']],
+      ['G7', 'Runaway queries on PROD', 'HIGH', 'Timeout, row cap, EXPLAIN guard.', ['15 AGENT APPROVALS']],
+      ['G8', 'PII leakage to model providers', 'HIGH', 'Sensitive columns hidden from agents BY DEFAULT (auto-marked by name); human can unmark per column.', ['14 AGENTS WINDOW']],
+      ['G9', 'Databases without FKs (SQLite, legacy MySQL)', 'MED', 'Inferred relations; ACCEPT AS RELATION stores a virtual FK.', ['16 SCHEMA MAP']],
+      ['G10', 'Dashboards break on schema drift', 'MED', 'Widget error “column `total` not found” + ASK AGENT TO FIX.', ['17 DASHBOARD']],
+      ['G11', 'Agent output scattered, unattributed', 'MED', 'Per-agent layers in the DBMan store: adopt, diff, discard; dashboards export/import as JSON.', ['20 STORE']],
+      ['G12', 'Approvals missed in background windows', 'HIGH', 'Notification + Dock badge + menu bar count; expire after 10 min.', ['15 AGENT APPROVALS']],
+      ['G13', 'Large results blow agent context', 'MED', 'Row cap + cursor + truncated:true, column projection hint.', ['12 BRIEF // 02 MCP']],
+      ['G14', 'Agent undo', 'MED', 'Nothing to undo in the DB: agents only write overlay layers. DISCARD LAYER or per-item revert; the layer keeps history.', ['20 STORE']],
+      ['G15', 'Charts inaccessible', 'MED', 'VIEW AS TABLE + VoiceOver summary (“Revenue, 30 days, up 12 %”).', ['19 COMPONENT LIBRARY']],
+      ['G16', 'First-run doesn’t mention agents', 'LOW', 'Third first-run card in Connections: CONNECT AN AGENT.', ['14 AGENTS WINDOW']],
+      ['G17', 'Schema map unusable at 200+ tables', 'MED', 'Clusters collapsed by default, filter, focus, minimap, lazy columns.', ['16 SCHEMA MAP']],
+      ['G18', 'Agent-written SQL quality', 'MED', 'Every proposal shows SQL + EXPLAIN cost badge before accept.', ['18 DASHBOARD PROPOSAL']],
+      ['G19', 'Overlay drift', 'MED', 'A patch whose base row changed shows STALE with both values; views/dashboards on dropped columns show error state.', ['20 STORE']],
+      ['G20', 'Agent layers piling up', 'LOW', 'Layer list shows last activity + size; auto-archive after 30 days untouched, never auto-delete.', ['20 STORE']],
+    ].map(([n, gap, sev, fix, boards]) => ({n, gap, sev, fix, boards, sevStyle: sevStyle[sev]}));
+    const cnt = (s) => gaps.filter((g) => g.sev === s).length;
+    const sevSummary = cnt('HIGH') + ' HIGH · ' + cnt('MED') + ' MED · ' + cnt('LOW') + ' LOW';
+    const gapCount = String(gaps.length);
+
+    // ---------- 06 decisions ----------
+    const asks = [
+      {q: 'Ship a DBMan skill next to the MCP server?', d: 1, rec: 'No skill. MCP only.', why: 'The MCP tool descriptions carry the guidance; agentpack syncs the MCP server alone.'},
+      {q: 'May agents commit to a database?', d: 1, rec: 'Never. A DBMan store with per-agent overlays instead.', why: 'Agents write only their own layer; a human ADOPTs into MINE or APPLIES TO DATABASE (G11, G14).'},
+      {q: 'Where do dashboards live?', d: 1, rec: 'Per agent, in the DBMan store.', why: 'Each agent’s dashboards sit in its layer, the human’s in MINE; export/import JSON stays a file action.'},
+      {q: 'Hide sensitive columns by default?', d: 1, rec: 'Yes, hidden from agents by default.', why: 'Auto-marked by name on first schema load, agents get «redacted»; a human unmarks per column (G8).'},
+      {q: 'Where do agent configs point: inside DBMan.app or a stable path?', d: 0, rec: 'A stable symlink ~/.local/bin/dbman-mcp.', why: 'Moving or reinstalling the app never breaks Claude Code, Codex or agentpack configs; DBMan repairs the link on launch.'},
+      {q: 'Prod guard thresholds and approval expiry', d: 0, rec: 'Cost > 1e6 or seq scan > 1M rows; 5 s; 10 min.', why: 'ALLOW ONCE never persists; thresholds change per connection in DBMan, never by agent request.'},
+    ].map((a, i) => Object.assign(a, {n: String(i + 1).padStart(2, '0'), tag: a.d ? 'DECIDED' : 'REC', tagStyle: a.d ? chipOn : chip}));
+    const askCount = String(asks.filter((a) => !a.d).length);
+    const decidedCount = String(asks.filter((a) => a.d).length);
+
+    // ---------- masthead ----------
+    const stats = [
+      {k: 'MCP TOOLS', v: String(toolCount), d: groups.length + ' namespaces · ' + resources.length + ' resources · ' + prompts.length + ' prompts'},
+      {k: 'AGENT PLATFORMS', v: '10', d: '+ “Other (copy JSON)”'},
+      {k: 'COMPONENTS', v: '19', d: 'dashboard catalog, kpi → er.mini'},
+      {k: 'GAPS CLOSED', v: String(gaps.length), d: sevSummary},
+    ];
+
+    return {themeVars, cap, capDim, frame, head, meta, chip, chipOn, chipAmber, strip, nav, navOn, navs, stats,
+      toolCount, toolCols, resources, prompts, errors, conns, agents, levels, guards, flows,
+      gapGrid, gaps, gapCount, sevSummary, asks, askCount, decidedCount};
+  }
+}
+</script>
+</body>
+</html>

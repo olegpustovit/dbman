@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Command palette — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+  <div aria-hidden="true" inert="inert" style="position: absolute; inset: 0; overflow: hidden; pointer-events: none">
+    <dc-import name="Overview" dark="{{dark}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <div style="position: absolute; inset: 0; background: var(--scrim)"></div>
+
+  <div role="dialog" aria-modal="true" aria-label="Command palette" style="position: relative; margin: 110px auto 0; width: min(700px, calc(100% - 32px)); background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 8px 8px 0 var(--fill12); overflow: hidden">
+    <label style="display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 14px; border-bottom: 1px solid var(--lineStrong)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" role="combobox" aria-expanded="true" aria-controls="palette-results" aria-activedescendant="palette-opt-orders" value="ord" aria-label="Search tables, columns, actions and queries" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 300 22px var(--ui); letter-spacing: -0.3px; color: var(--ink)">
+      <span style="{{capDim}}">IN // SHOP</span>
+    </label>
+
+    <div style="display: flex; min-height: 380px">
+      <div role="listbox" id="palette-results" aria-label="Results" style="flex: 1; min-width: 0; padding: 6px 8px 8px">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+          <div role="group" aria-label="{{g.name}}">
+            <div aria-hidden="true" style="display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 4px; margin-top: 4px"><span style="{{cap}}">{{g.name}}</span><span style="{{capDim}}">// {{g.count}}</span><span style="flex: 1; height: 1px; background: var(--line)"></span></div>
+            <sc-for list="{{g.items}}" as="it" hint-placeholder-count="2">
+              <div role="option" id="{{it.id}}" aria-selected="{{it.on}}" style="{{it.style}}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="{{it.icon}}"></path></svg>
+                <span style="{{it.labelStyle}}">{{it.pre}}<b style="font-weight: 700; text-decoration: underline; text-underline-offset: 3px">{{it.hit}}</b>{{it.post}}</span>
+                <span style="{{it.metaStyle}}">{{it.meta}}</span>
+                <span style="{{it.keyStyle}}">{{it.key}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+
+      <aside aria-label="Preview" style="flex: 0 0 250px; padding: 10px 12px; border-left: 1px solid var(--lineStrong); box-sizing: border-box">
+        <div style="display: flex; align-items: center; gap: 6px"><span style="{{cap}}">PREVIEW</span><span style="{{capDim}}">// ORDERS</span></div>
+        <div style="font-size: 36px; font-weight: 300; letter-spacing: -1.2px; line-height: 1; margin-top: 12px">48,000</div>
+        <div style="{{capDim}}; margin-top: 4px">ROWS // 7 COLS // 6.1 MB</div>
+        <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); margin: 12px 0 10px">
+          <sc-for list="{{mini}}" as="d" hint-placeholder-count="144"><span style="aspect-ratio: 1; background: radial-gradient(circle closest-side, {{d}} 0 64%, transparent 74%)"></span></sc-for>
+        </div>
+        <sc-for list="{{cols}}" as="c" hint-placeholder-count="7">
+          <div style="display: flex; align-items: baseline; gap: 8px; height: 22px; border-bottom: 1px solid var(--line)">
+            <span style="{{c.nameStyle}}">{{c.k}}</span>
+            <span style="flex: 1"></span>
+            <span style="font-size: 11px; color: var(--ink3)">{{c.v}}</span>
+          </div>
+        </sc-for>
+      </aside>
+    </div>
+
+    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 14px; height: 30px; padding: 0 12px; border-top: 1px solid var(--lineStrong)">
+      <sc-for list="{{hints}}" as="h" hint-placeholder-count="4"><span style="{{capDim}}"><span style="color: var(--ink)">{{h.k}}</span> {{h.t}}</span></sc-for>
+      <span style="flex: 1"></span>
+      <span style="{{cap}}">7 RESULTS</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A',scrim:'rgba(243,243,241,0.72)'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E',scrim:'rgba(5,5,6,0.72)'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+
+    const I = {
+      table: 'M3 4h18v16H3zM3 10h18M9 4v16',
+      col: 'M9 4v16M15 4v16M4 4h16v16H4z',
+      action: 'M4 17l6-5-6-5M12 19h8',
+      clock: 'M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+      exp: 'M12 15V3M7 8l5-5 5 5M4 21h16',
+    };
+    let oid = 0;
+    const item = (icon, pre, hit, post, meta, key, on, code) => ({icon, pre, hit, post, meta, key: key || '', on: on ? 'true' : 'false', id: on ? 'palette-opt-orders' : 'palette-opt-' + (++oid),
+      style: 'display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 8px; border-radius: 2px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'color: var(--ink);'),
+      labelStyle: 'flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;' + (code ? 'font-family: var(--code); font-size: 12px;' : ''),
+      metaStyle: CAPS + 'font-size: 10.5px; white-space: nowrap;' + (on ? 'opacity: .7' : 'color: var(--ink3)'),
+      keyStyle: 'font-size: 11px; min-width: 26px; text-align: right;' + (on ? 'opacity: .75' : 'color: var(--ink3)')});
+    const groups = [
+      {name: 'TABLES', count: '02', items: [item(I.table, '', 'ord', 'ers', '48,000 ROWS', '⏎', true), item(I.table, '', 'ord', 'er_items', '168,214 ROWS', '')]},
+      {name: 'COLUMNS', count: '02', items: [item(I.col, 'invoices.', 'ord', 'er_id', 'BIGINT // → ORDERS', ''), item(I.col, 'customers.', 'ord', 'ers_count', 'INTEGER', '')]},
+      {name: 'ACTIONS', count: '02', items: [item(I.action, 'New query on ', 'ord', 'ers', '', '⌘T'), item(I.exp, 'Export ', 'ord', 'ers as CSV…', '', '⇧⌘E')]},
+      {name: 'RECENT_QUERIES', count: '01', items: [item(I.clock, 'SELECT * FROM ', 'ord', "ers WHERE status = 'pending'", '8 MS', '', false, true)]},
+    ];
+    const mini = [];
+    let seed = 5;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const v = [];
+    for (let c = 0; c < 24; c++) v.push(Math.min(1, 0.2 + 0.7 * c / 24 + (rnd() - 0.5) * 0.25));
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 24; c++) { const lvl = (6 - r) / 6; mini.push(lvl <= v[c] ? (c === 23 ? t.accent : (lvl > .5 ? t.ink : t.ink3)) : t.fill12); }
+    const cols = [['id', 'int8 · pk', 'pk'], ['customer_id', '→ customers', 'fk'], ['status', 'enum'], ['total', 'numeric'], ['items', 'int4'], ['created_at', 'tstz'], ['shipped_at', 'tstz · null']].map(([k, val, kind]) => ({k, v: val,
+      nameStyle: 'font-size: 12px;' + (kind === 'pk' ? 'font-weight: 600; text-decoration: underline 1px solid; text-underline-offset: 3px;' : kind === 'fk' ? 'text-decoration: underline dotted var(--ink); text-underline-offset: 3px;' : '')}));
+    const hints = [{k: '↑↓', t: 'NAVIGATE'}, {k: '⏎', t: 'OPEN'}, {k: '⌘⏎', t: 'NEW_TAB'}, {k: 'ESC', t: 'CLOSE'}];
+    return {themeVars, dark, cap, capDim, groups, mini, cols, hints};
+  }
+}
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@ import DBCore
 import SwiftUI
 
 /// Dev/CI hooks for scripted screenshots and smoke tests. Env vars, DEBUG builds only (release gets inert stubs).
-///   DBMAN_OPEN=sample|/path.sqlite|postgres://…|mysql://…   DBMAN_ENV=production|staging  (tags the opened profile)
+///   DBMAN_STORE=<path> (use this store file, not the real one)   DBMAN_OPEN=internal|sample|/path.sqlite|postgres://…|mysql://…   DBMAN_ENV=production|staging  (tags the opened profile)
 ///   DBMAN_ROUTE=table:<name>|query:<sql>   DBMAN_VIEW=<rail index>   DBMAN_AUTORUN=1   DBMAN_SELECT=<row>
 ///   DBMAN_STAGE=<table>.<column>=<value> (stages an update of the first row by id)   DBMAN_REVIEW=1   DBMAN_COMMIT=1   DBMAN_PALETTE=1
 ///   DBMAN_APPEARANCE=dark   DBMAN_WINDOW=settings|min (min: resize the database window to its 1100x700 minimum)
@@ -28,6 +28,7 @@ import SwiftUI
             let app = AppModel.shared
             var id: UUID?
             if target == "sample" { id = app.ensureSampleDatabase() }
+            else if target == "internal" { id = ConnectionProfile.internalID }
             else if let (p, pw) = ConnectionURL.parseWithPassword(target) {
                 let profile = app.profiles.first { $0.engine == p.engine && $0.host == p.host && $0.port == p.port && $0.database == p.database && $0.filePath == p.filePath } ?? p
                 app.upsert(profile)

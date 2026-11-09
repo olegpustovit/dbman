@@ -73,6 +73,13 @@ final class SQLiteTests: XCTestCase {
         // even bypassing the session guard, the connection itself is read-only
         let d = try SQLiteDriver(path: path, readOnly: true)
         do { _ = try await d.execute("DELETE FROM users"); XCTFail() } catch DBError.query {}
+
+        // production opens read-write (so Unlock works) but locked: the engine refuses writes the classifier misses
+        let prod = ConnectionProfile(name: "p", engine: .sqlite, filePath: path, environment: .production)
+        let ps = try await DatabaseSession.connect(prod, password: nil)
+        do { _ = try await ps.run("WITH x AS (SELECT 1) DELETE FROM users"); XCTFail() } catch {}
+        await ps.unlockWrites()
+        _ = try await ps.run("WITH x AS (SELECT 1) DELETE FROM orders")
     }
 
     func testColumnStats() async throws {

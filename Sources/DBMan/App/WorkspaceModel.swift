@@ -1,3 +1,4 @@
+import AppKit
 import DBCore
 import Foundation
 import Observation
@@ -78,6 +79,7 @@ final class WorkspaceModel {
         do {
             let start = Date()
             let s = try await DatabaseSession.connect(profile, password: password)
+            if writesUnlocked { await s.unlockWrites() } // unlocked before the session existed (internal store, ⌥-click)
             session = s
             schema = try await s.schema()
             state = .connected(latencyMs: Date().timeIntervalSince(start) * 1000)
@@ -135,7 +137,13 @@ final class WorkspaceModel {
     }
     func undoStaged() { staged.undo(); Task { await session?.undoLastChange() } }
     func discardStaged() { staged = ChangeSet(); Task { await session?.discardChanges() } }
-    func unlockWrites() { writesUnlocked = true; Task { await session?.unlockWrites() } }
+    func unlockWrites() {
+        // The internal store unlocks only on a deliberate ⌥-click (UNLOCK INTERNAL STORE).
+        if profile.environment == .system && !NSEvent.modifierFlags.contains(.option) {
+            log("internal store is read-only: ⌥-click UNLOCK INTERNAL STORE to edit", "locked", error: true); return
+        }
+        writesUnlocked = true; Task { await session?.unlockWrites() }
+    }
     func lockWrites() { writesUnlocked = false; Task { await session?.lockWrites() } }
     func commitStaged() async throws {
         guard let session else { return }

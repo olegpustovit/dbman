@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agents window — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+
+  <!-- menu crumb -->
+  <div aria-hidden="true" style="position: absolute; left: 170px; top: 80px; display: flex; align-items: center; gap: 14px">
+    <span style="{{capDim}}">DBMAN</span><span style="{{capDim}}">FILE</span><span style="{{capDim}}">EDIT</span><span style="{{capDim}}">VIEW</span>
+    <span style="{{cap}}">AGENTS ▸ CONNECT AN AGENT…</span><span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">⌘⇧A</span>
+  </div>
+
+  <div role="dialog" aria-label="Agents" style="position: relative; margin: 110px auto 0; width: 1100px; height: 680px; display: flex; flex-direction: column; box-sizing: border-box; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 8px 8px 0 var(--fill12); overflow: hidden">
+    <div style="flex: 1; min-height: 0; display: flex">
+
+      <!-- SIDEBAR -->
+      <nav aria-label="Agents sections" style="flex: 0 0 250px; box-sizing: border-box; display: flex; flex-direction: column; border-right: 1px solid var(--lineStrong); min-height: 0">
+        <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+          <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span>
+          <span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span>
+          <span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+          <span style="flex: 1"></span>
+          <span style="{{cap}}">AGENTS</span><span style="{{capAccent}}">// {{liveShort}}</span>
+        </div>
+        <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 6px 6px">
+          <div style="display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 4px">
+            <span style="{{cap}}">PLATFORMS</span><span style="{{capDim}}">// {{foundCount}} FOUND</span>
+            <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+          </div>
+          <sc-for list="{{platforms}}" as="p" hint-placeholder-count="11">
+            <button type="button" onClick="{{p.pick}}" aria-current="{{p.current}}" title="{{p.tip}}" style="{{p.style}}">
+              <span aria-hidden="true" style="{{p.tile}}">{{p.mono}}</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; text-align: left">
+                <span style="font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p.name}}</span>
+                <span style="{{p.scopeStyle}}">{{p.scope}}</span>
+              </span>
+              <span style="{{p.chip}}">{{p.status}}</span>
+            </button>
+          </sc-for>
+          <div style="display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 4px; margin-top: 6px">
+            <span style="{{cap}}">MANAGE</span><span style="{{capDim}}">// 03</span>
+            <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+          </div>
+          <sc-for list="{{sections}}" as="s" hint-placeholder-count="3">
+            <button type="button" onClick="{{s.pick}}" aria-current="{{s.current}}" title="{{s.tip}}" style="{{s.style}}">
+              <span aria-hidden="true" style="{{s.tile}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{s.icon}}"></path></svg></span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; text-align: left">
+                <span style="{{s.nameStyle}}">{{s.name}}</span>
+                <span style="{{s.subStyle}}">{{s.sub}}</span>
+              </span>
+              <span style="{{s.badgeStyle}}">{{s.badge}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 8px; border-top: 1px solid var(--line)">
+          <button type="button" title="Rescan for agents  ⌘R" style="{{box}}">RESCAN</button>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}">SCANNED // 14:31:02</span>
+        </div>
+      </nav>
+
+      <!-- DETAIL -->
+      <main style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+        <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line)">
+          <span style="{{cap}}">{{head.k}}</span><span style="{{capDim}}">{{head.sub}}</span>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}">{{head.right}}</span>
+          <sc-if value="{{head.hasBtn}}" hint-placeholder-val="{{false}}"><button type="button" title="{{head.btnTip}}" onClick="{{head.btnFn}}" style="{{box}}">{{head.btn}}</button></sc-if>
+        </div>
+
+        <!-- ============ PLATFORM ============ -->
+        <sc-if value="{{isPlatform}}" hint-placeholder-val="{{true}}">
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column">
+            <div style="flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; gap: 14px; align-items: flex-start">
+                <span aria-hidden="true" style="{{pf.tileL}}">{{pf.mono}}</span>
+                <div style="flex: 1; min-width: 0">
+                  <div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 26px; font-weight: 300; letter-spacing: -0.02em; line-height: 1">{{pf.name}}</span><span style="{{pf.chipL}}">{{pf.status}}</span></div>
+                  <div style="font-size: 12.5px; line-height: 1.45; color: var(--ink2); margin-top: 6px; max-width: 640px">{{pf.sentence}}</div>
+                </div>
+              </div>
+
+              <sc-if value="{{pf.showVerify}}" hint-placeholder-val="{{true}}">
+                <ol aria-label="Connect steps" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none">
+                  <sc-for list="{{steps}}" as="s" hint-placeholder-count="4"><li aria-current="{{s.current}}" style="{{s.style}}"><span style="font-family: var(--code); font-size: 10.5px; letter-spacing: 0">{{s.n}}</span><span>{{s.t}}</span></li></sc-for>
+                </ol>
+              </sc-if>
+
+              <sc-if value="{{pf.hasScope}}" hint-placeholder-val="{{true}}">
+                <div style="display: flex; align-items: center; gap: 10px; height: 26px">
+                  <span style="{{capDim}}; width: 52px">SCOPE</span>
+                  <span role="radiogroup" aria-label="Scope" style="display: inline-flex; gap: 3px">
+                    <sc-for list="{{scopes}}" as="s" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{s.on}}" title="{{s.tip}}" onClick="{{s.pick}}" style="{{s.style}}">{{s.t}}</button></sc-for>
+                  </span>
+                  <sc-if value="{{pf.isProject}}" hint-placeholder-val="{{false}}">
+                    <label style="display: flex; align-items: center; gap: 6px; width: 230px; height: 24px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px">
+                      <span style="{{capDim}}">PATH</span>
+                      <input type="text" aria-label="Project folder" value="~/projects/shop" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--code); font-size: 11.5px; color: var(--ink)">
+                    </label>
+                    <button type="button" title="Choose project folder  ⌘O" style="{{box}}">CHOOSE…</button>
+                  </sc-if>
+                  <span style="{{capDim}}">{{pf.scopeNote}}</span>
+                </div>
+              </sc-if>
+
+              <div>
+                <div style="display: flex; gap: 6px; margin-bottom: 5px"><span style="{{cap}}">{{pf.cmdLabel}}</span><span style="{{capDim}}">{{pf.cmdSub}}</span></div>
+                <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 4px 0 10px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--sunken)">
+                  <span style="font-family: var(--code); font-size: 11.5px; color: var(--ink3)">{{pf.cmdPrompt}}</span>
+                  <span title="{{pf.cmd}}" style="flex: 1; min-width: 0; font-family: var(--code); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{pf.cmd}}</span>
+                  <button type="button" title="Copy  ⌘C" onClick="{{pf.copyCmd}}" style="{{box}}">{{pf.copyLabel}}</button>
+                </div>
+              </div>
+
+              <section aria-label="Config diff" style="flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 3px">
+                <div style="display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+                  <span style="{{cap}}">{{pf.diffLabel}}</span><span style="{{capDim}}; overflow: hidden; text-overflow: ellipsis">// {{pf.file}}</span>
+                  <span style="flex: 1"></span><span style="{{pf.diffStatStyle}}">{{pf.diffStat}}</span>
+                </div>
+                <div style="flex: 1; min-height: 0; overflow: auto; padding: 4px 0; font-family: var(--code); font-size: 11.5px; line-height: 18px">
+                  <sc-for list="{{pf.diff}}" as="d" hint-placeholder-count="12"><div style="{{d.style}}"><span style="{{d.nStyle}}">{{d.n}}</span><span style="{{d.signStyle}}">{{d.sign}}</span><span style="white-space: pre">{{d.text}}</span></div></sc-for>
+                </div>
+              </section>
+
+              <sc-if value="{{pf.showVerify}}" hint-placeholder-val="{{true}}">
+                <section aria-label="Verify" aria-live="polite" style="{{verify.box}}">
+                  <div style="display: flex; align-items: baseline; gap: 8px">
+                    <span style="{{verify.labelStyle}}">{{verify.label}}</span><span style="{{verify.dotsStyle}}">{{verify.dots}}</span>
+                    <span style="{{verify.subStyle}}">{{verify.sub}}</span>
+                    <span style="flex: 1"></span><span style="{{capDim}}">{{verify.right}}</span>
+                  </div>
+                  <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(48, minmax(0, 1fr)); gap: 1px; height: 6px; margin-top: 8px"><sc-for list="{{verify.bar}}" as="b" hint-placeholder-count="48"><span style="background: {{b}}; transition: background .18s"></span></sc-for></div>
+                  <sc-if value="{{verify.done}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line)">
+                      <span style="{{cap}}">SEND TEST PROMPT</span><span style="{{capDim}}">//</span>
+                      <span style="flex: 1; min-width: 0; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{pf.ask}}</span>
+                      <button type="button" title="Copy prompt  ⌘C" onClick="{{copyAsk}}" style="{{box}}">{{askLabel}}</button>
+                    </div>
+                    <div style="font-size: 11px; color: var(--ink3); margin-top: 4px">The agent calls <span style="font-family: var(--code)">connections.list</span>, the call appears in ACTIVITY, and it sees 3 connections with its permission level for each.</div>
+                  </sc-if>
+                </section>
+              </sc-if>
+            </div>
+
+            <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid var(--lineStrong)">
+              <span title="{{pf.foot}}" style="{{capDim}}; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis">{{pf.foot}}</span>
+              <sc-for list="{{actions}}" as="a" hint-placeholder-count="2"><button type="button" aria-disabled="{{a.disabled}}" title="{{a.tip}}" onClick="{{a.fn}}" style="{{a.style}}">{{a.t}}</button></sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ AGENTPACK ============ -->
+        <sc-if value="{{isAgentpack}}" hint-placeholder-val="{{false}}">
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column">
+            <sc-if value="{{apFound}}" hint-placeholder-val="{{true}}">
+              <div style="flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-content: start">
+                <!-- left: project + steps -->
+                <div style="min-width: 0; display: flex; flex-direction: column; gap: 10px">
+                  <div>
+                    <div style="display: flex; gap: 6px; margin-bottom: 5px"><span style="{{cap}}">PROJECT</span><span style="{{capDim}}">// ONE DEFINITION FOR EVERY AGENT</span></div>
+                    <div style="display: flex; gap: 4px">
+                      <label style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; box-sizing: border-box; border: 1.5px solid var(--accent); border-radius: 3px">
+                        <input type="text" aria-label="Project folder" value="~/projects/shop" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--code); font-size: 12px; color: var(--ink)">
+                        <span style="{{cap}}">✓ agentpack.toml</span>
+                      </label>
+                      <button type="button" title="Choose project folder  ⌘O" style="{{boxL}}">CHOOSE…</button>
+                    </div>
+                    <div style="{{capDim}}; margin-top: 5px">PACK.LOCK // 9 ENTRIES // 3 MCP // GIT CLEAN</div>
+                  </div>
+
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">STEPS</span><span style="{{capDim}}">// {{apCheckedCount}} OF 3</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                    <sc-for list="{{apItems}}" as="it" hint-placeholder-count="3">
+                      <div style="padding: 7px 0; border-bottom: 1px solid var(--line)">
+                        <div style="display: flex; align-items: center; gap: 8px">
+                          <button type="button" role="checkbox" aria-checked="{{it.on}}" aria-label="{{it.title}}" onClick="{{it.toggle}}" style="{{it.check}}">{{it.mark}}</button>
+                          <span style="font-size: 12px; font-weight: 600">{{it.title}}</span>
+                          <span style="flex: 1"></span><span style="{{it.stateStyle}}">{{it.state}}</span>
+                        </div>
+                        <div style="margin: 3px 0 0 22px; font-family: var(--code); font-size: 10.5px; line-height: 15px; color: var(--ink3); word-break: break-all">$ {{it.cmd}}</div>
+                        <sc-if value="{{it.hasBlock}}" hint-placeholder-val="{{true}}">
+                          <div style="margin: 6px 0 0 22px; padding: 5px 8px; background: var(--sunken); border: 1px solid var(--line); border-radius: 3px; font-family: var(--code); font-size: 10.5px; line-height: 16px">
+                            <sc-for list="{{it.block}}" as="bl" hint-placeholder-count="4"><div style="{{bl.style}}">{{bl.t}}</div></sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <button type="button" aria-disabled="{{apRunDisabled}}" title="Run checked steps  ⌘⏎" onClick="{{runAp}}" style="{{apRunStyle}}">{{apRunLabel}}</button>
+                    <span style="{{capDim}}">{{apRunNote}}</span>
+                  </div>
+                </div>
+
+                <!-- right: result -->
+                <div style="min-width: 0; display: flex; flex-direction: column; gap: 10px">
+                  <div style="display: flex; align-items: flex-end; gap: 10px">
+                    <span style="font-size: 52px; font-weight: 300; letter-spacing: -0.03em; line-height: .9">{{apStaged}}</span>
+                    <span style="padding-bottom: 3px"><span style="{{cap}}; display: block">/ 6 HARNESSES STAGED</span><span style="{{capDim}}; display: block; margin-top: 2px">{{apLockNote}}</span></span>
+                  </div>
+                  <div role="table" aria-label="Staged harnesses" style="border-top: 1px solid var(--lineStrong)">
+                    <div role="row" style="display: grid; grid-template-columns: 88px minmax(0, 1fr) 76px 62px; gap: 8px; height: 24px; align-items: center; border-bottom: 1px solid var(--line)">
+                      <span role="columnheader" style="{{capDim}}">HARNESS</span><span role="columnheader" style="{{capDim}}">WRITES</span><span role="columnheader" style="{{capDim}}">MCP LOCK</span><span role="columnheader" style="{{capDim}}">STATE</span>
+                    </div>
+                    <sc-for list="{{apRows}}" as="r" hint-placeholder-count="6">
+                      <div role="row" style="{{r.style}}">
+                        <span role="cell" style="font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.mark}} {{r.name}}</span>
+                        <span role="cell" title="{{r.path}}" style="font-family: var(--code); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.path}}</span>
+                        <span role="cell" title="{{r.mcpTip}}" style="font-family: var(--code); font-size: 11px">{{r.mcp}}</span>
+                        <span role="cell" style="font-family: var(--code); font-size: 11px">{{r.state}}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="font-size: 11.5px; line-height: 1.45; color: var(--ink2)"><span style="font-family: var(--code); color: var(--ink)">unpinnable</span> is expected: dbman is a <span style="font-family: var(--code)">command</span> launcher for your local DBMan.app, so there is no source for pack.lock to hash. Only the MCP server is staged; its tool descriptions carry the guidance.</div>
+                  <div style="margin-top: 4px">
+                    <div style="display: flex; align-items: center; gap: 6px; height: 22px"><span style="{{cap}}">LAUNCH IN TERMINAL</span><span style="{{capDim}}">// AT ~/PROJECTS/SHOP</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-top: 4px">
+                      <sc-for list="{{launches}}" as="l" hint-placeholder-count="4"><button type="button" title="{{l.tip}}" style="{{l.style}}"><span>{{l.t}}</span><span style="flex: 1"></span><span style="font-family: var(--ui); font-size: 11px">↗</span></button></sc-for>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{apMissing}}" hint-placeholder-val="{{false}}">
+              <div style="flex: 1; min-height: 0; overflow: auto; padding: 28px 40px; display: flex; flex-direction: column; gap: 14px; max-width: 700px">
+                <div style="font-size: 30px; font-weight: 300; letter-spacing: -0.02em; line-height: 1"><span style="font-family: var(--code); font-size: 26px">agentpack</span> not found on PATH</div>
+                <div style="font-size: 12.5px; line-height: 1.5; color: var(--ink2)">agentpack pins skills, plugins and MCP servers per project in agentpack.toml + pack.lock and stages them for Claude Code, Cursor, OpenCode, Codex, Grok and Antigravity. Install it, then RESCAN — or connect each platform on its own under PLATFORMS.</div>
+                <sc-for list="{{installRows}}" as="ir" hint-placeholder-count="2">
+                  <div>
+                    <div style="{{capDim}}; margin-bottom: 5px">{{ir.k}}</div>
+                    <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 4px 0 10px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--sunken)">
+                      <span style="font-family: var(--code); font-size: 11.5px; color: var(--ink3)">$</span>
+                      <span style="flex: 1; min-width: 0; font-family: var(--code); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ir.cmd}}</span>
+                      <button type="button" title="Copy  ⌘C" onClick="{{ir.copy}}" style="{{box}}">{{ir.label}}</button>
+                    </div>
+                  </div>
+                </sc-for>
+                <div style="{{capDim}}">LOOKED IN // /OPT/HOMEBREW/BIN · /USR/LOCAL/BIN · ~/.LOCAL/BIN · ~/.CARGO/BIN</div>
+                <div><button type="button" title="Rescan PATH  ⌘R" onClick="{{toggleApFound}}" style="{{boxPrimary}}">RESCAN // ⌘R</button></div>
+              </div>
+            </sc-if>
+
+            <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid var(--lineStrong)">
+              <span style="{{capDim}}">COMMIT agentpack.toml + pack.lock // TEAMMATES GET DBMAN ON NEXT SYNC</span>
+              <span style="flex: 1"></span>
+              <button type="button" title="Reveal in Finder  ⇧⌘R" style="{{boxL}}">OPEN agentpack.toml</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ PERMISSIONS ============ -->
+        <sc-if value="{{isPerms}}" hint-placeholder-val="{{false}}">
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column">
+            <div style="flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border: 1px solid var(--lineStrong); border-radius: 2px; background: var(--sunken)">
+                <span style="{{cap}}">RULE</span><span style="{{capDim}}">//</span>
+                <span style="font-size: 12px; color: var(--ink)">Agents never write to a database. <span style="font-family: var(--code); font-weight: 600">OVERLAY</span> = their own layer in the DBMan store.</span>
+                <span style="flex: 1"></span>
+                <span style="{{capDim}}">ONLY YOU APPLY TO DATABASE</span>
+              </div>
+              <div role="table" aria-label="Permission per agent and connection">
+                <div role="row" style="display: grid; grid-template-columns: 170px repeat(3, minmax(0, 1fr)); height: 38px; align-items: end; padding-bottom: 6px; border-bottom: 1px solid var(--lineStrong)">
+                  <span role="columnheader" style="{{capDim}}">AGENT ↓ // CONNECTION →</span>
+                  <sc-for list="{{permCols}}" as="c" hint-placeholder-count="3">
+                    <span role="columnheader" title="{{c.tip}}" style="display: flex; flex-direction: column; gap: 2px; padding-left: 8px; border-left: 1px solid var(--line)">
+                      <span style="display: flex; align-items: baseline; gap: 6px"><span style="font-family: var(--code); font-size: 12.5px; font-weight: 600">{{c.name}}</span><span style="{{c.envStyle}}">{{c.env}}</span></span>
+                      <span style="{{capDim}}; font-size: 10px">{{c.sub}}</span>
+                    </span>
+                  </sc-for>
+                </div>
+                <sc-for list="{{permRows}}" as="r" hint-placeholder-count="6">
+                  <div role="row" style="{{r.style}}">
+                    <span role="rowheader" style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                      <span aria-hidden="true" style="{{r.tile}}">{{r.mono}}</span>
+                      <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-family: var(--code); font-size: 12px; white-space: nowrap">{{r.name}}</span><span style="{{r.subStyle}}">{{r.sub}}</span></span>
+                    </span>
+                    <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="3">
+                      <span role="radiogroup" aria-label="{{c.label}}" style="display: flex; align-items: center; gap: 2px; padding-left: 8px; border-left: 1px solid var(--line); height: 100%">
+                        <sc-for list="{{c.levels}}" as="lv" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{lv.on}}" aria-disabled="{{lv.disabled}}" title="{{lv.tip}}" onClick="{{lv.pick}}" style="{{lv.style}}">{{lv.t}}</button></sc-for>
+                      </span>
+                    </sc-for>
+                  </div>
+                </sc-for>
+                <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 7px; font-size: 11px; color: var(--ink3)">
+                  <sc-for list="{{legend}}" as="lg" hint-placeholder-count="3"><span><span style="{{cap}}; font-size: 10px">{{lg.k}}</span> {{lg.v}}</span></sc-for>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 22px">
+                <section aria-label="Sensitive columns">
+                  <div style="display: flex; align-items: center; gap: 6px; height: 24px; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">SENSITIVE COLUMNS</span><span style="{{capAccent}}">{{sensHead}}</span><span style="flex: 1"></span><span style="{{capDim}}">SHOP</span></div>
+                  <sc-for list="{{sens}}" as="s" hint-placeholder-count="7">
+                    <div style="display: flex; align-items: center; gap: 10px; height: 27px; border-bottom: 1px solid var(--line)">
+                      <button type="button" role="switch" aria-checked="{{s.on}}" aria-label="{{s.label}}" title="{{s.tip}}" onClick="{{s.toggle}}" style="{{s.track}}"><span style="{{s.knob}}"></span></button>
+                      <span style="font-family: var(--code); font-size: 12px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.col}}</span>
+                      <span style="{{s.noteStyle}}">{{s.note}}</span>
+                      <span style="flex: 1"></span>
+                      <span style="{{s.valStyle}}">{{s.val}}</span>
+                    </div>
+                  </sc-for>
+                  <div style="font-size: 11px; color: var(--ink3); margin-top: 6px">Auto-marked on first schema load: names matching email, phone, ssn, address, name, token, password, iban, dob. Agents get «redacted» (COUNT / GROUP BY still work on a hashed form). Unmark per column; redaction happens in DBMan before rows leave the socket.</div>
+                </section>
+
+                <section aria-label="Limits">
+                  <div style="display: flex; align-items: center; gap: 6px; height: 24px; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">LIMITS</span><span style="{{capDim}}">// EVERY AGENT CALL</span></div>
+                  <div style="display: flex; align-items: center; gap: 8px; height: 30px; border-bottom: 1px solid var(--line)">
+                    <span style="{{capDim}}; width: 112px">TIMEOUT</span>
+                    <input type="text" aria-label="Statement timeout" value="15 s" style="{{fieldS}}">
+                    <span style="{{capAmber}}">PRODUCTION</span>
+                    <input type="text" aria-label="Statement timeout on production" value="5 s" style="{{fieldS}}">
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; height: 30px; border-bottom: 1px solid var(--line)">
+                    <span style="{{capDim}}; width: 112px">ROW CAP</span>
+                    <input type="text" aria-label="Row cap per call" value="500" style="{{fieldS}}">
+                    <span style="{{capDim}}">PER CALL // CURSOR AFTER</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; height: 30px; border-bottom: 1px solid var(--line)">
+                    <span style="{{capAmber}}; width: 112px">PROD GUARD</span>
+                    <button type="button" role="switch" aria-checked="{{guardOn}}" aria-label="Prod guard" title="EXPLAIN every agent query on PRODUCTION first  ⌥⌘G" onClick="{{toggleGuard}}" style="{{guardTrack}}"><span style="{{guardKnob}}"></span></button>
+                    <span style="font-size: 11.5px; color: var(--ink2)">EXPLAIN first on <span style="font-family: var(--code)">analytics</span></span>
+                  </div>
+                  <div style="{{guardRows}}">
+                    <div style="display: flex; align-items: center; gap: 8px; height: 30px; border-bottom: 1px solid var(--line)">
+                      <span style="{{capDim}}; width: 112px">BLOCK IF COST &gt;</span>
+                      <input type="text" aria-label="Block if estimated cost above" value="1e6" style="{{fieldS}}">
+                      <span style="{{capDim}}">ESTIMATED // FROM EXPLAIN</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; height: 30px; border-bottom: 1px solid var(--line)">
+                      <span style="{{capDim}}; width: 112px">OR SEQ SCAN &gt;</span>
+                      <input type="text" aria-label="Block sequential scans above rows" value="1,000,000" style="{{fieldS}}">
+                      <span style="{{capDim}}">ROWS</span>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+            <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid var(--lineStrong)">
+              <span style="{{capDim}}">APPLIES TO THE NEXT CALL // AGENTS SEE THEIR LEVEL IN connections.list</span>
+              <span style="flex: 1"></span>
+              <button type="button" title="Reset to defaults  ⌥⌘⌫" onClick="{{resetPerms}}" style="{{boxL}}">RESET TO DEFAULTS</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ ACTIVITY ============ -->
+        <sc-if value="{{isActivity}}" hint-placeholder-val="{{false}}">
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column">
+            <div style="height: 34px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 12px; border-bottom: 1px solid var(--line)">
+              <span style="{{capDim}}; margin-right: 6px">CLIENT</span>
+              <span role="radiogroup" aria-label="Filter by client" style="display: inline-flex; gap: 3px">
+                <sc-for list="{{filters}}" as="f" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{f.on}}" title="{{f.tip}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.t}}<span style="{{f.countStyle}}">{{f.count}}</span></button></sc-for>
+              </span>
+              <span style="flex: 1"></span>
+              <span style="{{capDim}}">{{feedNote}}</span>
+            </div>
+            <div style="flex: 1; min-height: 0; overflow: auto">
+              <div role="table" aria-label="Agent tool calls" style="font-family: var(--code); font-size: 11.5px">
+                <div role="row" style="position: sticky; top: 0; z-index: 1; display: grid; grid-template-columns: {{feedCols}}; gap: 8px; height: 24px; align-items: center; padding: 0 12px; background: var(--paper); border-bottom: 1px solid var(--lineStrong)">
+                  <sc-for list="{{feedHeads}}" as="h" hint-placeholder-count="8"><span role="columnheader" style="{{h.style}}">{{h.t}}</span></sc-for>
+                </div>
+                <sc-for list="{{feed}}" as="r" hint-placeholder-count="14">
+                  <div role="row" aria-expanded="{{r.expanded}}" title="{{r.tip}}" onClick="{{r.pick}}" style="{{r.style}}">
+                    <span role="cell" style="color: var(--ink3)">{{r.time}}</span>
+                    <span role="cell" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.client}}</span>
+                    <span role="cell" style="{{r.connStyle}}">{{r.conn}}</span>
+                    <span role="cell" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.tool}}</span>
+                    <span role="cell" style="color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.args}}</span>
+                    <span role="cell" style="text-align: right; color: var(--ink2)">{{r.ms}}</span>
+                    <span role="cell" style="text-align: right; color: var(--ink2)">{{r.rows}}</span>
+                    <span role="cell"><span style="{{r.chip}}">{{r.status}}</span></span>
+                  </div>
+                  <sc-if value="{{r.isOpen}}" hint-placeholder-val="{{false}}">
+                    <div style="{{r.panel}}">
+                      <div style="font-family: var(--code); font-size: 11.5px; line-height: 17px; color: var(--ink); white-space: pre-wrap">{{r.full}}</div>
+                      <sc-if value="{{r.hasReason}}" hint-placeholder-val="{{false}}"><div style="font-family: var(--code); font-size: 11.5px; line-height: 17px; color: var(--alert); margin-top: 4px">{{r.reason}}</div></sc-if>
+                      <div style="font-family: var(--ui); font-size: 11.5px; color: var(--ink2); margin-top: 4px">{{r.result}}</div>
+                      <sc-if value="{{r.hasActions}}" hint-placeholder-val="{{false}}">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; font-family: var(--ui)">
+                          <button type="button" title="Run this query once, then keep the guard  ⌥⏎" onClick="{{allowOnce}}" style="{{boxL}}">ALLOW ONCE</button>
+                          <button type="button" title="Agent receives BLOCKED_BY_PROD_GUARD  ⎋" onClick="{{keepBlocked}}" style="{{boxPrimary}}">KEEP BLOCKED // ⎋</button>
+                          <span style="flex: 1"></span>
+                          <span style="{{capDim}}">EXPIRES IN 9:12 // AGENT GETS NEEDS_APPROVAL_TIMEOUT</span>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+                </sc-for>
+              </div>
+            </div>
+            <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-top: 1px solid var(--lineStrong)">
+              <sc-for list="{{tally}}" as="tl" hint-placeholder-count="4"><span style="{{tl.style}}">{{tl.k}} // {{tl.v}}</span></sc-for>
+              <span style="flex: 1"></span>
+              <span style="{{capDim}}">TODAY // 412 CALLS // P50 9 MS</span>
+            </div>
+          </div>
+        </sc-if>
+      </main>
+    </div>
+
+    <!-- STATUS STRIP -->
+    <div style="height: 24px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-top: 1px solid var(--lineStrong); white-space: nowrap; overflow: hidden">
+      <span style="{{cap}}">MCP SERVER</span><span style="{{capDim}}">//</span>
+      <span style="{{cap}}">LISTENING ON</span><span style="font-family: var(--code); font-size: 11px" title="~/Library/Application Support/DBMan/mcp.sock">mcp.sock</span><span style="{{capDim}}">//</span>
+      <span style="{{capAccent}}">{{liveLabel}}</span><span style="{{capDim}}">//</span>
+      <span style="font-family: var(--code); font-size: 11px">dbman-mcp 2.0.0</span>
+      <span style="flex: 1"></span>
+      <span style="{{capDim}}">PROTOCOL // 2025-06-18 // STDIO</span>
+    </div>
+  </div>
+
+  <div aria-hidden="true" style="position: absolute; left: 170px; top: 812px; width: 1100px; display: flex; gap: 18px">
+    <span style="{{capDim}}">TRY //</span>
+    <span style="{{capDim}}">CLAUDE CODE → CONNECT</span>
+    <span style="{{capDim}}">CODEX · CURSOR · OTHER</span>
+    <span style="{{capDim}}">AGENTPACK → RUN</span>
+    <span style="{{capDim}}">PERMISSIONS → LEVELS</span>
+    <span style="{{capDim}}">ACTIVITY → ALLOW ONCE / KEEP BLOCKED</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const def = {shop: 'OVERLAY', crm: 'OVERLAY', analytics: 'READ'};
+    this.defaults = {
+      'claude-code': Object.assign({}, def), 'claude-desktop': Object.assign({}, def), opencode: Object.assign({}, def),
+      cursor: {shop: 'OVERLAY', crm: 'READ', analytics: 'READ'}, codex: {shop: 'OVERLAY', crm: 'OFF', analytics: 'OFF'}, default: Object.assign({}, def),
+    };
+    this.state = {
+      sel: 'cc', phase: {cd: 'connected', oc: 'connected'}, scope: {oc: 'project'}, copied: null, tick: 0,
+      apFound: true, apChecks: {mcp: true, sync: true}, apRun: 'idle', apStart: 0,
+      perms: JSON.parse(JSON.stringify(this.defaults)), sens: {email: true, phone: true, name: true, line1: true, city: true, postcode: true, bill: true}, guard: true,
+      filter: 'all', open: 'b1', decision: null,
+    };
+    this.timers = [];
+  }
+  componentDidMount() {
+    this.iv = setInterval(() => {
+      const s = this.state;
+      const busy = Object.keys(s.phase).some((k) => s.phase[k] === 'applying' || s.phase[k] === 'waiting');
+      if (s.apRun === 'running') {
+        const n = s.tick + 1;
+        if (n - s.apStart >= 9) this.setState({tick: n, apRun: 'done'}); else this.setState({tick: n});
+      } else if (busy) this.setState({tick: s.tick + 1});
+    }, 240);
+  }
+  componentWillUnmount() { clearInterval(this.iv); this.timers.forEach((x) => clearTimeout(x)); }
+  setPhase(id, p) { this.setState({phase: Object.assign({}, this.state.phase, {[id]: p})}); }
+  connect(id) {
+    this.timers.forEach((x) => clearTimeout(x));
+    this.timers = [];
+    this.setPhase(id, 'applying');
+    this.timers.push(setTimeout(() => this.setPhase(id, 'waiting'), 900));
+    this.timers.push(setTimeout(() => this.setPhase(id, 'connected'), 3500));
+  }
+  cancel(id) { this.timers.forEach((x) => clearTimeout(x)); this.timers = []; this.setPhase(id, 'idle'); }
+  copy(key) {
+    this.setState({copied: key});
+    this.timers.push(setTimeout(() => { if (this.state.copied === key) this.setState({copied: null}); }, 1400));
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const capAccent = CAPS + ' color: var(--accent); white-space: nowrap';
+    const capAmber = CAPS + ' color: var(--amber); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const boxOff = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--fill12); color: var(--ink3); border-color: var(--line); cursor: default;';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+    const fieldS = field + '; width: 64px; height: 22px; font-family: var(--code); font-size: 11.5px';
+
+    const st = this.state;
+    const BIN = '/Applications/DBMan.app/Contents/Helpers/dbman-mcp';
+    const seg = (on, warn) => 'display: inline-flex; align-items: center; height: 22px; padding: 0 8px; box-sizing: border-box; border: 1px solid ' + (warn ? 'var(--amber)' : 'var(--lineStrong)') + '; border-radius: 2px; cursor: pointer; font-family: var(--ui);' + CAPS + 'font-size: 10.5px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: ' + (warn ? 'var(--amber)' : 'var(--ink)') + ';');
+
+    // ---------- platforms ----------
+    const PL = [
+      {id: 'cc', mono: 'CC', name: 'Claude Code', found: true, file: {user: '~/.claude.json', project: '~/projects/shop/.mcp.json'}, client: 'claude-code 2.4.1', ms: 18, who: 'Claude',
+        cli: {user: 'claude mcp add dbman -s user -- ' + BIN + ' --stdio', project: 'claude mcp add dbman -s project -- ' + BIN + ' --stdio'}, cliName: 'claude mcp add'},
+      {id: 'cd', mono: 'CD', name: 'Claude Desktop', found: true, userOnly: true, file: {user: '~/Library/Application Support/Claude/claude_desktop_config.json'}, client: 'claude-desktop 1.8.3', ms: 22, who: 'Claude'},
+      {id: 'cx', mono: 'CX', name: 'Codex', found: true, file: {user: '~/.codex/config.toml', project: '~/projects/shop/.codex/config.toml'}, client: 'codex-mcp-client 0.46.0', ms: 21, who: 'Codex',
+        cli: {user: 'codex mcp add dbman -- ' + BIN + ' --stdio', project: 'codex mcp add dbman -- ' + BIN + ' --stdio'}, cliName: 'codex mcp add'},
+      {id: 'cu', mono: 'CU', name: 'Cursor', found: true, update: true, file: {user: '~/.cursor/mcp.json', project: '~/projects/shop/.cursor/mcp.json'}, client: 'cursor-vscode 1.7.2', ms: 15, who: 'Cursor'},
+      {id: 'oc', mono: 'OC', name: 'OpenCode', found: true, file: {user: '~/.config/opencode/opencode.json', project: '~/projects/shop/opencode.json'}, client: 'opencode 0.15.2', ms: 9, who: 'OpenCode'},
+      {id: 'vs', mono: 'VS', name: 'VS Code (Copilot)', found: true, file: {user: '~/Library/Application Support/Code/User/mcp.json', project: '~/projects/shop/.vscode/mcp.json'}, client: 'Visual Studio Code 1.105.1', ms: 24, who: 'Copilot (agent mode)',
+        cli: {user: 'code --add-mcp \'{"name":"dbman","command":"' + BIN + '","args":["--stdio"]}\''}, cliName: 'code --add-mcp'},
+      {id: 'zd', mono: 'ZD', name: 'Zed', found: false, userOnly: true, file: {user: '~/.config/zed/settings.json'}, root: 'context_servers'},
+      {id: 'gk', mono: 'GK', name: 'Grok', found: false, userOnly: true, file: {user: '~/.grok/user-settings.json'}},
+      {id: 'ag', mono: 'AG', name: 'Antigravity', found: true, userOnly: true, file: {user: '~/.gemini/antigravity/mcp_config.json'}, client: 'antigravity 1.11.3', ms: 19, who: 'Gemini'},
+      {id: 'ws', mono: 'WS', name: 'Windsurf', found: false, userOnly: true, file: {user: '~/.codeium/windsurf/mcp_config.json'}},
+      {id: 'ot', mono: '{}', name: 'Other (copy JSON)', other: true, found: true, userOnly: true, file: {user: 'any stdio MCP client'}},
+    ];
+    const phaseOf = (p) => p.other ? 'other' : !p.found ? 'missing' : (st.phase[p.id] || 'idle');
+    const scopeOf = (p) => p.userOnly ? 'user' : (st.scope[p.id] || 'user');
+    const statusOf = (p) => {
+      const ph = phaseOf(p);
+      if (p.other) return 'JSON';
+      if (ph === 'missing') return 'NOT_FOUND';
+      if (ph === 'connected') return 'INSTALLED';
+      if (p.update) return 'NEEDS_UPDATE';
+      return 'DETECTED';
+    };
+    const chipCss = (status, onInk, big) => {
+      const base = CAPS + 'font-size: ' + (big ? '10.5px' : '9.5px') + '; display: inline-flex; align-items: center; height: ' + (big ? '20px' : '16px') + '; padding: 0 ' + (big ? '7px' : '5px') + '; box-sizing: border-box; border-radius: 2px; flex: none; white-space: nowrap; border: 1px solid ';
+      if (status === 'INSTALLED') return base + (onInk ? 'var(--paper); background: var(--paper); color: var(--ink);' : 'var(--ink); background: var(--ink); color: var(--paper);');
+      if (status === 'NEEDS_UPDATE') return base + 'var(--amber); color: var(--amber);';
+      if (status === 'NOT_FOUND') return base + (onInk ? 'currentColor; opacity: .55;' : 'var(--line); color: var(--ink3);');
+      if (status === 'JSON') return base + (onInk ? 'currentColor; opacity: .7;' : 'var(--line); color: var(--ink2);');
+      return base + (onInk ? 'currentColor;' : 'var(--lineStrong); color: var(--ink);');
+    };
+    const isPlat = !['agentpack', 'perms', 'activity'].includes(st.sel);
+    const liveCount = PL.filter((p) => !p.other && phaseOf(p) === 'connected').length;
+    const liveLabel = liveCount + ' CLIENTS LIVE';
+    const keyOf = (i) => i < 9 ? '⌘' + (i + 1) : i === 9 ? '⌘0' : '';
+    const platforms = PL.map((p, i) => {
+      const on = isPlat && st.sel === p.id;
+      const status = statusOf(p);
+      const sc = scopeOf(p);
+      const scope = p.other ? 'GENERIC // STDIO' : (sc === 'project' ? 'PROJECT // ~/projects/shop' : 'USER // ' + p.file.user);
+      return {mono: p.mono, name: p.name, status, scope, current: on ? 'page' : 'false',
+        tip: p.name + ' — ' + status.replace('_', ' ') + ' · ' + (p.other ? 'copy generic JSON' : p.file[sc] || p.file.user) + (keyOf(i) ? '  ' + keyOf(i) : ''),
+        pick: () => this.setState({sel: p.id}),
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 6px; margin-bottom: 2px; box-sizing: border-box; border: 0; border-radius: 3px; cursor: pointer; font-family: var(--ui); text-align: left;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: ' + (status === 'NOT_FOUND' ? 'var(--ink3)' : 'var(--ink)') + ';'),
+        tile: 'display: inline-flex; align-items: center; justify-content: center; flex: none; width: 22px; height: 22px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--paper)' : status === 'NOT_FOUND' ? 'var(--line)' : 'var(--lineStrong)') + '; border-radius: 2px; font-size: 9.5px; font-weight: 700; letter-spacing: .04em;' + (p.other ? 'border-style: dashed;' : ''),
+        scopeStyle: CAPS + 'font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (on ? 'opacity: .7;' : 'color: var(--ink3);'),
+        chip: chipCss(status, on, false)};
+    });
+    const foundCount = String(PL.filter((p) => !p.other && p.found).length).padStart(2, '0');
+
+    // ---------- manage sections ----------
+    const blockedPending = st.decision === null;
+    const apStaged = st.apRun === 'done' ? 6 : st.apRun === 'running' ? Math.max(0, Math.min(6, st.tick - st.apStart - 1)) : 0;
+    const SEC = [
+      {id: 'agentpack', name: 'AGENTPACK', sub: st.apFound ? 'v0.9 // ~/projects/shop' : 'NOT ON PATH', badge: st.apFound ? (st.apRun === 'done' ? '6 STAGED' : 'v0.9') : 'INSTALL', tone: 'ink', icon: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5', key: '⌥⌘1'},
+      {id: 'perms', name: 'PERMISSIONS', sub: '5 AGENTS × 3 CONNECTIONS', badge: 'PROD READ', tone: 'amber', icon: 'M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z', key: '⌥⌘2'},
+      {id: 'activity', name: 'ACTIVITY', sub: '412 CALLS TODAY', badge: blockedPending ? '1 BLOCKED' : 'LIVE', tone: blockedPending ? 'alert' : 'accent', icon: 'M3 12h4l3-8 4 16 3-8h4', key: '⌥⌘3'},
+    ];
+    const sections = SEC.map((s) => {
+      const on = st.sel === s.id;
+      const toneVar = s.tone === 'amber' ? 'var(--amber)' : s.tone === 'alert' ? 'var(--alert)' : s.tone === 'accent' ? 'var(--accent)' : 'var(--lineStrong)';
+      return {name: s.name, sub: s.sub, badge: s.badge, icon: s.icon, current: on ? 'page' : 'false', tip: s.name.charAt(0) + s.name.slice(1).toLowerCase() + '  ' + s.key,
+        pick: () => this.setState({sel: s.id}),
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 38px; padding: 0 6px; margin-bottom: 2px; box-sizing: border-box; border: 0; border-radius: 3px; cursor: pointer; font-family: var(--ui); text-align: left;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);'),
+        tile: 'display: inline-flex; align-items: center; justify-content: center; flex: none; width: 22px; height: 22px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--paper)' : 'var(--lineStrong)') + '; border-radius: 2px;',
+        nameStyle: CAPS + 'white-space: nowrap;',
+        subStyle: CAPS + 'font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (on ? 'opacity: .7;' : 'color: var(--ink3);'),
+        badgeStyle: CAPS + 'font-size: 9.5px; display: inline-flex; align-items: center; height: 16px; padding: 0 5px; box-sizing: border-box; border-radius: 2px; flex: none; white-space: nowrap;' +
+          (on ? 'border: 1px solid currentColor;' : s.tone === 'alert' ? 'background: var(--alert); color: var(--paper); border: 1px solid var(--alert);' : 'border: 1px solid ' + toneVar + '; color: ' + (s.tone === 'ink' ? 'var(--ink)' : toneVar) + ';')};
+    });
+
+    // ---------- platform detail ----------
+    const P = PL.find((p) => p.id === st.sel) || PL[0];
+    const ph = phaseOf(P);
+    const sc = scopeOf(P);
+    const file = P.file[sc] || P.file.user;
+    const status = statusOf(P);
+    const conn = ph === 'connected';
+    const plus = conn ? ' ' : '+';
+    const jsonEntry = (root, withType, allNew) => {
+      const s = allNew && !conn ? '+' : plus;
+      const c = allNew && !conn ? '+' : ' ';
+      return [['{', c], ['  "' + root + '": {', c], ['    "dbman": {', s]].concat(withType ? [['      "type": "stdio",', s]] : [])
+        .concat([['      "command": "' + BIN + '",', s], ['      "args": ["--stdio"]', s], ['    }', s], ['  }', c], ['}', c]]);
+    };
+    let diff; let start = 1;
+    if (P.id === 'cc' && sc === 'user') {
+      start = 38;
+      diff = [['  },', ' '], ['  "mcpServers": {', ' '], ['    "dbman": {', plus], ['      "type": "stdio",', plus], ['      "command": "' + BIN + '",', plus], ['      "args": ["--stdio"],', plus], ['      "env": {}', plus], ['    },', plus], ['    "github": {', ' '], ['      "type": "http",', ' '], ['      "url": "https://api.githubcopilot.com/mcp/"', ' '], ['    }', ' '], ['  },', ' ']];
+      if (conn) { diff = diff.slice(1, 9); start = 39; }
+    } else if (P.id === 'cc') {
+      diff = jsonEntry('mcpServers', true, true);
+    } else if (P.id === 'cx') {
+      start = sc === 'user' ? 14 : 1;
+      diff = (sc === 'user' ? [['[mcp_servers.github]', ' '], ['command = "github-mcp-server"', ' '], ['args = ["stdio"]', ' '], ['', ' ']] : [])
+        .concat([['[mcp_servers.dbman]', plus], ['command = "' + BIN + '"', plus], ['args = ["--stdio"]', plus], ['startup_timeout_sec = 20', plus]]);
+    } else if (P.id === 'cu') {
+      diff = [['{', ' '], ['  "mcpServers": {', ' '], ['    "dbman": {', ' ']]
+        .concat(conn ? [['      "command": "' + BIN + '",', ' ']] : [['      "command": "/Users/snowbear/Downloads/DBMan.app/Contents/Helpers/dbman-mcp",', '-'], ['      "command": "' + BIN + '",', '+']])
+        .concat([['      "args": ["--stdio"]', ' '], ['    }', ' '], ['  }', ' '], ['}', ' ']]);
+    } else if (P.id === 'oc') {
+      diff = [['{', ' '], ['  "$schema": "https://opencode.ai/config.json",', ' '], ['  "mcp": {', ' '], ['    "dbman": {', plus], ['      "type": "local",', plus], ['      "command": ["' + BIN + '", "--stdio"],', plus], ['      "enabled": true', plus], ['    }', plus], ['  }', ' '], ['}', ' ']];
+    } else if (P.id === 'vs') {
+      diff = jsonEntry('servers', true, false);
+    } else if (P.other) {
+      diff = jsonEntry('mcpServers', true, false).map(([x]) => [x, ' ']);
+    } else {
+      diff = jsonEntry(P.root || 'mcpServers', false, false);
+      if (!P.found) diff = diff.map(([x, s]) => [x, s === '+' ? '+' : ' ']);
+    }
+    let ln = start;
+    const diffRows = diff.map(([text, sign]) => {
+      const n = sign === '-' ? '' : String(ln++);
+      const tone = sign === '+' ? 'var(--accent)' : sign === '-' ? 'var(--ink3)' : 'var(--ink2)';
+      return {text, sign: sign === ' ' ? '' : sign === '-' ? '−' : '+', n: sign === '-' ? String(ln) : n,
+        style: 'display: grid; grid-template-columns: 40px 16px minmax(0, 1fr); padding-right: 10px; color: ' + tone + ';' + (sign === '+' ? 'box-shadow: inset 2px 0 0 var(--accent);' : '') + (sign === '-' ? 'text-decoration: line-through;' : ''),
+        nStyle: 'text-align: right; padding-right: 10px; color: var(--ink3); opacity: .7; text-decoration: none',
+        signStyle: 'color: ' + tone + '; font-weight: 600'};
+    });
+    const addCount = diff.filter((d) => d[1] === '+').length;
+    const delCount = diff.filter((d) => d[1] === '-').length;
+    const hasCli = !!(P.cli && (P.cli[sc] || P.cli.user)) && !P.other;
+    const cmd = P.other ? BIN : hasCli ? (P.cli[sc] || P.cli.user) : file;
+    const lower = P.name.toLowerCase();
+    let sentence;
+    if (P.other) sentence = 'Any MCP client that speaks stdio can launch DBMan: paste this entry into its config, or point it at the binary below — credentials never leave DBMan.';
+    else if (ph === 'missing') sentence = P.name + ' was not found — DBMan looked for ' + file + '. Install it and RESCAN ⌘R, or copy the JSON below into its config yourself.';
+    else if (conn && (P.id === 'cd' || P.id === 'oc') ) sentence = P.name + ' already launches dbman-mcp and is live now; DISCONNECT removes only the dbman entry from ' + file + '.';
+    else if (conn) sentence = P.name + ' is connected: it launches dbman-mcp over stdio, and every call it makes shows up in ACTIVITY.';
+    else if (P.update) sentence = 'Cursor points at an old DBMan copy in ~/Downloads that no longer exists; UPDATE rewrites one line in ' + file + '.';
+    else if (hasCli) sentence = 'DBMan will run `' + P.cliName + '` to register dbman-mcp as a ' + (sc === 'project' ? 'project' : 'user') + '-scoped stdio server in ' + file + ' — ' + addCount + ' lines, nothing else changes, and your passwords stay in DBMan.';
+    else sentence = 'DBMan will add one dbman entry to ' + file + ' — ' + addCount + ' lines, nothing else changes, and your passwords stay in DBMan.';
+
+    const copied = st.copied;
+    const pf = {
+      mono: P.mono, name: P.name, status, sentence, file: P.other ? 'mcpServers entry // paste into the client config' : file,
+      chipL: chipCss(status, false, true),
+      tileL: 'display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; box-sizing: border-box; border: 1.5px solid ' + (ph === 'missing' ? 'var(--line)' : 'var(--lineStrong)') + '; border-radius: 3px; font-size: 15px; font-weight: 700; letter-spacing: .04em;' + (ph === 'missing' ? 'color: var(--ink3);' : '') + (P.other ? 'border-style: dashed;' : ''),
+      showVerify: ph !== 'missing' && ph !== 'other',
+      hasScope: !P.userOnly && ph !== 'missing',
+      isProject: sc === 'project',
+      scopeNote: sc === 'project' ? 'GIT REPO // SHARED WITH TEAM' : 'EVERY PROJECT ON THIS MAC',
+      cmdLabel: P.other ? 'BINARY' : hasCli ? 'RUNS' : 'WRITES',
+      cmdSub: P.other ? '// LAUNCH WITH --stdio' : hasCli ? '// ' + P.name.toUpperCase() + ' CLI, FROM YOUR LOGIN SHELL' : '// NATIVE CONFIG FILE, BACKUP FIRST',
+      cmdPrompt: hasCli ? '$' : '→',
+      cmd,
+      copyLabel: copied === 'cmd' ? '✓ COPIED' : 'COPY',
+      copyCmd: () => this.copy('cmd'),
+      diffLabel: P.other ? 'JSON' : ph === 'missing' ? 'WOULD ADD' : conn ? (P.id === 'cd' || P.id === 'oc' ? 'CURRENT' : 'APPLIED') : 'DIFF',
+      diffStat: P.other ? 'GENERIC // STDIO' : conn ? '✓ IN SYNC' : '+' + addCount + ' −' + delCount,
+      diffStatStyle: P.other ? capDim : conn ? capDim : CAPS + 'color: var(--accent); white-space: nowrap',
+      diff: diffRows,
+      ask: 'Ask ' + (P.who || 'the agent') + ": 'list my DBMan connections'",
+      foot: P.other ? 'BINARY IS SIGNED // DBMAN STARTS HIDDEN IF NOT RUNNING' : ph === 'missing' ? 'NOT FOUND // NOTHING WILL BE WRITTEN' : conn ? 'LAST CALL // ' + (P.id === 'cd' ? '12 S AGO' : P.id === 'oc' ? '41 S AGO' : 'JUST NOW') + ' // PERMISSIONS → ' + (P.id === 'cc' ? 'CLAUDE-CODE' : lower.toUpperCase()) : 'BACKUP FIRST // ' + (file.length > 34 ? '….DBMAN-BAK' : file + '.DBMAN-BAK') + ' // UNDO ⌘Z',
+    };
+    const scopes = [['user', 'USER', 'User scope — every project on this Mac'], ['project', 'PROJECT', 'Project scope — written into the repo, shared via git']].map(([id, label, tip]) => ({
+      t: label, tip, on: sc === id ? 'true' : 'false', style: seg(sc === id, false),
+      pick: () => { if (ph === 'idle') this.setState({scope: Object.assign({}, st.scope, {[P.id]: id})}); },
+    }));
+    const stepIdx = {idle: 0, applying: 1, waiting: 2, connected: 3}[ph] ?? 0;
+    const steps = [['01', 'PREVIEW DIFF'], ['02', 'APPLY'], ['03', 'HANDSHAKE'], ['04', 'CONNECTED']].map(([n, label], i) => {
+      const done = i < stepIdx || (conn && i <= 3);
+      const cur = !conn && i === stepIdx;
+      const color = (conn && i === 3) || cur ? 'var(--accent)' : done ? 'var(--ink)' : 'var(--ink3)';
+      return {n, t: label, current: cur ? 'step' : 'false',
+        style: CAPS + 'display: flex; align-items: center; gap: 6px; height: 22px; padding-top: 3px; box-sizing: border-box; border-top: 2px solid ' + ((conn && i === 3) || cur ? 'var(--accent)' : done ? 'var(--ink)' : 'var(--line)') + '; color: ' + color + '; white-space: nowrap;'};
+    });
+    // verify panel
+    const tick = st.tick;
+    const bar = [];
+    for (let i = 0; i < 48; i++) {
+      let c = t.fill12;
+      if (ph === 'applying') c = i < Math.min(24, 6 + (tick % 8) * 3) ? t.ink : t.fill12;
+      else if (ph === 'waiting') { const pos = 24 + ((tick * 2) % 24); c = i < 24 ? t.ink : (i >= pos && i < pos + 5) ? t.accent : t.fill12; }
+      else if (conn) c = t.ink;
+      bar.push(c);
+    }
+    const dots = '.'.repeat(1 + (tick % 3));
+    const verify = {
+      bar, done: conn, dots: ph === 'applying' || ph === 'waiting' ? dots : '',
+      box: 'border: 1px solid ' + (conn ? 'var(--accent)' : 'var(--line)') + '; border-radius: 3px; padding: 10px 12px; flex: none;',
+      label: {idle: 'VERIFY', applying: 'APPLYING', waiting: 'WAITING FOR HANDSHAKE', connected: 'CONNECTED'}[ph] || 'VERIFY',
+      labelStyle: conn ? 'font-size: 20px; font-weight: 300; letter-spacing: .02em; color: var(--accent); line-height: 1' : CAPS + 'color: ' + (ph === 'idle' ? 'var(--ink)' : 'var(--accent)') + '; white-space: nowrap',
+      dotsStyle: CAPS + 'color: var(--accent); display: inline-block; width: 14px',
+      sub: conn ? '// ' + P.client + ' · ' + P.ms + ' ms' : ph === 'applying' ? '// BACKUP SAVED · WRITING CONFIG' : ph === 'waiting' ? '// START A NEW ' + P.name.toUpperCase() + ' SESSION — IT LAUNCHES dbman-mcp' : "// WAITS FOR THE AGENT'S FIRST INITIALIZE CALL AFTER APPLY",
+      subStyle: conn ? 'font-family: var(--code); font-size: 12px; color: var(--ink); white-space: nowrap' : capDim,
+      right: conn ? 'HANDSHAKE // 14:32:09' : ph === 'waiting' ? 'TIMEOUT // 2 MIN' : '',
+    };
+    const copyAsk = () => this.copy('ask');
+    const askLabel = copied === 'ask' ? '✓ COPIED' : 'COPY PROMPT';
+    let actions;
+    const A = (t2, style, tip, fn, disabled) => ({t: t2, style, tip, fn: fn || (() => {}), disabled: disabled ? 'true' : 'false'});
+    if (P.other) actions = [A(copied === 'bin' ? '✓ COPIED' : 'COPY BINARY PATH', boxL, 'Copy path  ⌥⌘C', () => this.copy('bin')), A(copied === 'json' ? '✓ COPIED // ⏎' : 'COPY JSON // ⏎', boxPrimary, 'Copy mcpServers entry  ⏎', () => this.copy('json'))];
+    else if (ph === 'missing') actions = [A(copied === 'json' ? '✓ COPIED' : 'COPY JSON', boxL, 'Copy JSON  ⌥⌘C', () => this.copy('json')), A('CONNECT // ⏎', boxOff, P.name + ' not found — install it, then RESCAN ⌘R', null, true)];
+    else if (ph === 'applying' || ph === 'waiting') actions = [A('CANCEL // ⎋', boxL, 'Cancel and restore backup  ⎋', () => this.cancel(P.id)), A(ph === 'applying' ? 'APPLYING…' : 'WAITING…', boxOff, 'Waiting for ' + P.name, null, true)];
+    else if (conn) actions = [A('OPEN ACTIVITY', boxL, 'Activity  ⌥⌘3', () => this.setState({sel: 'activity', filter: 'all'})), A('DISCONNECT', boxL, 'Remove the dbman entry  ⌘⌫', () => this.setPhase(P.id, 'idle'))];
+    else actions = [A(copied === 'cmd' ? '✓ COPIED' : hasCli ? 'COPY COMMAND' : 'COPY JSON', boxL, 'Copy and run it yourself  ⌥⌘C', () => this.copy('cmd')), A((P.update ? 'UPDATE' : 'CONNECT') + ' // ⏎', boxPrimary, (P.update ? 'Update' : 'Connect') + ' ' + P.name + '  ⏎', () => this.connect(P.id))];
+
+    // ---------- agentpack ----------
+    const apItemsDef = [
+      {k: 'mcp', title: 'Add DBMan MCP server to agentpack.toml', cmd: 'agentpack mcp add dbman --command ' + BIN + ' --args --stdio',
+        block: [['# agentpack.toml', 'c'], ['[mcp.servers.dbman]', '+'], ['command = "' + BIN + '"', '+'], ['args = ["--stdio"]', '+']]},
+      {k: 'sync', title: 'Run agentpack sync', cmd: 'agentpack sync', block: null},
+    ];
+    const apDone = st.apRun === 'done';
+    const apItems = apItemsDef.map((it, i) => {
+      const on = !!st.apChecks[it.k];
+      const stepDone = on && (apDone || (st.apRun === 'running' && st.tick - st.apStart > i));
+      return {title: it.title, cmd: it.cmd, on: on ? 'true' : 'false', mark: on ? '✓' : '',
+        toggle: () => { if (st.apRun !== 'running') this.setState({apChecks: Object.assign({}, st.apChecks, {[it.k]: !on}), apRun: 'idle'}); },
+        check: 'display: inline-flex; align-items: center; justify-content: center; flex: none; width: 14px; height: 14px; padding: 0; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-size: 10px; line-height: 1;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);'),
+        state: !on ? 'SKIP' : stepDone ? '✓ DONE' : st.apRun === 'running' ? 'RUNNING' : 'READY',
+        stateStyle: CAPS + 'font-size: 10px; white-space: nowrap; color: ' + (stepDone ? 'var(--accent)' : 'var(--ink3)'),
+        hasBlock: !!it.block,
+        block: (it.block || []).map(([x, s]) => ({t: x, style: 'white-space: pre-wrap; word-break: break-all; color: ' + (s === 'c' ? 'var(--ink3)' : s === '+' && on ? 'var(--accent)' : 'var(--ink2)')}))};
+    });
+    const apCheckedCount = Object.keys(st.apChecks).filter((k) => st.apChecks[k]).length;
+    const apRunDisabled = apCheckedCount === 0 || st.apRun === 'running';
+    const apRunLabel = st.apRun === 'running' ? 'SYNCING…' : apDone ? 'SYNC AGAIN // ⌘⏎' : 'RUN ' + apCheckedCount + ' STEP' + (apCheckedCount === 1 ? '' : 'S') + ' // ⌘⏎';
+    const apRunNote = st.apRun === 'running' ? 'agentpack sync' + '.'.repeat(1 + (st.tick % 3)) : apDone ? 'SYNCED // 6 HARNESSES // 1.4 S' : 'WRITES agentpack.toml + pack.lock';
+    const runAp = () => { if (!apRunDisabled) this.setState({apRun: 'running', apStart: st.tick}); };
+    const HARN = [['Claude Code', '.mcp.json'], ['Cursor', '.cursor/mcp.json'], ['OpenCode', 'opencode.json'], ['Codex', '.codex/config.toml'], ['Grok', '.grok/settings.json'], ['Antigravity', '.agent/mcp_config.json']];
+    const apRows = HARN.map(([name, path], i) => {
+      const done = i < apStaged;
+      return {name, path, mark: done ? '✓' : '·',
+        mcp: !st.apChecks.mcp ? '—' : done ? 'unpinnable' : 'pending', state: done ? '✓ READY' : 'pending',
+        mcpTip: 'command launcher — nothing to hash into pack.lock (expected)',
+        style: 'display: grid; grid-template-columns: 88px minmax(0, 1fr) 76px 62px; gap: 8px; height: 26px; align-items: center; border-bottom: 1px solid var(--line); transition: color .2s;' + (done ? 'color: var(--ink);' : 'color: var(--ink3);')};
+    });
+    const apLockNote = apDone ? 'PACK.LOCK UPDATED // DBMAN MCP ADDED' : st.apRun === 'running' ? 'STAGING…' : 'NOTHING STAGED YET';
+    const launches = ['claude', 'codex', 'agent', 'opencode'].map((x) => ({t: 'agentpack ' + x, tip: 'Open Terminal at ~/projects/shop and run agentpack ' + x + (apDone ? '' : ' (sync first)'),
+      style: box + 'height: 26px; font-family: var(--code); font-weight: 400; letter-spacing: 0; font-size: 11.5px; padding: 0 8px;' + (apDone ? '' : 'opacity: .45;')}));
+    const installRows = [['HOMEBREW', 'brew install --cask olegpustovit/tap/agentpack', 'brew'], ['OR SCRIPT', 'curl -LsSf https://github.com/olegpustovit/agentpack/releases/latest/download/agentpack-installer.sh | sh', 'cargo']].map(([k, c, id]) => ({k, cmd: c, label: copied === id ? '✓ COPIED' : 'COPY', copy: () => this.copy(id)}));
+
+    // ---------- permissions ----------
+    const LEVELS = ['OFF', 'READ', 'OVERLAY'];
+    const LEVEL_TIP = {OFF: 'OFF — connection hidden from this agent', READ: 'READ — SELECT, EXPLAIN, schema, stats', OVERLAY: 'OVERLAY — READ + writes into its own layer of the DBMan store (row patches, virtual views, relations, notes, dashboards). Never the database.'};
+    const CONNS = [{id: 'shop', env: 'LOCAL', sub: 'POSTGRES 17 // DEFAULT OVERLAY', prod: false}, {id: 'crm', env: 'STAGING', sub: 'MYSQL 8 // DEFAULT OVERLAY', prod: false}, {id: 'analytics', env: 'PRODUCTION', sub: 'POSTGRES 17 // READ // OVERLAY OPT-IN', prod: true}];
+    const permCols = CONNS.map((c) => ({name: c.id, env: c.env, sub: c.sub, tip: c.prod ? 'PRODUCTION — defaults to READ, OVERLAY is opt-in; every query is EXPLAINed first' : c.env + ' connection — defaults to OVERLAY',
+      envStyle: CAPS + 'font-size: 10px; white-space: nowrap; color: ' + (c.prod ? 'var(--amber)' : 'var(--ink3)')}));
+    const ccLive = phaseOf(PL[0]) === 'connected';
+    const AG = [['claude-code', 'CC', ccLive ? 'LIVE' : 'NOT CONNECTED'], ['claude-desktop', 'CD', 'LIVE'], ['opencode', 'OC', 'LIVE'], ['cursor', 'CU', 'NEEDS_UPDATE'], ['codex', 'CX', 'NOT CONNECTED'], ['default', '+', 'NEW AGENTS']];
+    const permRows = AG.map(([id, mono, sub], ri) => ({
+      name: id === 'default' ? 'default' : id, mono, sub,
+      subStyle: CAPS + 'font-size: 9.5px; white-space: nowrap; color: ' + (sub === 'LIVE' ? 'var(--accent)' : sub === 'NEEDS_UPDATE' ? 'var(--amber)' : 'var(--ink3)'),
+      tile: 'display: inline-flex; align-items: center; justify-content: center; flex: none; width: 20px; height: 20px; box-sizing: border-box; border: 1px ' + (id === 'default' ? 'dashed' : 'solid') + ' var(--lineStrong); border-radius: 2px; font-size: 9px; font-weight: 700; letter-spacing: .04em',
+      style: 'display: grid; grid-template-columns: 170px repeat(3, minmax(0, 1fr)); height: 34px; align-items: center; border-bottom: 1px solid var(--line);' + (id === 'default' ? 'background: var(--sunken);' : ''),
+      cells: CONNS.map((c) => {
+        const cur = st.perms[id][c.id];
+        return {label: id + ' on ' + c.id, levels: LEVELS.map((lv, li) => {
+          const optIn = c.prod && lv === 'OVERLAY';
+          const on = cur === lv;
+          return {t: lv, on: on ? 'true' : 'false', disabled: 'false',
+            tip: optIn ? 'OVERLAY on PRODUCTION is opt-in — ' + id + ' still only reads ' + c.id + '; its patches, views and notes stay in its own layer.  ⌥' + li : LEVEL_TIP[lv] + '  ⌥' + li,
+            pick: () => { const np = JSON.parse(JSON.stringify(st.perms)); np[id][c.id] = lv; this.setState({perms: np}); },
+            style: CAPS + 'font-size: 9.5px; display: inline-flex; align-items: center; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 2px; font-family: var(--ui); white-space: nowrap; cursor: pointer; border: 1px ' +
+              (optIn ? (on ? 'solid var(--amber); background: var(--amber); color: var(--paper);' : 'dashed var(--amber); background: transparent; color: var(--amber);') :
+              on ? 'solid var(--ink); background: var(--ink); color: var(--paper);' :
+              'solid var(--line); background: transparent; color: var(--ink2);')};
+        })};
+      }),
+    }));
+    const legend = [['OFF', 'hidden'], ['READ', 'select · explain · schema · stats'], ['OVERLAY', 'read + its own layer: row patches, virtual views, relations, notes, dashboards · opt-in on PROD']].map(([k, v]) => ({k, v}));
+    const sw = (on, dis) => ({
+      track: 'display: inline-flex; align-items: center; justify-content: ' + (on ? 'flex-end' : 'flex-start') + '; flex: none; width: 26px; height: 14px; padding: 1px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; background: ' + (on ? 'var(--ink)' : 'transparent') + ';' + (dis ? 'opacity: .4;' : ''),
+      knob: 'display: block; width: 10px; height: 10px; border-radius: 1px; background: ' + (on ? 'var(--paper)' : 'var(--ink)'),
+    });
+    const SENS = [['email', 'customers.email', 'AUTO // EMAIL'], ['phone', 'customers.phone', 'AUTO // PHONE'], ['name', 'customers.name', 'AUTO // NAME'], ['line1', 'addresses.line1', 'AUTO // ADDRESS'], ['city', 'addresses.city', 'AUTO // ADDRESS'], ['postcode', 'addresses.postcode', 'AUTO // ADDRESS'], ['bill', 'invoices.billing_address', 'AUTO // ADDRESS']];
+    const sens = SENS.map(([k, col, note]) => {
+      const on = !!st.sens[k];
+      const s = sw(on);
+      return {col, note: on ? note : 'UNMARKED BY YOU', on: on ? 'true' : 'false', label: 'Hide ' + col + ' from agents', tip: (on ? 'Hidden from agents — click to unmark' : 'Visible to agents — click to hide again') + '  ⌥⌘' + (SENS.findIndex((x) => x[0] === k) + 1),
+        toggle: () => this.setState({sens: Object.assign({}, st.sens, {[k]: !on})}), track: s.track, knob: s.knob,
+        noteStyle: CAPS + 'font-size: 9.5px; white-space: nowrap; color: ' + (on ? 'var(--ink3)' : 'var(--amber)'),
+        val: on ? '«redacted»' : 'visible to agents', valStyle: 'font-family: var(--code); font-size: 11.5px; color: ' + (on ? 'var(--ink)' : 'var(--amber)')};
+    });
+    const sensHidden = SENS.filter(([k]) => st.sens[k]).length;
+    const sensHead = 'AUTO // ' + sensHidden + ' COLUMN' + (sensHidden === 1 ? '' : 'S') + ' HIDDEN FROM AGENTS';
+    const g = sw(st.guard);
+    const guardOn = st.guard ? 'true' : 'false';
+    const toggleGuard = () => this.setState({guard: !st.guard});
+    const guardRows = st.guard ? '' : 'opacity: .4; pointer-events: none;';
+    const resetPerms = () => this.setState({perms: JSON.parse(JSON.stringify(this.defaults)), sens: {email: true, phone: true, name: true, line1: true, city: true, postcode: true, bill: true}, guard: true});
+
+    // ---------- activity ----------
+    const decision = st.decision;
+    const FEED = [
+      ['a1', '14:32:08', 'claude-desktop', 'shop', 'query.run', 'select status, count(*) from orders group by 1', '12', '5', 'OK'],
+      ['a2', '14:32:05', 'claude-desktop', 'shop', 'schema.describe', '{table: "orders"}', '4', '9', 'OK'],
+      ['a3', '14:31:58', 'opencode', 'shop', 'overlay.patch_rows', '{table: "products", patches: {118: {price: 24.00}}}', '9', '1', 'OVERLAY'],
+      ['a4', '14:31:52', 'opencode', 'shop', 'query.explain', 'select * from order_items where product_id = 118', '6', '—', 'OK'],
+      ['b1', '14:31:40', 'claude-desktop', 'analytics', 'query.run', "select * from events where payload->>'utm_source' = 'newsletter'", decision === 'allow' ? '2,140' : '31', decision === 'allow' ? '500' : '—', decision === 'allow' ? 'OK' : 'BLOCKED'],
+      ['a5', '14:31:22', 'cursor', 'analytics', 'overlay.patch_rows', '{table: "events", 214 patches · customer_id → null}', '3', '—', 'DENIED'],
+      ['a6', '14:31:10', 'opencode', 'shop', 'stats.column', '{table: "orders", column: "total"}', '31', '48,000', 'OK'],
+      ['a7', '14:30:57', 'claude-desktop', '—', 'dashboard.components', 'catalog + JSON schema · 19 types', '2', '19', 'OK'],
+      ['a8', '14:30:41', 'opencode', 'shop', 'query.sample', '{table: "customers", n: 20} · email, phone «redacted»', '8', '20', 'OK'],
+      ['a9', '14:30:12', 'claude-desktop', '—', 'connections.list', '3 connections', '1', '3', 'OK'],
+      ['a10', '14:29:55', 'cursor', 'shop', 'schema.graph', '12 tables · 10 foreign keys', '22', '12', 'OK'],
+      ['a11', '14:29:30', 'opencode', 'shop', 'views.create', '{name: "coupon_usage", sql: "select c.code, count(*) …"}', '11', '1', 'OVERLAY'],
+      ['a15', '14:28:44', 'claude-desktop', 'shop', 'relations.add', '{from: "order_coupons.coupon_id", to: "coupons.id"}', '3', '1', 'OVERLAY'],
+      ['a16', '14:28:20', 'opencode', 'shop', 'notes.set', '{table: "orders", column: "status", text: "paid → shipped → …"}', '2', '1', 'OVERLAY'],
+      ['a12', '14:28:02', 'claude-desktop', 'shop', 'query.run', 'select * from order_items · truncated at row cap', '44', '500', 'OK'],
+      ['a13', '14:27:40', 'claude-desktop', 'shop', 'ui.open', '{route: "table", selection: "orders"}', '3', '—', 'OK'],
+      ['a14', '14:27:12', 'cursor', 'crm', 'query.run', 'delete from leads where created_at < …', '2', '—', 'DENIED'],
+    ];
+    if (ccLive) FEED.unshift(['c2', '14:32:11', 'claude-code', '—', 'connections.list', '3 connections', '1', '3', 'OK'], ['c1', '14:32:09', 'claude-code', '—', 'initialize', 'protocol 2025-06-18 · claude-code 2.4.1', '18', '—', 'OK']);
+    const REASON = {
+      b1: 'BLOCKED_BY_PROD_GUARD (seq scan on events, 61,532 rows est. cost 2.1e6)',
+      a5: 'PERMISSION_DENIED (READ on analytics; needs OVERLAY)',
+      a14: 'WRITE_REDIRECTED (query.run never writes to crm; overlay.* needs OVERLAY, cursor has READ)',
+    };
+    const FULL = {
+      b1: "select *\n  from events\n where payload->>'utm_source' = 'newsletter'\n order by created_at desc",
+      a5: 'overlay.patch_rows {table: "events", patches: 214 rows by id, customer_id → null}',
+      a11: 'views.create {name: "coupon_usage",\n  sql: "select c.code, count(*) as uses\n          from order_coupons oc join coupons c on c.id = oc.coupon_id\n         group by 1"}',
+    };
+    const clients = ['claude-desktop', 'opencode', 'cursor'].concat(ccLive ? ['claude-code'] : []);
+    const statusChip = (s) => CAPS + 'font-family: var(--ui); font-size: 9.5px; display: inline-flex; align-items: center; height: 16px; padding: 0 5px; box-sizing: border-box; border-radius: 2px; white-space: nowrap; border: 1px solid ' +
+      (s === 'OK' ? 'var(--line); color: var(--ink2);' : s === 'OVERLAY' ? 'var(--accent); color: var(--accent);' : s === 'BLOCKED' ? 'var(--alert); background: var(--alert); color: var(--paper);' : 'var(--alert); color: var(--alert);');
+    const feedCols = '58px 100px 70px 140px minmax(0, 1fr) 44px 48px 64px';
+    const feedHeads = [['TIME', 'l'], ['CLIENT', 'l'], ['CONN', 'l'], ['TOOL', 'l'], ['ARGS', 'l'], ['MS', 'r'], ['ROWS', 'r'], ['STATUS', 'l']].map(([h, a]) => ({t: h, style: capDim + '; font-family: var(--ui); font-size: 10px;' + (a === 'r' ? ' text-align: right' : '')}));
+    const shown = FEED.filter((r) => st.filter === 'all' || r[2] === st.filter);
+    const feed = shown.map(([id, time, client, connName, tool, args, ms, rows, status]) => {
+      const isOpen = st.open === id;
+      const err = status === 'BLOCKED' || status === 'DENIED';
+      let result;
+      if (id === 'b1') result = decision === 'allow' ? 'Allowed once by you at 14:32:20 — ran in 2,140 ms, 4,811 rows capped at 500, cursor returned. The guard stays on.' : decision === 'keep' ? 'Kept blocked — claude-desktop received BLOCKED_BY_PROD_GUARD and was told to add a filter on created_at (indexed).' : 'The PROD guard EXPLAINed this on analytics before running it. Threshold: est. cost > 1e6. Nothing ran.';
+      else if (err) result = 'Nothing ran. The agent received the error above. You can raise it to OVERLAY in PERMISSIONS — it never gets write access to the database.';
+      else if (status === 'OVERLAY') result = 'Written to the ' + client + ' layer of ' + connName + ' in the DBMan store — the database is untouched, no approval needed. Review it in the layer switcher: ADOPT INTO MINE, APPLY TO DATABASE (you, COMMIT ⌘↩) or DISCARD.';
+      else result = rows + ' rows · ' + ms + ' ms · truncated ' + (rows === '500' ? 'true' : 'false');
+      return {time, client, conn: connName, tool, args, ms, rows, status, isOpen, expanded: isOpen ? 'true' : 'false',
+        tip: (isOpen ? 'Collapse' : 'Expand') + '  ⏎ · ↑↓ move',
+        pick: () => this.setState({open: isOpen ? null : id}),
+        full: FULL[id] || args, hasReason: !!REASON[id] && !(id === 'b1' && decision === 'allow'), reason: REASON[id] || '', result,
+        hasActions: id === 'b1' && decision === null,
+        chip: statusChip(status),
+        connStyle: 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ' + (connName === 'analytics' ? 'var(--amber)' : 'var(--ink2)'),
+        style: 'display: grid; grid-template-columns: ' + feedCols + '; gap: 8px; height: 24px; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--line); cursor: pointer;' +
+          (isOpen ? 'background: var(--sunken);' : '') + (status === 'BLOCKED' ? 'box-shadow: inset 2px 0 0 var(--alert);' : '') + (id.charAt(0) === 'c' ? 'color: var(--accent);' : ''),
+        panel: 'padding: 8px 12px 10px 78px; background: var(--sunken); border-bottom: 1px solid ' + (status === 'BLOCKED' ? 'var(--alert)' : 'var(--line)') + ';' + (status === 'BLOCKED' ? 'box-shadow: inset 2px 0 0 var(--alert);' : ''),
+      };
+    });
+    const allowOnce = () => this.setState({decision: 'allow'});
+    const keepBlocked = () => this.setState({decision: 'keep'});
+    const filters = ['all'].concat(clients).map((c) => {
+      const on = st.filter === c;
+      const n = c === 'all' ? FEED.length : FEED.filter((r) => r[2] === c).length;
+      return {t: c === 'all' ? 'ALL' : c, count: String(n), on: on ? 'true' : 'false', tip: 'Show ' + (c === 'all' ? 'every client' : c) + '  ⌘' + (c === 'all' ? 'F' : ''),
+        pick: () => this.setState({filter: c}),
+        style: 'display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; box-sizing: border-box; border-radius: 2px; cursor: pointer; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + ';' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);') + (c === 'all' ? CAPS + 'font-size: 10.5px;' : 'font-family: var(--code); font-size: 11px;'),
+        countStyle: 'font-family: var(--code); font-size: 10.5px; opacity: .6'};
+    });
+    const cnt = (s) => shown.filter((r) => r[8] === s).length;
+    const tally = [['OK', cnt('OK'), 'var(--ink2)'], ['OVERLAY', cnt('OVERLAY'), 'var(--accent)'], ['BLOCKED', cnt('BLOCKED'), 'var(--alert)'], ['DENIED', cnt('DENIED'), 'var(--alert)']].map(([k, v, c]) => ({k, v: String(v), style: CAPS + 'font-size: 10.5px; white-space: nowrap; color: ' + c}));
+    const feedNote = 'LIVE // NEWEST FIRST';
+
+    // ---------- head ----------
+    let head;
+    if (st.sel === 'agentpack') head = {k: 'AGENTPACK', sub: st.apFound ? '// v0.9 // ~/.LOCAL/BIN/AGENTPACK' : '// NOT ON PATH', right: 'PREVIEW STATE', hasBtn: true, btn: st.apFound ? 'FOUND → MISSING' : 'MISSING → FOUND', btnTip: 'Toggle detected / not detected (design preview)', btnFn: () => this.setState({apFound: !st.apFound})};
+    else if (st.sel === 'perms') head = {k: 'PERMISSIONS', sub: '// 5 AGENTS × 3 CONNECTIONS', right: 'DEFAULTS // OVERLAY · PROD READ', hasBtn: false};
+    else if (st.sel === 'activity') head = {k: 'ACTIVITY', sub: '// EVERY TOOL CALL, EVERY CLIENT', right: blockedPending ? '1 WAITING FOR YOU' : 'NOTHING WAITING', hasBtn: false};
+    else head = {k: 'PLATFORM', sub: '// ' + P.name.toUpperCase() + ' // ' + status, right: P.other ? '' : ph === 'missing' ? 'CONFIG // NOT FOUND' : 'CONFIG // FOUND', hasBtn: false};
+    if (!head.hasBtn) { head.btn = ''; head.btnTip = ''; head.btnFn = () => {}; }
+
+    return {
+      themeVars, cap, capDim, capAccent, capAmber, box, boxL, boxPrimary, fieldS,
+      liveLabel, liveShort: liveCount + ' LIVE', foundCount, platforms, sections, head,
+      isPlatform: isPlat, isAgentpack: st.sel === 'agentpack', isPerms: st.sel === 'perms', isActivity: st.sel === 'activity',
+      pf, steps, scopes, verify, copyAsk, askLabel, actions,
+      apFound: st.apFound, apMissing: !st.apFound, apItems, apCheckedCount, apRunDisabled: apRunDisabled ? 'true' : 'false',
+      apRunStyle: apRunDisabled ? boxOff : boxPrimary, apRunLabel, apRunNote, runAp, apStaged: String(apStaged), apLockNote, apRows, launches, installRows,
+      toggleApFound: () => this.setState({apFound: true}),
+      permCols, permRows, legend, sens, sensHead, guardOn, guardTrack: g.track, guardKnob: g.knob, toggleGuard, guardRows, resetPerms,
+      filters, feedNote, feedCols, feedHeads, feed, allowOnce, keepBlocked, tally,
+    };
+  }
+}
+</script>
+</body>
+</html>

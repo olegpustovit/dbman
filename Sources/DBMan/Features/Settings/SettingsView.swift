@@ -1,28 +1,28 @@
 import Halftone
 import SwiftUI
 
-/// Settings scene: app-wide defaults, persisted with @AppStorage.
+/// Settings scene: app-wide defaults, persisted in the DBMan store (via AppModel).
 struct SettingsView: View {
-    @AppStorage("pageSize") private var pageSize = 500
-    @AppStorage("relativeDates") private var relativeDates = false
+    @Environment(AppModel.self) private var appModel
 
     var body: some View {
-        VStack(spacing: HT.M.gap) {
+        @Bindable var app = appModel
+        return VStack(spacing: HT.M.gap) {
             HTFrame(title: "APPEARANCE", tail: "SYSTEM") {
                 note("Follows the macOS appearance (Light or Dark). Change it in System Settings.")
                     .padding(10)
             }
             HTFrame(title: "RESULTS", tail: "PAGE SIZE") {
                 HStack(spacing: 14) {
-                    Readout(value: pageSize.formatted(), label: "ROWS PER PAGE", size: .s)
+                    Readout(value: app.pageSize.formatted(), label: "ROWS PER PAGE", size: .s)
                     Spacer(minLength: 0)
-                    Stepper("Rows per page", value: $pageSize, in: 100...5000, step: 100).labelsHidden()
+                    Stepper("Rows per page", value: $app.pageSize, in: 100...5000, step: 100).labelsHidden()
                 }
                 .padding(10)
             }
             HTFrame(title: "DATES", tail: "DEFAULT") {
                 HStack {
-                    HTToggleChip("RELATIVE DATES", isOn: $relativeDates)
+                    HTToggleChip("RELATIVE DATES", isOn: $app.relativeDates)
                     Spacer(minLength: 0)
                 }
                 .padding(10)

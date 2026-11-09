@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard editor — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: stretch; gap: 4px">
+    <div aria-hidden="true" style="display: flex; align-items: center; gap: 7px; padding: 0 8px">
+      <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+    </div>
+    <nav aria-label="Sections" style="display: flex; gap: 4px">
+      <sc-for list="{{navs}}" as="n" hint-placeholder-count="5">
+        <a href="{{n.href}}" title="{{n.tip}}" aria-current="{{n.current}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg><span>{{n.t}}</span></a>
+      </sc-for>
+    </nav>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="5"><span style="display: inline-flex; gap: 5px"><span style="{{capDim}}">{{r.k}} //</span><span style="{{r.vs}}">{{r.v}}</span></span></sc-for>
+    </div>
+    <label style="display: flex; align-items: center; gap: 6px; width: 220px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" aria-label="Jump to table, column, query or dashboard" placeholder="JUMP_TO" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+      <span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">⌘K</span>
+    </label>
+  </div>
+
+  <div style="height: 852px; flex: none; display: flex; gap: 4px; min-height: 0">
+
+    <!-- LEFT: NAVIGATOR (view) -->
+    <sc-if value="{{showNav}}" hint-placeholder-val="{{false}}">
+      <nav aria-label="Database navigator" style="{{frame}} flex: 0 0 220px; height: 852px; display: flex; flex-direction: column">
+        <div style="padding: 10px; border-bottom: 1px solid var(--line)">
+          <div style="display: flex; align-items: center; gap: 6px"><span style="{{cap}}">shop</span><span style="{{capDim}}">// local</span><span style="flex: 1"></span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--ink3)"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg></div>
+          <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px"><span style="font-size: 36px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">290.2K</span><span style="{{capDim}}">rows · 182 MB</span></div>
+          <div style="{{capDim}} margin-top: 4px">postgres 17 · localhost:5432</div>
+        </div>
+        <label style="display: flex; align-items: center; gap: 6px; height: 26px; margin: 8px 8px 2px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input type="text" placeholder="FILTER" aria-label="Filter navigator" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+          <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">⌥⌘F</span>
+        </label>
+        <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 8px 8px">
+          <sc-for list="{{navSections}}" as="s" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 8px; padding: 0 2px">
+              <span style="{{cap}}">{{s.name}}</span><span style="{{capDim}}">// {{s.count}}</span>
+              <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+            </div>
+            <sc-for list="{{s.groups}}" as="gr" hint-placeholder-count="1">
+              <sc-if value="{{gr.hasLabel}}" hint-placeholder-val="{{false}}">
+                <div title="{{gr.tip}}" style="display: flex; align-items: center; gap: 6px; height: 20px; margin-top: 2px; padding: 0 6px">
+                  <span style="{{capSm}} color: var(--ink3)">layer //</span><span style="{{gr.labelStyle}}">{{gr.label}}</span><span style="flex: 1"></span><span style="{{capSm}} color: var(--ink3)">{{gr.meta}}</span>
+                </div>
+              </sc-if>
+              <sc-for list="{{gr.items}}" as="it" hint-placeholder-count="4">
+                <a href="{{it.href}}" aria-current="{{it.current}}" title="{{it.tip}}" style="{{it.style}}">
+                  <sc-if value="{{it.hasMono}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="{{it.monoStyle}}">{{it.mono}}</span></sc-if>
+                  <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.name}}</span>
+                  <sc-if value="{{it.isNew}}" hint-placeholder-val="{{false}}"><span style="{{newBadge}}">new</span></sc-if>
+                  <sc-if value="{{it.hasMeter}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="display: inline-flex; gap: 1px"><sc-for list="{{it.meter}}" as="m" hint-placeholder-count="8"><span style="{{m}}"></span></sc-for></span></sc-if>
+                  <span style="{{it.countStyle}}">{{it.count}}</span>
+                </a>
+              </sc-for>
+            </sc-for>
+            <sc-if value="{{s.hasNew}}" hint-placeholder-val="{{false}}">
+              <button type="button" title="New dashboard  ⌥⌘N" style="display: flex; align-items: center; gap: 6px; width: 100%; height: 24px; margin-top: 2px; padding: 0 6px; box-sizing: border-box; border: 1px dashed var(--line); border-radius: 2px; background: transparent; color: var(--ink2); cursor: pointer; {{capSm}}">+ new<span style="flex: 1"></span><span style="font-family: var(--code); font-weight: 400; letter-spacing: 0; color: var(--ink3)">⌥⌘N</span></button>
+            </sc-if>
+          </sc-for>
+        </div>
+        <div style="height: 26px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-top: 1px solid var(--line)">
+          <span style="{{capDim}}">status //</span><span style="{{cap}}">connected · 4 ms</span>
+        </div>
+      </nav>
+    </sc-if>
+
+    <!-- LEFT: COMPONENT LIBRARY (edit) -->
+    <sc-if value="{{edit}}" hint-placeholder-val="{{true}}">
+      <aside aria-label="Component library" style="{{frame}} flex: 0 0 220px; height: 852px; display: flex; flex-direction: column">
+        <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+          <span style="{{cap}}">component library</span><span style="{{capDim}}">// 19</span><span style="flex: 1"></span><span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">⌘L</span>
+        </div>
+        <label style="display: flex; align-items: center; gap: 6px; height: 26px; margin: 8px 8px 0; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input type="text" placeholder="SEARCH COMPONENTS" aria-label="Search component library" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+        </label>
+        <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 8px 6px">
+          <sc-for list="{{library}}" as="g" hint-placeholder-count="7">
+            <div style="display: flex; align-items: center; gap: 6px; height: 22px; margin-top: 6px; padding: 0 2px">
+              <span style="{{capSm}} color: var(--ink)">{{g.name}}</span><span style="{{capSm}} color: var(--ink3)">// {{g.count}}</span>
+              <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+            </div>
+            <sc-for list="{{g.items}}" as="c" hint-placeholder-count="3">
+              <div draggable="true" title="{{c.tip}}" style="{{c.style}}">
+                <span aria-hidden="true" style="flex: none; display: flex; align-items: center; justify-content: center; width: 30px; height: 20px; border: 1px solid var(--line); border-radius: 2px; background: var(--paper)"><svg width="28" height="18" viewBox="0 0 28 18" fill="none" stroke="currentColor" stroke-width="{{c.sw}}" stroke-linecap="round" stroke-linejoin="round" style="{{c.thumbColor}}"><path d="{{c.thumb}}"></path></svg></span>
+                <span style="flex: 1; min-width: 0; font-family: var(--code); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.id}}</span>
+                <span style="{{c.usedStyle}}">{{c.used}}</span>
+              </div>
+            </sc-for>
+          </sc-for>
+        </div>
+        <div style="flex: none; padding: 8px; border-top: 1px solid var(--line)">
+          <a href="DashGen.dc.html" title="Ask a connected agent to propose widgets  ⌥⌘G" style="{{boxPrimary}} width: 100%; justify-content: center">+ generate with agent</a>
+          <div style="font-size: 11px; color: var(--ink3); margin-top: 6px; line-height: 1.35">Drag onto the grid, or ⏎ to drop at the next free row.</div>
+        </div>
+      </aside>
+    </sc-if>
+
+    <!-- MAIN -->
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+
+      <!-- DASHBOARD HEADER -->
+      <header style="position: relative; z-index: 5; height: 66px; flex: none; box-sizing: border-box; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 6px 10px 0">
+        <div style="display: flex; align-items: center; gap: 8px; height: 28px">
+          <h1 style="margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap">Revenue <span style="color: var(--ink3); font-weight: 300">//</span> 30 d</h1>
+          <span style="{{capDim}} overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto">// shop · 9 widgets · layer mine · dbman store</span>
+          <span style="flex: 1"></span>
+          <span style="{{editNoteStyle}}">{{editNote}}</span>
+          <button type="button" aria-pressed="{{editPressed}}" onClick="{{toggleEdit}}" title="Edit layout  ⌘E" style="{{editBtn}}">{{editLabel}}</button>
+          <button type="button" title="Share or export as JSON  ⇧⌘E" style="{{box}}">share / export json</button>
+          <span style="position: relative; display: inline-flex">
+            <button type="button" aria-haspopup="menu" aria-expanded="{{layerOpenAttr}}" onClick="{{toggleLayer}}" title="Layer this dashboard is saved in · DBMan store  ⌘S saves" style="{{saveBtn}}">layer // mine <span style="opacity: .7">▾</span></button>
+            <sc-if value="{{layerOpen}}" hint-placeholder-val="{{false}}">
+              <div role="menu" aria-label="Layers" style="position: absolute; top: 24px; right: 0; width: 248px; padding: 3px; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 4px 4px 0 var(--fill12); z-index: 20">
+                <sc-for list="{{layerOpts}}" as="o" hint-placeholder-count="4"><button type="button" role="menuitemradio" aria-checked="{{o.on}}" aria-disabled="{{o.dis}}" title="{{o.tip}}" onClick="{{o.pick}}" style="{{o.style}}"><span style="{{o.monoStyle}}">{{o.mono}}</span><span style="flex: 1; text-align: left">{{o.t}}</span><span style="{{o.metaStyle}}">{{o.meta}}</span></button></sc-for>
+                <div style="font-size: 11px; line-height: 1.35; color: var(--ink3); padding: 5px 8px 4px; border-top: 1px solid var(--line); margin-top: 3px">Agents write only their own layer; adopt an item to copy it into MINE.</div>
+              </div>
+            </sc-if>
+          </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; height: 30px">
+          <span style="{{capDim}}">range //</span>
+          <span role="radiogroup" aria-label="Range variable, bound to :range" style="display: inline-flex; gap: 3px">
+            <sc-for list="{{ranges}}" as="r" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">{{r.t}}</button></sc-for>
+          </span>
+          <span aria-hidden="true" style="width: 1px; height: 14px; background: var(--line); margin: 0 4px"></span>
+          <span style="{{capDim}}">status //</span>
+          <button type="button" aria-haspopup="listbox" title="Status variable, bound to :status" style="{{box}}">all · 5 of 5 <span style="color: var(--ink3)">▾</span></button>
+          <span aria-hidden="true" style="width: 1px; height: 14px; background: var(--line); margin: 0 4px"></span>
+          <span style="{{capDim}}">refresh //</span>
+          <span style="position: relative; display: inline-flex">
+            <button type="button" aria-haspopup="menu" aria-expanded="{{refreshOpenAttr}}" onClick="{{toggleRefresh}}" title="Auto-refresh" style="{{box}}">{{refreshLabel}} <span style="color: var(--ink3)">▾</span></button>
+            <sc-if value="{{refreshOpen}}" hint-placeholder-val="{{false}}">
+              <div role="menu" aria-label="Auto-refresh" style="position: absolute; top: 24px; left: 0; width: 120px; padding: 3px; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 4px 4px 0 var(--fill12)">
+                <sc-for list="{{refreshOpts}}" as="o" hint-placeholder-count="4"><button type="button" role="menuitemradio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}"><span>{{o.t}}</span><span>{{o.mark}}</span></button></sc-for>
+              </div>
+            </sc-if>
+          </span>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}">updated // 14:32:09 · 38 ms · 9 queries</span>
+        </div>
+      </header>
+
+      <div style="height: 758px; flex: none; display: flex; gap: 4px">
+
+        <!-- GRID CANVAS -->
+        <div role="region" aria-label="Dashboard grid, 12 columns" style="{{canvasStyle}}">
+          <sc-if value="{{edit}}" hint-placeholder-val="{{true}}">
+            <div aria-hidden="true" style="position: absolute; inset: 0; background-image: radial-gradient(circle, var(--fill30) 1px, transparent 1.3px); background-size: 8px 8px"></div>
+            <sc-for list="{{colBands}}" as="b" hint-placeholder-count="12"><span aria-hidden="true" style="{{b}}"></span></sc-for>
+          </sc-if>
+
+          <sc-for list="{{widgets}}" as="w" hint-placeholder-count="9">
+            <section aria-label="{{w.aria}}" onClick="{{w.pick}}" style="{{w.style}}">
+              <div style="display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px 0 10px">
+                <sc-if value="{{w.edit}}" hint-placeholder-val="{{true}}">
+                  <svg width="8" height="12" viewBox="0 0 8 12" aria-label="Drag handle" role="img" style="flex: none; color: var(--accent); cursor: grab"><circle cx="2" cy="2" r="1" fill="currentColor"></circle><circle cx="6" cy="2" r="1" fill="currentColor"></circle><circle cx="2" cy="6" r="1" fill="currentColor"></circle><circle cx="6" cy="6" r="1" fill="currentColor"></circle><circle cx="2" cy="10" r="1" fill="currentColor"></circle><circle cx="6" cy="10" r="1" fill="currentColor"></circle></svg>
+                </sc-if>
+                <span style="{{cap}} overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0">{{w.title}}</span>
+                <span style="{{capDim}} font-size: 10px; flex: none">// {{w.type}}</span>
+                <span style="flex: 1"></span>
+                <span style="{{w.badgeStyle}}">{{w.badge}}</span>
+                <sc-if value="{{w.edit}}" hint-placeholder-val="{{true}}">
+                  <button type="button" aria-label="Widget menu" aria-haspopup="menu" onClick="{{w.openMenu}}" style="{{w.menuBtn}}">⋯</button>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{w.isKpi}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; align-items: baseline; gap: 8px; padding: 0 10px; height: 34px">
+                  <span style="font-size: 32px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; white-space: nowrap">{{w.k.v}}</span>
+                  <span style="{{w.k.dStyle}}">{{w.k.delta}}</span>
+                </div>
+                <div style="{{capDim}} font-size: 10px; padding: 2px 10px 0; overflow: hidden; text-overflow: ellipsis">{{w.k.sub}}</div>
+                <svg width="{{w.k.sw}}" height="{{w.k.sh}}" viewBox="{{w.k.vb}}" aria-hidden="true" style="display: block; margin: 6px 10px 0; overflow: visible">
+                  <path d="{{w.k.base}}" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--line)"></path>
+                  <path d="{{w.k.d}}" fill="none" stroke="currentColor" stroke-width="1.5" style="{{w.k.lineColor}}"></path>
+                  <circle cx="{{w.k.cx}}" cy="{{w.k.cy}}" r="2.5" style="{{w.k.dotStyle}}"></circle>
+                </svg>
+              </sc-if>
+
+              <sc-if value="{{w.isLine}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; align-items: baseline; gap: 10px; padding: 0 10px; height: 22px">
+                  <span style="font-size: 20px; font-weight: 300; letter-spacing: -0.02em; line-height: 1">$1.65M</span>
+                  <span style="{{cap}} font-size: 10.5px">▲ 12 % vs previous_period</span>
+                  <span style="flex: 1"></span>
+                  <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 14px; height: 2px; background: var(--accent)"></span><span style="{{capDim}} font-size: 10px">this period</span></span>
+                  <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 14px; height: 0; border-top: 1px dashed var(--ink3)"></span><span style="{{capDim}} font-size: 10px">previous</span></span>
+                </div>
+                <div style="position: relative; margin: 4px 10px 0; height: {{w.l.boxH}}px">
+                  <sc-for list="{{w.l.yl}}" as="y" hint-placeholder-count="4"><span style="{{y.s}}">{{y.t}}</span></sc-for>
+                  <svg width="{{w.l.cw}}" height="{{w.l.ch}}" viewBox="{{w.l.vb}}" role="img" aria-label="Revenue, 30 days, up 12 %" style="position: absolute; left: 34px; top: 0; overflow: visible">
+                    <defs><pattern id="dash17-halftone" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.85" style="fill: var(--accent)"></circle></pattern></defs>
+                    <path d="{{w.l.grid}}" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--line)"></path>
+                    <path d="{{w.l.base}}" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--lineStrong)"></path>
+                    <path d="{{w.l.area}}" fill="url(#dash17-halftone)" stroke="none" style="opacity: .55"></path>
+                    <path d="{{w.l.prev}}" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" style="color: var(--ink3)"></path>
+                    <path d="{{w.l.cur}}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="color: var(--accent)"></path>
+                    <circle cx="{{w.l.lx}}" cy="{{w.l.ly}}" r="4" style="fill: var(--accent); stroke: var(--paper); stroke-width: 2"></circle>
+                  </svg>
+                  <sc-for list="{{w.l.xl}}" as="x" hint-placeholder-count="4"><span style="{{x.s}}">{{x.t}}</span></sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{w.isBarsH}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; flex-direction: column; justify-content: space-around; padding: 2px 10px 8px; height: {{w.b.h}}px; box-sizing: border-box">
+                  <sc-for list="{{w.b.rows}}" as="r" hint-placeholder-count="6">
+                    <div style="display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) 48px; gap: 8px; align-items: center">
+                      <span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+                      <span aria-hidden="true" style="height: 12px; display: block; position: relative"><span style="{{r.bar}}"></span></span>
+                      <span style="font-family: var(--code); font-size: 11px; text-align: right">{{r.v}}</span>
+                    </div>
+                  </sc-for>
+                  <div style="{{capDim}} font-size: 10px">6 of 240 products // sum(quantity × unit_price)</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{w.isHeat}}" hint-placeholder-val="{{false}}">
+                <div role="img" aria-label="{{w.hm.label}}" style="padding: 4px 10px 0">
+                  <sc-for list="{{w.hm.rows}}" as="r" hint-placeholder-count="7">
+                    <div style="display: flex; align-items: center; height: {{w.hm.cell}}px">
+                      <span style="width: 28px; flex: none; font-family: var(--code); font-size: 10px; color: var(--ink3)">{{r.d}}</span>
+                      <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="24"><span style="{{c}}"></span></sc-for>
+                    </div>
+                  </sc-for>
+                  <div style="display: flex; padding-left: 28px; margin-top: 3px; font-family: var(--code); font-size: 10px; color: var(--ink3)">
+                    <sc-for list="{{w.hm.hours}}" as="h" hint-placeholder-count="5"><span style="{{h.s}}">{{h.t}}</span></sc-for>
+                  </div>
+                  <div aria-hidden="true" style="display: flex; align-items: flex-end; padding-left: 28px; margin-top: 6px; height: {{w.hm.margH}}px; border-bottom: 1px solid var(--lineStrong)">
+                    <sc-for list="{{w.hm.marg}}" as="mb" hint-placeholder-count="24"><span style="{{mb}}"></span></sc-for>
+                  </div>
+                  <div style="display: flex; gap: 10px; margin-top: 8px"><span style="{{capDim}} font-size: 10px">peak //</span><span style="{{cap}} font-size: 10px; color: var(--accent)">{{w.hm.peak}}</span><span style="flex: 1"></span><span style="{{capDim}} font-size: 10px">dot area = orders</span></div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{w.isFeed}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 0 10px; font-size: 11.5px">
+                  <div style="{{w.f.head}}"><span>id</span><span>customer</span><span>status</span><span style="text-align: right">total</span><span style="text-align: right">ago</span></div>
+                  <sc-for list="{{w.f.rows}}" as="r" hint-placeholder-count="10">
+                    <div style="{{w.f.row}}"><span style="font-family: var(--code); color: var(--ink3)">{{r.id}}</span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="{{r.stStyle}}">{{r.status}}</span><span style="font-family: var(--code); text-align: right">{{r.total}}</span><span style="font-family: var(--code); color: var(--ink3); text-align: right">{{r.ago}}</span></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{w.isMeter}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 2px 10px 0">
+                  <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 32px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">4,012</span><span style="{{capDim}}">orders // 30 d</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 14px">
+                    <sc-for list="{{w.m.rows}}" as="m" hint-placeholder-count="5">
+                      <div>
+                        <div style="display: flex; justify-content: space-between"><span style="{{m.labelStyle}}">{{m.n}}</span><span style="font-family: var(--code); font-size: 11px; color: var(--ink2)">{{m.v}}</span></div>
+                        <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 1px; height: 8px; margin-top: 3px"><sc-for list="{{m.seg}}" as="s" hint-placeholder-count="24"><span style="background: {{s}}"></span></sc-for></span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="{{capDim}} font-size: 10px; margin-top: 12px">fulfilled // 67 % · pending above 4 % → amber</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{w.isTable}}" hint-placeholder-val="{{false}}">
+                <div role="table" aria-label="{{w.aria}} as table" style="padding: 0 10px; font-family: var(--code); font-size: 11px">
+                  <div role="row" style="{{w.tb.head}}"><sc-for list="{{w.tb.cols}}" as="c" hint-placeholder-count="3"><span role="columnheader">{{c}}</span></sc-for></div>
+                  <sc-for list="{{w.tb.rows}}" as="r" hint-placeholder-count="5"><div role="row" style="{{w.tb.row}}"><sc-for list="{{r}}" as="c" hint-placeholder-count="3"><span role="cell" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c}}</span></sc-for></div></sc-for>
+                  <div style="{{capDim}} font-size: 10px; margin-top: 6px; font-family: var(--ui)">view as table // voiceover reads rows</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{w.edit}}" hint-placeholder-val="{{true}}">
+                <svg width="12" height="12" viewBox="0 0 12 12" role="img" aria-label="Resize corner" style="position: absolute; right: 2px; bottom: 2px; color: var(--accent); cursor: nwse-resize"><path d="M11 3L3 11M11 7L7 11M11 10.5L10.5 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg>
+              </sc-if>
+            </section>
+          </sc-for>
+
+          <sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}">
+            <div role="menu" aria-label="Widget actions" style="{{menuStyle}}">
+              <sc-for list="{{menuItems}}" as="m" hint-placeholder-count="3"><button type="button" role="menuitem" onClick="{{m.pick}}" style="{{m.style}}"><span>{{m.t}}</span><span style="font-family: var(--code); font-weight: 400; letter-spacing: 0; color: var(--ink3)">{{m.k}}</span></button></sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- INSPECTOR -->
+        <sc-if value="{{hasSel}}" hint-placeholder-val="{{true}}">
+          <aside aria-label="Widget inspector" style="{{frame}} flex: 0 0 320px; display: flex; flex-direction: column">
+            <div style="flex: none; padding: 10px 12px 0">
+              <div style="display: flex; align-items: center; gap: 6px">
+                <span style="{{cap}}">widget</span><span style="{{capDim}}">// {{ins.id}} · {{ins.type}}</span>
+                <span style="flex: 1"></span>
+                <button type="button" aria-label="Close inspector" title="Deselect  esc" onClick="{{deselect}}" style="{{box}} padding: 0 6px">×</button>
+              </div>
+              <input type="text" aria-label="Widget title" value="{{ins.title}}" style="{{field}} width: 100%; margin-top: 8px; font-size: 13px; font-weight: 600">
+              <div role="tablist" aria-label="Inspector" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; margin-top: 8px">
+                <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="{{tb.style}}">{{tb.t}}</button></sc-for>
+              </div>
+            </div>
+            <div style="flex: 1; min-height: 0; overflow: auto; padding: 10px 12px 12px; border-top: 1px solid var(--line); margin-top: 8px">
+
+              <sc-if value="{{tabData}}" hint-placeholder-val="{{true}}">
+                <div style="display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px 8px; align-items: center">
+                  <span style="{{capDim}}">connection</span>
+                  <button type="button" style="{{select}}"><span>shop <span style="color: var(--ink3)">// local · pg 17.2</span></span><span style="color: var(--ink3)">▾</span></button>
+                  <span style="{{capDim}}">mode</span>
+                  <span role="radiogroup" aria-label="Query mode" style="display: inline-flex; gap: 3px"><sc-for list="{{modes}}" as="m" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.t}}</button></sc-for></span>
+                </div>
+                <div style="margin-top: 10px; border: 1px solid var(--lineStrong); border-radius: 3px; overflow: hidden">
+                  <div style="display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-bottom: 1px solid var(--line)">
+                    <span style="{{capSm}}">sql</span><span style="{{capSm}} color: var(--ink3)">// read-only</span><span style="flex: 1"></span>
+                    <button type="button" title="Run  ⌘↩" style="{{box}} height: 18px">run ⌘↩</button>
+                  </div>
+                  <div style="padding: 5px 0; font-family: var(--code); font-size: 11.5px; line-height: 18px; background: var(--sunken)">
+                    <sc-for list="{{ins.sql}}" as="ln" hint-placeholder-count="7">
+                      <div style="display: flex; white-space: pre"><span style="width: 26px; flex: none; text-align: right; padding-right: 8px; color: var(--ink3)">{{ln.n}}</span><sc-for list="{{ln.tok}}" as="k" hint-placeholder-count="4"><span style="{{k.s}}">{{k.t}}</span></sc-for></div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap">
+                  <span style="{{varChip}}">:range = 30 d</span><span style="{{varChip}}">:status = all</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 3px">
+                  <span style="{{costBadge}}">explain // cost {{ins.cost}}</span>
+                  <span style="font-size: 11px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ins.plan}}</span>
+                  <span style="flex: 1"></span>
+                  <span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">{{ins.ms}}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 12px"><span style="{{cap}}">row preview</span><span style="{{capDim}}">// {{ins.rowsN}}</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <div role="table" aria-label="Row preview" style="margin-top: 4px; font-family: var(--code); font-size: 11px">
+                  <div role="row" style="{{ins.pvHead}}"><sc-for list="{{ins.pvCols}}" as="c" hint-placeholder-count="3"><span role="columnheader">{{c}}</span></sc-for></div>
+                  <sc-for list="{{ins.pvRows}}" as="r" hint-placeholder-count="6"><div role="row" style="{{ins.pvRow}}"><sc-for list="{{r}}" as="c" hint-placeholder-count="3"><span role="cell" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c}}</span></sc-for></div></sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{tabEncoding}}" hint-placeholder-val="{{false}}">
+                <div style="font-size: 11.5px; color: var(--ink2); line-height: 1.4">{{ins.req}}</div>
+                <div style="display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px 8px; align-items: center; margin-top: 10px">
+                  <sc-for list="{{ins.enc}}" as="e" hint-placeholder-count="6">
+                    <span style="{{e.kStyle}}">{{e.k}}</span>
+                    <button type="button" aria-haspopup="listbox" aria-label="{{e.k}}" style="{{select}}"><span style="font-family: var(--code); font-size: 11.5px">{{e.v}}</span><span style="{{e.tagStyle}}">{{e.tag}} ▾</span></button>
+                  </sc-for>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 14px"><span style="{{cap}}">columns</span><span style="{{capDim}}">// from query · drag to a slot</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px">
+                  <sc-for list="{{ins.pvCols}}" as="c" hint-placeholder-count="3"><span style="{{varChip}}">{{c}}</span></sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{tabFormat}}" hint-placeholder-val="{{false}}">
+                <div style="display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px 8px; align-items: center">
+                  <span style="{{capDim}}">unit</span>
+                  <button type="button" aria-haspopup="listbox" style="{{select}}"><span>{{ins.unit}}</span><span style="color: var(--ink3)">▾</span></button>
+                  <span style="{{capDim}}">compact</span>
+                  <span style="display: flex; align-items: center; gap: 8px"><button type="button" role="switch" aria-checked="{{ins.compactAttr}}" style="{{ins.compactStyle}}">{{ins.compactT}}</button><span style="font-family: var(--code); font-size: 11.5px; color: var(--ink2)">{{ins.compactEx}}</span></span>
+                  <span style="{{capDim}}">decimals</span>
+                  <span style="display: inline-flex; gap: 3px"><span style="{{segOn}}">0</span><span style="{{segOff}}">1</span><span style="{{segOff}}">2</span></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 14px"><span style="{{cap}}">thresholds</span><span style="{{capDim}}">// colour is a signal</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <sc-for list="{{ins.thr}}" as="th" hint-placeholder-count="2">
+                  <div style="display: grid; grid-template-columns: 28px minmax(0, 1fr) 70px; gap: 6px; align-items: center; height: 26px; border-bottom: 1px solid var(--line)">
+                    <span style="font-family: var(--code); font-size: 12px; text-align: center">{{th.op}}</span>
+                    <span style="font-family: var(--code); font-size: 11.5px">{{th.v}}</span>
+                    <span style="{{th.style}}">{{th.level}}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ins.noThr}}" hint-placeholder-val="{{false}}"><div style="font-size: 11.5px; color: var(--ink3); padding: 6px 0">No thresholds. Values stay ink.</div></sc-if>
+                <button type="button" style="{{box}} margin-top: 6px">+ add threshold</button>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 14px"><span style="{{cap}}">comparison</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <div role="radiogroup" aria-label="Comparison" style="display: flex; gap: 3px; margin-top: 6px; flex-wrap: wrap"><sc-for list="{{ins.cmp}}" as="c" hint-placeholder-count="3"><span role="radio" aria-checked="{{c.on}}" style="{{c.style}}">{{c.t}}</span></sc-for></div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 14px"><span style="{{cap}}">voiceover summary</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <div style="font-size: 12px; color: var(--ink2); margin-top: 6px">“{{ins.vo}}”</div>
+              </sc-if>
+
+              <sc-if value="{{tabSize}}" hint-placeholder-val="{{false}}">
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+                  <sc-for list="{{ins.size}}" as="z" hint-placeholder-count="4">
+                    <div style="border: 1px solid var(--line); border-radius: 3px; padding: 6px 8px">
+                      <div style="{{capDim}}">{{z.k}}</div>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px"><button type="button" aria-label="Decrease {{z.k}}" style="{{box}} padding: 0 6px">−</button><span style="flex: 1; text-align: center; font-size: 22px; font-weight: 300">{{z.v}}</span><button type="button" aria-label="Increase {{z.k}}" style="{{box}} padding: 0 6px">+</button></div>
+                      <div style="{{capDim}} font-size: 10px; text-align: center; margin-top: 2px">{{z.u}}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 14px"><span style="{{cap}}">placement</span><span style="{{capDim}}">// 12 cols · 10 rows</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                <div role="img" aria-label="{{ins.mapLabel}}" style="position: relative; height: 180px; margin-top: 6px; background-image: radial-gradient(circle, var(--fill30) 1px, transparent 1.3px); background-size: 8px 8px; border: 1px solid var(--line); border-radius: 3px">
+                  <sc-for list="{{ins.map}}" as="m" hint-placeholder-count="9"><span style="{{m.style}}">{{m.id}}</span></sc-for>
+                </div>
+                <div style="font-size: 11.5px; color: var(--ink2); margin-top: 8px; line-height: 1.45">Snaps to the 8 pt grid. Row unit 72 pt. Minimum for <span style="font-family: var(--code)">{{ins.type}}</span> is {{ins.min}}. Neighbours reflow down, never overlap.</div>
+              </sc-if>
+            </div>
+            <div style="height: 40px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-top: 1px solid var(--lineStrong)">
+              <button type="button" title="Revert widget" style="{{box}}">revert</button>
+              <span style="flex: 1"></span>
+              <span style="{{capDim}}">auto-applied</span>
+              <button type="button" title="Apply and close  ⏎" onClick="{{deselect}}" style="{{boxPrimary}} height: 24px">done ⏎</button>
+            </div>
+          </aside>
+        </sc-if>
+      </div>
+
+      <!-- STATUS STRIP -->
+      <div style="height: 20px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 4px; white-space: nowrap; overflow: hidden">
+        <span style="{{cap}} font-size: 10.5px">{{gridStatus}}</span>
+        <span style="{{capDim}} font-size: 10.5px">{{modeStatus}}</span>
+        <span style="flex: 1"></span>
+        <span style="{{capDim}} font-size: 10.5px">auto_refresh // {{refreshLabel}}</span>
+        <span style="{{capDim}} font-size: 10.5px">store // layer mine · saved 14:32</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"mode":{"editor":"enum","options":["view","edit"],"default":"edit"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const edit = (props && props.mode ? props.mode : 'edit') === 'edit';
+    this.state = {edit, sel: edit ? 'w5' : null, tab: 'data', menu: null, refresh: '1m', refreshOpen: false, layerOpen: false, range: '30d', mode: 'sql', asTable: {}};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap;';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap;';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink); text-transform: uppercase;';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper); text-transform: uppercase;';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box;';
+
+    const st = this.state;
+    const edit = !!st.edit;
+    const capSm = CAPS + ' font-size: 10.5px; white-space: nowrap;';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;';
+    const seg = (on) => 'display: inline-flex; align-items: center; height: 20px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-family: var(--ui);' + CAPS + ' font-size: 10.5px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);');
+    const segOn = seg(true), segOff = seg(false);
+    const select = field + ' display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; cursor: pointer; text-align: left; height: 24px;';
+    const varChip = 'display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 2px; background: var(--fill12); color: var(--accent); font-family: var(--code); font-size: 11px;';
+    const costBadge = 'display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border: 1px solid var(--lineStrong); border-radius: 2px; flex: none;' + CAPS + ' font-size: 10px;';
+    let seed = 17;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+    // ---------- top strip ----------
+    const NAVI = {
+      dash: 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z', tables: 'M3 4h18v16H3zM3 10h18M9 4v16', query: 'M4 17l6-5-6-5M12 19h8',
+      map: 'M4 5h6v5H4zM14 14h6v5h-6zM10 7.5h2v9h2', activity: 'M3 12h4l3-8 4 16 3-8h4',
+    };
+    const navs = [['dash', 'Dashboards', 'Dashboard.dc.html', '⌘0'], ['tables', 'Tables', 'Table.dc.html', '⌘T'], ['query', 'Query', 'Query.dc.html', '⌘⏎'], ['map', 'Schema map', 'Dashboard.dc.html', '⌘4'], ['activity', 'Activity', 'Overview.dc.html', '⇧⌘A']].map(([id, label, href, key]) => {
+      const on = id === 'dash';
+      return {t: label, href, icon: NAVI[id], tip: label + '  ' + key, current: on ? 'page' : 'false',
+        style: CAPS + ' white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px; text-decoration: none;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [['session', 'shop'], ['engine', 'pg 17.2'], ['latency', '4 ms'], ['agents', '2 live'], ['clock', '14:32:09']].map(([k, v]) => ({k, v, vs: cap + (k === 'agents' ? ' color: var(--accent)' : '')}));
+
+    // ---------- navigator ----------
+    const MAX = 168214;
+    const navItem = (name, href, o) => {
+      o = o || {};
+      const on = !!o.on;
+      const filled = o.rows ? Math.max(1, Math.round(Math.sqrt(o.rows / MAX) * 8)) : 0;
+      return {name, href, current: on ? 'page' : 'false', tip: o.tip || name, hasMeter: !!o.rows, count: o.count || '',
+        hasMono: !!o.mono, mono: o.mono || '', isNew: !!o.isNew,
+        monoStyle: 'display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--paper)' : 'var(--accent)') + '; border-radius: 2px;' + CAPS + ' font-size: 8.5px; letter-spacing: .02em; color: ' + (on ? 'var(--paper)' : 'var(--accent)') + ';',
+        meter: Array.from({length: 8}, (_, k) => 'width: 3px; height: 8px; background: ' + (k < filled ? 'var(--ink)' : 'var(--fill12)')),
+        countStyle: 'font-family: var(--code); font-size: 11px; min-width: 34px; text-align: right;' + (on ? 'color: var(--paper); opacity: .75' : 'color: var(--ink3)'),
+        style: 'display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 6px; border-radius: 2px; text-decoration: none; font-size: 12px;' + (on ? 'background: var(--ink); color: var(--paper); font-weight: 600;' : 'color: var(--ink);')};
+    };
+    const fmtN = (n) => n >= 1000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace('.0', '') + 'K' : String(n);
+    const grp = (items, label, o) => {
+      o = o || {};
+      return {items, hasLabel: !!label, label: label || '', meta: o.meta || '', tip: o.tip || '',
+        labelStyle: CAPS + ' font-size: 10.5px; white-space: nowrap; color: ' + (o.agent ? 'var(--accent)' : 'var(--ink)') + ';'};
+    };
+    const navSections = [
+      {name: 'dashboards', count: '04', hasNew: true, groups: [
+        grp([
+          navItem('Overview // default', 'Overview.dc.html', {count: '⌘0', tip: 'Overview // default · the v1 overview as a dashboard · layer MINE'}),
+          navItem('Revenue // 30 d', 'Dashboard.dc.html', {count: '9 w', on: true, tip: 'Revenue // 30 d · layer MINE · DBMan store'}),
+          navItem('Ops health', 'Dashboard.dc.html', {count: '6 w', tip: 'Ops health · layer MINE'})], 'mine', {meta: '03', tip: 'Your layer · DBMan store'}),
+        grp([
+          navItem('Sales health', 'DashGen.dc.html', {count: '8 w', mono: 'CC', isNew: true, tip: 'Sales health · new in the claude-code layer · review and ADOPT into MINE'})], 'claude-code', {agent: true, meta: '1 new', tip: 'claude-code\'s layer · read-only for you until adopted'})]},
+      {name: 'tables', count: '06', hasNew: false, groups: [grp([['customers', 2400], ['events', 61532], ['invoices', 9812], ['order_items', 168214], ['orders', 48000], ['products', 240]].map(([n, k]) => navItem(n, 'Table.dc.html', {rows: k, count: fmtN(k), tip: n + ' · ' + k.toLocaleString('en-US') + ' rows'})))]},
+      {name: 'saved', count: '03', hasNew: false, groups: [grp([navItem('Revenue by plan', 'Query.dc.html'), navItem('Pending > 3 days', 'Query.dc.html'), navItem('Slow events p95', 'Query.dc.html')])]},
+    ];
+    const newBadge = 'display: inline-flex; align-items: center; height: 14px; padding: 0 4px; flex: none; border-radius: 2px; background: var(--accent); color: var(--paper);' + CAPS + ' font-size: 9px;';
+
+    // ---------- library ----------
+    const dots = (pts) => pts.map(([x, y]) => 'M' + x + ' ' + y + 'h0.01').join('');
+    const grid = (cols, rows, x0, y0, dx, dy, keep) => { const p = []; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!keep || keep(c, r)) p.push([x0 + c * dx, y0 + r * dy]); return dots(p); };
+    const TH = {
+      'kpi': ['M4 5h10M4 9h20M4 13h14', 1.4], 'kpi.spark': ['M4 5h10M3 15l5-3 4 2 5-5 4 2 4-4', 1.2],
+      'meter': [grid(9, 2, 4, 6, 2.5, 6, (c, r) => c < (r ? 4 : 7)), 2],
+      'line': ['M2 14l5-4 4 2 6-7 4 3 5-4', 1.2], 'area.stacked': ['M2 15l6-5 6 2 12-6M2 16l6-3 6 1 12-3M2 16h24', 1.2],
+      'heatmap.hour_week': [grid(8, 4, 3.5, 3, 3, 3.6, (c, r) => (c + r) % 3 !== 0), 1.8],
+      'heatmap.calendar': [grid(9, 4, 2.5, 3, 2.8, 3.6), 1.6],
+      'bars': ['M5 16V9M10 16V5M15 16V11M20 16V7M25 16V12', 2.4], 'bars.stacked': ['M5 16V12M5 10V7M11 16V10M11 8V4M17 16V13M17 11V8M23 16V11M23 9V6', 2.4],
+      'bars.horizontal': ['M3 4h20M3 8h15M3 12h10M3 16h6', 2.2], 'radar': ['M14 2l9 6-3 9H8L5 8zM14 6l5 3-2 5h-6l-2-5z', 1], 'funnel': ['M3 3h22M6 7h16M9 11h10M12 15h4', 2.2],
+      'histogram': ['M3 16V12h4V7h4V3h4V8h4v5h4v3', 1.2], 'halftone.distribution': [grid(10, 3, 3, 5, 2.4, 4, (c, r) => r > 2 - (c > 2 && c < 7 ? 3 : 2) + (c === 0 || c === 9 ? 1 : 0)), 1.8],
+      'scatter': [dots([[5, 13], [8, 10], [11, 12], [12, 7], [16, 8], [18, 5], [21, 6], [23, 3], [9, 14], [15, 11]]), 2.2],
+      'table': ['M3 3h22v12H3zM3 7h22M3 11h22M11 3v12', 1], 'status.feed': ['M3 4h2M8 4h16M3 9h2M8 9h12M3 14h2M8 14h15', 1.4],
+      'er.mini': ['M2 3h9v6H2zM17 9h9v6h-9zM11 6h3v6h3', 1.1], 'text': ['M3 4h22M3 8h20M3 12h22M3 16h12', 1.2],
+    };
+    const used = {'kpi.spark': 4, 'line': 1, 'bars.horizontal': 1, 'heatmap.hour_week': 1, 'status.feed': 1, 'meter': 1};
+    const libGroups = [['numbers', ['kpi', 'kpi.spark', 'meter']], ['time', ['line', 'area.stacked', 'heatmap.hour_week', 'heatmap.calendar']], ['compare', ['bars', 'bars.stacked', 'bars.horizontal', 'radar', 'funnel']], ['distribution', ['histogram', 'halftone.distribution', 'scatter']], ['records', ['table', 'status.feed']], ['schema', ['er.mini']], ['notes', ['text']]];
+    const library = libGroups.map(([name, ids]) => ({name, count: String(ids.length).padStart(2, '0'), items: ids.map((id) => ({id, thumb: TH[id][0], sw: String(TH[id][1]),
+      tip: id + (used[id] ? ' · on this dashboard ×' + used[id] : '') + ' · drag onto the grid',
+      used: used[id] ? '×' + used[id] : '',
+      thumbColor: 'color: ' + (used[id] ? 'var(--accent)' : 'var(--ink)'),
+      usedStyle: 'font-family: var(--code); font-size: 10.5px; color: var(--accent); min-width: 18px; text-align: right',
+      style: 'display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 4px; border-radius: 2px; cursor: grab; color: var(--ink);'}))}));
+
+    // ---------- header controls ----------
+    const editLabel = edit ? 'done // ⌘E' : 'edit // ⌘E';
+    const editBtn = box + (edit ? 'background: var(--accent); border-color: var(--accent); color: var(--paper);' : '');
+    const saveBtn = box + (edit ? 'background: var(--ink); color: var(--paper);' : '');
+    const LAYERS = [['db', '', 'database', 'read-only', 'Live database · never written by agents or this menu', true], ['mine', 'ME', 'mine', 'saving here', 'Your layer · this dashboard is saved here', false],
+      ['cc', 'CC', 'claude-code', '1 new', 'claude-code\'s layer · open to review and adopt', false], ['cx', 'CX', 'codex', 'empty', 'codex\'s layer · nothing yet', false]];
+    const layerOpts = LAYERS.map(([id, mono, label, meta, tip, dis]) => {
+      const on = id === 'mine';
+      return {t: label, mono: mono || '—', meta: on ? '✓ ' + meta : meta, tip, on: on ? 'true' : 'false', dis: dis ? 'true' : 'false',
+        style: 'display: flex; align-items: center; gap: 7px; width: 100%; height: 24px; padding: 0 6px; border: 0; border-radius: 2px; font-family: var(--ui);' + CAPS + ' font-size: 10.5px;' + (on ? 'background: var(--ink); color: var(--paper); cursor: pointer;' : dis ? 'background: transparent; color: var(--ink3); cursor: default;' : 'background: transparent; color: var(--ink); cursor: pointer;'),
+        monoStyle: 'display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 16px; flex: none; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--paper)' : id === 'cc' || id === 'cx' ? 'var(--accent)' : 'var(--line)') + '; border-radius: 2px; font-size: 8.5px; letter-spacing: .02em; color: ' + (on ? 'var(--paper)' : id === 'cc' || id === 'cx' ? 'var(--accent)' : 'var(--ink3)') + ';',
+        metaStyle: 'font-family: var(--code); font-size: 10.5px; letter-spacing: 0; text-transform: none; font-weight: 400;' + (on ? 'color: var(--paper); opacity: .8' : id === 'cc' ? 'color: var(--accent)' : 'color: var(--ink3)'),
+        pick: dis ? () => {} : () => this.setState({layerOpen: false})};
+    });
+    const editNote = edit ? 'editing // 2 unsaved changes' : '';
+    const editNoteStyle = capDim + (edit ? ' color: var(--accent);' : '');
+    const ranges = [['24h', '24h'], ['7d', '7d'], ['30d', '30d'], ['90d', '90d']].map(([id, label]) => ({t: label, on: st.range === id ? 'true' : 'false', style: seg(st.range === id), pick: () => this.setState({range: id})}));
+    const RF = [['off', 'off'], ['30s', '30 s'], ['1m', '1 m'], ['5m', '5 m']];
+    const refreshLabel = (RF.find((r) => r[0] === st.refresh) || RF[2])[1];
+    const refreshOpts = RF.map(([id, label]) => ({t: label, on: st.refresh === id ? 'true' : 'false', mark: st.refresh === id ? '✓' : '',
+      style: 'display: flex; justify-content: space-between; align-items: center; width: 100%; height: 22px; padding: 0 8px; border: 0; border-radius: 2px; cursor: pointer; font-family: var(--ui);' + CAPS + ' font-size: 10.5px;' + (st.refresh === id ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);'),
+      pick: () => this.setState({refresh: id, refreshOpen: false})}));
+
+    // ---------- grid math ----------
+    const COLS = 12, ROWS = 10, GAP = 4, ROW = 72;
+    const hasSel = edit && !!st.sel;
+    const gridW = hasSel ? 880 : 1204;
+    const cw = (gridW - GAP * (COLS - 1)) / COLS;
+    const rect = (x, y, w, h) => ({l: x * (cw + GAP), t: y * (ROW + GAP), w: w * cw + (w - 1) * GAP, h: h * ROW + (h - 1) * GAP});
+    const canvasStyle = 'position: relative; flex: 0 0 ' + gridW + 'px; height: 758px;';
+    const colBands = Array.from({length: COLS}, (_, i) => 'position: absolute; top: 0; bottom: 0; left: ' + (i * (cw + GAP)).toFixed(2) + 'px; width: ' + cw.toFixed(2) + 'px; background: var(--fill12); opacity: .45');
+
+    const W = [
+      {id: 'w1', type: 'kpi.spark', title: 'Revenue', x: 0, y: 0, w: 3, h: 2},
+      {id: 'w2', type: 'kpi.spark', title: 'Orders', x: 3, y: 0, w: 3, h: 2},
+      {id: 'w3', type: 'kpi.spark', title: 'Avg order value', x: 6, y: 0, w: 3, h: 2},
+      {id: 'w4', type: 'kpi.spark', title: 'Refund rate', x: 9, y: 0, w: 3, h: 2},
+      {id: 'w5', type: 'line', title: 'Revenue // daily', x: 0, y: 2, w: 8, h: 4},
+      {id: 'w6', type: 'bars.horizontal', title: 'Top products', x: 8, y: 2, w: 4, h: 4},
+      {id: 'w7', type: 'heatmap.hour_week', title: 'Orders // hour × weekday', x: 0, y: 6, w: 5, h: 4},
+      {id: 'w8', type: 'status.feed', title: 'Latest orders', x: 5, y: 6, w: 4, h: 4},
+      {id: 'w9', type: 'meter', title: 'Orders // by status', x: 9, y: 6, w: 3, h: 4},
+    ];
+    let overlaps = 0, outOfBounds = 0;
+    W.forEach((a, i) => {
+      if (a.x < 0 || a.y < 0 || a.x + a.w > COLS || a.y + a.h > ROWS) outOfBounds++;
+      W.slice(i + 1).forEach((b) => { if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) overlaps++; });
+    });
+
+    // ---------- data ----------
+    const days = 30;
+    const cur = [], prev = [];
+    for (let i = 0; i < days; i++) {
+      const wk = [0.92, 1.04, 1.08, 1.06, 1.1, 0.95, 0.85][i % 7];
+      cur.push((49000 + i * 400) * wk + (rnd() - 0.5) * 6000);
+      prev.push((46000 + i * 200) * wk + (rnd() - 0.5) * 6000);
+    }
+    const kpiDefs = {
+      w1: {v: '$1.65M', delta: '▲ 12 %', sub: 'vs previous_period · $1.47M', vals: cur, warn: false},
+      w2: {v: '4,012', delta: '▲ 8 %', sub: 'vs previous_period · 3,715', vals: cur.map((v, i) => v / 412 + Math.sin(i) * 6), warn: false},
+      w3: {v: '$412', delta: '▲ 4 %', sub: 'median // $389', vals: Array.from({length: days}, (_, i) => 400 + i * 0.4 + Math.sin(i / 2) * 9), warn: false},
+      w4: {v: '2.6 %', delta: '▲ 0.4 pt', sub: '≥ 2.5 % amber · ≥ 4 % alert', vals: Array.from({length: days}, (_, i) => 2.1 + i * 0.016 + Math.sin(i / 3) * 0.12), warn: true},
+    };
+    const products = [['Field Notebook A5', 182], ['Brass Pen No. 2', 146], ['Linen Tote', 121], ['Desk Lamp', 98], ['Wool Throw', 77], ['Ceramic Mug', 64]];
+    const names = ['Grace Hopper', 'Ada Lovelace', 'Linus Pauling', 'Hedy Lamarr', 'Alan Turing', 'Katherine Johnson', 'Claude Shannon', 'Barbara Liskov', 'Edsger Dijkstra', 'Radia Perlman'];
+    const feedSt = ['paid', 'pending', 'paid', 'shipped', 'paid', 'delivered', 'pending', 'paid', 'shipped', 'paid'];
+    const feedAgo = ['12 s', '41 s', '1 m', '2 m', '2 m', '4 m', '5 m', '7 m', '9 m', '11 m'];
+    const feedRows = names.map((n, i) => ({id: '#' + (48213 - i * 3 - (i > 4 ? 1 : 0)), name: n, status: feedSt[i], total: '$' + (180 + Math.round(rnd() * 900)) + '.00', ago: feedAgo[i],
+      stStyle: CAPS + ' font-size: 10px; white-space: nowrap; color: ' + (feedSt[i] === 'pending' ? 'var(--amber)' : 'var(--ink2)')}));
+    const statusMix = [['paid', 1580], ['delivered', 1137], ['shipped', 1003], ['pending', 192], ['refunded', 100]];
+    const heat = [];
+    const DOW = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    let hmax = 0, hpk = [0, 0];
+    for (let d = 0; d < 7; d++) {
+      const row = [];
+      for (let h = 0; h < 24; h++) {
+        const wk = [1, 1.12, 1.05, 1.02, 0.96, 0.62, 0.5][d];
+        const v = wk * (6 + 34 * Math.exp(-Math.pow((h - 11) / 2.3, 2)) + 22 * Math.exp(-Math.pow((h - 15.5) / 2, 2)) + 9 * Math.exp(-Math.pow((h - 20.5) / 1.6, 2))) + rnd() * 3;
+        row.push(v);
+        if (v > hmax) { hmax = v; hpk = [d, h]; }
+      }
+      heat.push(row);
+    }
+
+    // previews per widget (also used by "view as table")
+    const money = (v) => Math.round(v).toLocaleString('en-US') + '.00';
+    const SPEC = {
+      w1: {sql: ['select sum(total) as value', 'from orders', 'where created_at > now() - :range', '  and status = any(:status)'], cost: '412', plan: 'Index scan · orders_created_at_idx', ms: '3 ms', cols: ['value', 'previous'], rows: [['1,652,904.00', '1,471,220.00']],
+        enc: [['value', 'value', 'numeric'], ['spark', 'created_at → day', 'time'], ['compare', 'previous', 'numeric']], unit: 'USD', compact: true, ex: '$1.65M', thr: [], vo: 'Revenue, 30 days, up 12 %'},
+      w2: {sql: ['select count(*) as value', 'from orders', 'where created_at > now() - :range', '  and status = any(:status)'], cost: '388', plan: 'Index only scan · orders_created_at_idx', ms: '2 ms', cols: ['value', 'previous'], rows: [['4,012', '3,715']],
+        enc: [['value', 'value', 'numeric'], ['spark', 'created_at → day', 'time'], ['compare', 'previous', 'numeric']], unit: 'count', compact: false, ex: '4,012', thr: [], vo: 'Orders, 30 days, up 8 %'},
+      w3: {sql: ['select avg(total) as value', 'from orders', 'where created_at > now() - :range', "  and status <> 'refunded'"], cost: '412', plan: 'Index scan · orders_created_at_idx', ms: '3 ms', cols: ['value', 'median'], rows: [['411.86', '389.00']],
+        enc: [['value', 'value', 'numeric'], ['spark', 'created_at → day', 'time'], ['compare', 'previous', 'numeric']], unit: 'USD', compact: false, ex: '$412', thr: [], vo: 'Average order value, 30 days, up 4 %'},
+      w4: {sql: ['select count(r.id)::float', '     / count(distinct i.id) as value', 'from invoices i', 'left join refunds r on r.invoice_id = i.id', 'where i.created_at > now() - :range'], cost: '1,106', plan: 'Hash left join · refunds → invoices', ms: '5 ms', cols: ['value', 'previous'], rows: [['0.026', '0.022']],
+        enc: [['value', 'value', 'numeric'], ['spark', 'created_at → day', 'time'], ['compare', 'previous', 'numeric']], unit: 'percent', compact: false, ex: '2.6 %', thr: [['≥', '2.5 %', 'amber'], ['≥', '4 %', 'alert']], vo: 'Refund rate, 30 days, 2.6 %, above amber threshold'},
+      w5: {sql: ["select date_trunc('day', created_at) as day,", '       sum(total) as revenue', 'from orders', 'where created_at > now() - :range', '  and status = any(:status)', 'group by 1', 'order by 1'], cost: '1,842', plan: 'Index scan · orders_created_at_idx', ms: '6 ms', cols: ['day', 'revenue', 'previous'],
+        rows: [29, 28, 27, 26, 25, 24].map((i) => [['nov 09', 'nov 08', 'nov 07', 'nov 06', 'nov 05', 'nov 04'][29 - i], money(cur[i]), money(prev[i])]),
+        enc: [['x', 'day', 'time'], ['y', 'revenue', 'numeric'], ['aggregate', 'sum', 'fn'], ['series', 'none', 'optional'], ['sort', 'day asc', 'order'], ['limit', '—', 'rows']], unit: 'USD', compact: true, ex: '55.1K', thr: [['<', '30,000 / day', 'amber'], ['<', '15,000 / day', 'alert']], vo: 'Revenue, 30 days, up 12 %'},
+      w6: {sql: ['select p.name, sum(oi.quantity * oi.unit_price)', '       as revenue', 'from order_items oi', 'join products p on p.id = oi.product_id', 'join orders o on o.id = oi.order_id', 'where o.created_at > now() - :range', 'group by 1 order by 2 desc limit 6'], cost: '8,930', plan: 'Hash join · 3 tables · 14.2K rows', ms: '21 ms', cols: ['name', 'revenue'],
+        rows: products.map(([n, v]) => [n, (v * 1000).toLocaleString('en-US') + '.00']),
+        enc: [['y', 'name', 'category'], ['x', 'revenue', 'numeric'], ['aggregate', 'sum', 'fn'], ['series', 'none', 'optional'], ['sort', 'revenue desc', 'order'], ['limit', '6', 'rows']], unit: 'USD', compact: true, ex: '182K', thr: [], vo: 'Top products by revenue, Field Notebook A5 first at 182 thousand'},
+      w7: {sql: ['select extract(isodow from created_at) as dow,', '       extract(hour from created_at) as hour,', '       count(*) as orders', 'from orders', 'where created_at > now() - :range', 'group by 1, 2'], cost: '2,210', plan: 'Index scan · HashAggregate 168 groups', ms: '9 ms', cols: ['dow', 'hour', 'orders'],
+        rows: [[2, 11], [1, 11], [3, 11], [2, 15], [4, 10]].map(([d, h]) => [String(d), String(h), String(Math.round(heat[d - 1][h]))]),
+        enc: [['x', 'hour', 'ordinal'], ['y', 'dow', 'ordinal'], ['size', 'orders', 'numeric'], ['series', 'none', 'optional'], ['sort', '—', 'order'], ['limit', '168', 'rows']], unit: 'count', compact: false, ex: '41', thr: [], vo: 'Orders by hour and weekday, busiest Tuesday 11:00'},
+      w8: {sql: ['select id, customer_id, status, total, created_at', 'from orders', 'where status = any(:status)', 'order by created_at desc', 'limit 12'], cost: '18', plan: 'Index scan backward · orders_created_at_idx', ms: '1 ms', cols: ['id', 'status', 'total'],
+        rows: feedRows.slice(0, 6).map((r) => [r.id.slice(1), r.status, r.total.slice(1)]),
+        enc: [['rows', 'id, customer, status', 'columns'], ['highlight', 'status = pending', 'rule'], ['sort', 'created_at desc', 'order'], ['limit', '12', 'rows'], ['live', 'listen orders', 'notify']], unit: 'USD', compact: false, ex: '$412.00', thr: [['=', "status 'pending'", 'amber']], vo: 'Latest orders, newest 12 seconds ago'},
+      w9: {sql: ['select status, count(*) as orders', 'from orders', 'where created_at > now() - :range', 'group by 1 order by 2 desc'], cost: '402', plan: 'Index scan · HashAggregate 5 groups', ms: '3 ms', cols: ['status', 'orders'],
+        rows: statusMix.map(([s, v]) => [s, v.toLocaleString('en-US')]),
+        enc: [['category', 'status', 'category'], ['value', 'orders', 'numeric'], ['segments', '24', 'count'], ['sort', 'orders desc', 'order'], ['limit', '5', 'rows']], unit: 'count', compact: false, ex: '1,580', thr: [['>', 'pending 4 %', 'amber']], vo: 'Orders by status, 4,012 in 30 days, 67 % fulfilled'},
+    };
+    const REQ = {'kpi.spark': 'kpi.spark needs value (numeric); spark (time) and compare optional.', 'line': 'line needs x (time) and y (numeric); series optional.', 'bars.horizontal': 'bars.horizontal needs y (category) and x (numeric); top-N via sort + limit.', 'heatmap.hour_week': 'heatmap.hour_week needs hour, weekday and a numeric size.', 'status.feed': 'status.feed needs columns and an order; refreshes live.', 'meter': 'meter needs category and numeric value; segmented, v1 style.'};
+    const MIN = {'kpi.spark': '2 × 2', 'line': '3 × 2', 'bars.horizontal': '3 × 3', 'heatmap.hour_week': '4 × 3', 'status.feed': '3 × 3', 'meter': '2 × 3'};
+
+    // ---------- widgets ----------
+    const pathOf = (vals, wpx, hpx, lo, hi) => {
+      const pts = vals.map((v, i) => [i / (vals.length - 1) * wpx, hpx - (v - lo) / (hi - lo) * hpx]);
+      return {pts, d: pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ')};
+    };
+    const widgets = W.map((wd) => {
+      const r = rect(wd.x, wd.y, wd.w, wd.h);
+      const selOn = edit && st.sel === wd.id;
+      const tbl = !!st.asTable[wd.id];
+      const bw = r.w - 20, bh = r.h - 26 - 8;
+      const o = {id: wd.id, title: wd.title, type: wd.type, edit, aria: wd.title + ' · ' + wd.type,
+        isKpi: !tbl && wd.type === 'kpi.spark', isLine: !tbl && wd.type === 'line', isBarsH: !tbl && wd.type === 'bars.horizontal', isHeat: !tbl && wd.type === 'heatmap.hour_week', isFeed: !tbl && wd.type === 'status.feed', isMeter: !tbl && wd.type === 'meter', isTable: tbl,
+        style: 'position: absolute; left: ' + r.l.toFixed(2) + 'px; top: ' + r.t + 'px; width: ' + r.w.toFixed(2) + 'px; height: ' + r.h + 'px; box-sizing: border-box; background: var(--paper); border-radius: 3px; overflow: hidden;' +
+          (selOn ? 'border: 1px solid var(--accent); box-shadow: 0 0 0 1px var(--accent), 6px 6px 0 var(--fill12); z-index: 2; cursor: move;' : edit ? 'border: 1px solid var(--accent); cursor: pointer;' : 'border: 1px solid var(--line);'),
+        badge: selOn ? 'w' + wd.w + ' · h' + wd.h : (edit ? '' : (wd.type === 'status.feed' ? 'live' : '')),
+        badgeStyle: CAPS + ' font-size: 10px; white-space: nowrap; color: var(--accent);',
+        menuBtn: 'width: 22px; height: 18px; padding: 0; border: 1px solid ' + (st.menu === wd.id ? 'var(--accent)' : 'var(--line)') + '; border-radius: 2px; background: ' + (st.menu === wd.id ? 'var(--accent)' : 'transparent') + '; color: ' + (st.menu === wd.id ? 'var(--paper)' : 'var(--ink)') + '; cursor: pointer; font-size: 13px; line-height: 1',
+        pick: () => { if (this.state.edit) this.setState({sel: wd.id}); },
+        openMenu: () => this.setState({sel: wd.id, menu: this.state.menu === wd.id ? null : wd.id})};
+      // safe defaults so every sc-if branch resolves
+      o.k = {v: '', delta: '', sub: '', sw: '0', sh: '0', vb: '0 0 1 1', d: '', base: '', cx: '0', cy: '0', lineColor: '', dotStyle: '', dStyle: ''};
+      o.l = {boxH: '0', cw: '0', ch: '0', vb: '0 0 1 1', cur: '', prev: '', grid: '', base: '', area: '', lx: '0', ly: '0', yl: [], xl: []};
+      o.b = {h: '0', rows: []};
+      o.hm = {cell: '0', margH: '0', marg: [], peak: '', label: '', rows: [], hours: []};
+      o.f = {head: '', row: '', rows: []};
+      o.m = {rows: []};
+      o.tb = {cols: [], rows: [], head: '', row: ''};
+      if (wd.type === 'kpi.spark') {
+        const k = kpiDefs[wd.id];
+        const sh = Math.max(24, bh - 60), sw = bw;
+        const lo = Math.min(...k.vals), hi = Math.max(...k.vals);
+        const p = pathOf(k.vals, sw, sh, lo - (hi - lo) * 0.1, hi + (hi - lo) * 0.1);
+        const last = p.pts[p.pts.length - 1];
+        o.k = {v: k.v, delta: k.delta, sub: k.sub, sw: sw.toFixed(1), sh: String(sh), vb: '0 0 ' + sw.toFixed(1) + ' ' + sh, d: p.d, base: 'M0 ' + sh + 'H' + sw.toFixed(1),
+          cx: last[0].toFixed(1), cy: last[1].toFixed(1),
+          lineColor: 'color: ' + (k.warn ? 'var(--amber)' : 'var(--ink)'),
+          dotStyle: 'fill: ' + (k.warn ? 'var(--amber)' : 'var(--ink)') + '; stroke: var(--paper); stroke-width: 1.5',
+          dStyle: CAPS + ' font-size: 10.5px; white-space: nowrap; color: ' + (k.warn ? 'var(--amber)' : 'var(--ink)')};
+      }
+      if (wd.type === 'line') {
+        const boxH = bh - 26, chH = boxH - 16, chW = bw - 34;
+        const hi = 90000;
+        const pc = pathOf(cur, chW, chH, 0, hi), pp = pathOf(prev, chW, chH, 0, hi);
+        const last = pc.pts[pc.pts.length - 1];
+        const gl = [30000, 60000, 90000].map((v) => 'M0 ' + (chH - v / hi * chH).toFixed(1) + 'H' + chW.toFixed(1)).join('');
+        o.l = {boxH: String(boxH), cw: chW.toFixed(1), ch: String(chH), vb: '0 0 ' + chW.toFixed(1) + ' ' + chH, cur: pc.d, prev: pp.d, grid: gl, base: 'M0 ' + chH + 'H' + chW.toFixed(1),
+          area: pc.d + ' L' + chW.toFixed(1) + ' ' + chH + ' L0 ' + chH + ' Z', lx: last[0].toFixed(1), ly: last[1].toFixed(1),
+          yl: [[90000, '90K'], [60000, '60K'], [30000, '30K'], [0, '0']].map(([v, tt]) => ({t: tt, s: 'position: absolute; left: 0; width: 28px; text-align: right; top: ' + (chH - v / hi * chH - 6).toFixed(1) + 'px; font-family: var(--code); font-size: 10px; color: var(--ink3)'})),
+          xl: [[0, 'oct 11'], [10, 'oct 21'], [20, 'oct 31'], [29, 'nov 09']].map(([i, tt]) => ({t: tt, s: 'position: absolute; top: ' + (chH + 3) + 'px; left: ' + (34 + i / 29 * chW - (i === 29 ? 38 : i === 0 ? 0 : 18)).toFixed(1) + 'px; font-family: var(--code); font-size: 10px; color: var(--ink3)'}))};
+      }
+      if (wd.type === 'bars.horizontal') {
+        o.b = {h: String(bh + 8), rows: products.map(([n, v], i) => ({name: n, v: v + 'K',
+          bar: 'position: absolute; left: 0; top: 0; bottom: 0; width: ' + (v / 182 * 100).toFixed(1) + '%; box-sizing: border-box; border-right: 2px solid ' + (i === 0 ? 'var(--accent)' : 'var(--ink)') + '; background-image: radial-gradient(circle, ' + (i === 0 ? t.accent : t.ink) + ' 0.9px, transparent 1.2px); background-size: 3px 3px'}))};
+      }
+      if (wd.type === 'heatmap.hour_week') {
+        const cell = Math.floor(Math.min((bw - 28) / 24, (bh - 44) / 7) * 10) / 10;
+        const margH = Math.max(0, Math.min(72, Math.floor(bh - 7 * cell - 64)));
+        const hourTot = Array.from({length: 24}, (_, h) => heat.reduce((a, row) => a + row[h], 0));
+        const htMax = Math.max(...hourTot);
+        o.hm = {cell: String(cell), margH: String(margH),
+          marg: hourTot.map((v, h) => 'width: ' + (cell - 2).toFixed(1) + 'px; margin-right: 2px; flex: none; height: ' + Math.round(v / htMax * 100) + '%; background: ' + (h === hpk[1] ? 'var(--accent)' : 'var(--ink)') + '; border-radius: 1px 1px 0 0'), peak: DOW[hpk[0]] + ' ' + String(hpk[1]).padStart(2, '0') + ':00 · ' + Math.round(hmax) + ' orders',
+          label: 'Orders by hour and weekday, 30 days. Busiest ' + DOW[hpk[0]] + ' ' + hpk[1] + ':00.',
+          rows: heat.map((row, d) => ({d: DOW[d], cells: row.map((v, h) => {
+            const pk = d === hpk[0] && h === hpk[1];
+            const s = Math.round(18 + 70 * Math.sqrt(v / hmax));
+            return 'width: ' + cell + 'px; height: ' + cell + 'px; flex: none; background: radial-gradient(circle closest-side, ' + (pk ? t.accent : t.ink) + ' 0 ' + s + '%, transparent ' + (s + 10) + '%)';
+          })})),
+          hours: [0, 6, 12, 18].map((h) => ({t: String(h).padStart(2, '0'), s: 'width: ' + (cell * 6).toFixed(1) + 'px; flex: none'}))};
+      }
+      if (wd.type === 'status.feed') {
+        const cols = bw < 340 ? 'grid-template-columns: 44px minmax(0, 1fr) 56px 58px 0px; column-gap: 5px; align-items: center; overflow: hidden;' : 'grid-template-columns: 50px minmax(0, 1fr) 62px 62px 34px; column-gap: 6px; align-items: center;';
+        const nRows = Math.min(feedRows.length, Math.floor((bh - 24) / 22));
+        o.f = {head: 'display: grid; ' + cols + ' height: 22px; border-bottom: 1px solid var(--lineStrong);' + CAPS + ' font-size: 10px; color: var(--ink3);',
+          row: 'display: grid; ' + cols + ' height: 22px; border-bottom: 1px solid var(--line);', rows: feedRows.slice(0, nRows)};
+      }
+      if (wd.type === 'meter') {
+        const tot = statusMix.reduce((a, b) => a + b[1], 0);
+        o.m = {rows: statusMix.map(([n, v]) => {
+          const k = Math.max(1, Math.round(Math.sqrt(v / statusMix[0][1]) * 24));
+          const c = n === 'pending' ? t.amber : t.ink;
+          return {n, v: v.toLocaleString('en-US') + ' · ' + Math.round(v / tot * 100) + ' %', labelStyle: CAPS + ' font-size: 10px; white-space: nowrap; color: ' + (n === 'pending' ? 'var(--amber)' : 'var(--ink)'),
+            seg: Array.from({length: 24}, (_, i) => i < k ? c : t.fill12)};
+        })};
+      }
+      if (tbl) {
+        const sp = SPEC[wd.id];
+        const gc = 'display: grid; grid-template-columns: repeat(' + sp.cols.length + ', minmax(0, 1fr)); gap: 8px; height: 20px; align-items: center;';
+        o.tb = {cols: sp.cols, rows: sp.rows.slice(0, Math.max(1, Math.floor((bh - 44) / 20))), head: gc + ' border-bottom: 1px solid var(--lineStrong); color: var(--ink3);', row: gc + ' border-bottom: 1px solid var(--line);'};
+      }
+      return o;
+    });
+
+    // ---------- widget menu ----------
+    const menuW = W.find((w) => w.id === st.menu);
+    const menuOpen = edit && !!menuW;
+    let menuStyle = '';
+    if (menuW) {
+      const r = rect(menuW.x, menuW.y, menuW.w, menuW.h);
+      menuStyle = 'position: absolute; z-index: 10; top: ' + (r.t + 24) + 'px; left: ' + (r.l + r.w - 168).toFixed(2) + 'px; width: 160px; padding: 3px; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 4px 4px 0 var(--fill12)';
+    }
+    const mItem = (tt, k, fn, danger) => ({t: tt, k, pick: fn,
+      style: 'display: flex; justify-content: space-between; align-items: center; width: 100%; height: 22px; padding: 0 8px; border: 0; border-radius: 2px; background: transparent; cursor: pointer; font-family: var(--ui);' + CAPS + ' font-size: 10.5px; color: ' + (danger ? 'var(--alert)' : 'var(--ink)')});
+    const menuItems = menuW ? [
+      mItem('duplicate', '⌘D', () => this.setState({menu: null})),
+      mItem(st.asTable[menuW.id] ? 'view as chart' : 'view as table', '⌥⌘T', () => { const a = Object.assign({}, this.state.asTable); a[menuW.id] = !a[menuW.id]; this.setState({asTable: a, menu: null}); }),
+      mItem('delete', '⌫', () => this.setState({menu: null}), true),
+    ] : [];
+
+    // ---------- inspector ----------
+    const selW = W.find((w) => w.id === st.sel) || W[4];
+    const sp = SPEC[selW.id];
+    const KW = /^(select|from|where|and|join|left|on|group|by|order|limit|as|desc|asc|sum|count|avg|distinct|extract|date_trunc|now|any|float)$/i;
+    const tokLine = (line) => line.split(/(:range|:status|\s+|[(),*<>=]+)/).filter((x) => x !== '').map((x) => ({t: x,
+      s: x === ':range' || x === ':status' ? 'color: var(--accent); background: var(--fill12); border-radius: 2px; font-weight: 600' : KW.test(x) ? 'color: var(--ink); font-weight: 600' : /^'.*'$/.test(x) ? 'color: var(--ink2)' : 'color: var(--ink2)'}));
+    const pvCols = sp.cols;
+    const pvGrid = 'display: grid; grid-template-columns: repeat(' + pvCols.length + ', minmax(0, 1fr)); gap: 8px; height: 21px; align-items: center;';
+    const lvl = (l) => CAPS + ' font-size: 10px; white-space: nowrap; text-align: center; height: 18px; line-height: 16px; box-sizing: border-box; border-radius: 2px; border: 1px solid ' + (l === 'amber' ? 'var(--amber)' : 'var(--alert)') + '; color: ' + (l === 'amber' ? 'var(--amber)' : 'var(--alert)');
+    const mapW = 294, mapH = 178;
+    const ins = {id: selW.id, type: selW.type, title: selW.title, cost: sp.cost, plan: sp.plan, ms: sp.ms,
+      rowsN: sp.rows.length === 1 ? '1 row' : (selW.id === 'w5' ? '30 rows' : selW.id === 'w7' ? '168 rows' : sp.rows.length + ' rows'),
+      sql: sp.sql.map((ln, i) => ({n: String(i + 1), tok: tokLine(ln)})),
+      pvCols, pvRows: sp.rows.slice(0, 6), pvHead: pvGrid + ' border-bottom: 1px solid var(--lineStrong); color: var(--ink3);', pvRow: pvGrid + ' border-bottom: 1px solid var(--line);',
+      req: REQ[selW.type], min: MIN[selW.type],
+      enc: sp.enc.map(([k, v, tag]) => ({k, v, tag, kStyle: capDim, tagStyle: CAPS + ' font-size: 9.5px; white-space: nowrap; color: var(--ink3)'})),
+      unit: sp.unit, compactAttr: sp.compact ? 'true' : 'false', compactT: sp.compact ? 'on' : 'off', compactStyle: seg(sp.compact), compactEx: sp.ex,
+      thr: sp.thr.map(([op, v, l]) => ({op, v, level: l, style: lvl(l)})), noThr: sp.thr.length === 0,
+      cmp: [['none', false], ['previous_period', selW.type !== 'status.feed'], ['same_period_last_year', false]].map(([tt, on]) => ({t: tt, on: on ? 'true' : 'false', style: seg(on)})),
+      vo: sp.vo,
+      size: [['w', String(selW.w), 'of 12 cols'], ['h', String(selW.h), 'rows · ' + (selW.h * ROW + (selW.h - 1) * GAP) + ' pt'], ['x', String(selW.x), 'col'], ['y', String(selW.y), 'row']].map(([k, v, u]) => ({k, v, u})),
+      mapLabel: 'Placement of ' + selW.id + ' at column ' + selW.x + ', row ' + selW.y + ', ' + selW.w + ' by ' + selW.h,
+      map: W.map((w) => {
+        const on = w.id === selW.id;
+        const mcw = (mapW - 8 - 11 * 2) / 12, mrh = (mapH - 8 - 9 * 2) / 10;
+        return {id: w.id, style: 'position: absolute; box-sizing: border-box; left: ' + (4 + w.x * (mcw + 2)).toFixed(1) + 'px; top: ' + (4 + w.y * (mrh + 2)).toFixed(1) + 'px; width: ' + (w.w * mcw + (w.w - 1) * 2).toFixed(1) + 'px; height: ' + (w.h * mrh + (w.h - 1) * 2).toFixed(1) + 'px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--code); font-size: 10px;' + (on ? 'background: var(--accent); color: var(--paper);' : 'background: var(--paper); border: 1px solid var(--line); color: var(--ink3);')};
+      })};
+    const tabs = [['data', 'data'], ['encoding', 'encoding'], ['format', 'format'], ['size', 'size']].map(([id, label]) => ({t: label, on: st.tab === id ? 'true' : 'false', pick: () => this.setState({tab: id}),
+      style: 'height: 22px; border-radius: 2px; cursor: pointer; font-family: var(--ui);' + CAPS + ' font-size: 10.5px; border: 1px solid ' + (st.tab === id ? 'var(--ink)' : 'var(--line)') + ';' + (st.tab === id ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);')}));
+    const modes = [['sql', 'sql'], ['builder', 'builder']].map(([id, label]) => ({t: label, on: st.mode === id ? 'true' : 'false', style: seg(st.mode === id), pick: () => this.setState({mode: id})}));
+
+    const gridStatus = 'grid // 12 cols · row 72 pt · ' + W.length + ' widgets · ' + overlaps + ' overlaps' + (outOfBounds ? ' · ' + outOfBounds + ' out of bounds' : '');
+    const modeStatus = edit ? (hasSel ? 'edit // ' + selW.id + ' selected · drag to move · corner to resize · snap 8 pt' : 'edit // click a widget to inspect · drag from library') : 'view // ⌘E to edit layout';
+
+    return {themeVars, dark, cap, capDim, capSm, box, boxL, boxPrimary, field, frame, select, varChip, costBadge, segOn, segOff,
+      navs, readouts, navSections, library, showNav: !edit, edit,
+      editLabel, editBtn, editPressed: edit ? 'true' : 'false', saveBtn, editNote, editNoteStyle, newBadge,
+      layerOpts, layerOpen: !!st.layerOpen, layerOpenAttr: st.layerOpen ? 'true' : 'false', toggleLayer: () => this.setState({layerOpen: !this.state.layerOpen, refreshOpen: false}),
+      toggleEdit: () => this.setState({edit: !this.state.edit, menu: null, refreshOpen: false, layerOpen: false, sel: this.state.edit ? this.state.sel : (this.state.sel || 'w5')}),
+      ranges, refreshLabel, refreshOpts, refreshOpen: !!st.refreshOpen, refreshOpenAttr: st.refreshOpen ? 'true' : 'false', toggleRefresh: () => this.setState({refreshOpen: !this.state.refreshOpen, layerOpen: false}),
+      canvasStyle, colBands, widgets, menuOpen, menuStyle, menuItems,
+      hasSel, deselect: () => this.setState({sel: null, menu: null}), ins, tabs, modes,
+      tabData: st.tab === 'data', tabEncoding: st.tab === 'encoding', tabFormat: st.tab === 'format', tabSize: st.tab === 'size',
+      gridStatus, modeStatus};
+  }
+}
+</script>
+</body>
+</html>

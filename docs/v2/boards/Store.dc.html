@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DBMan store — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: stretch; gap: 4px">
+    <div aria-hidden="true" style="display: flex; align-items: center; gap: 7px; padding: 0 8px">
+      <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+    </div>
+    <nav aria-label="Sections" style="display: flex; gap: 4px">
+      <sc-for list="{{navs}}" as="n" hint-placeholder-count="5">
+        <a href="{{n.href}}" title="{{n.tip}}" aria-current="{{n.current}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg><span>{{n.t}}</span></a>
+      </sc-for>
+    </nav>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="5"><span style="display: inline-flex; gap: 5px"><span style="{{capDim}}">{{r.k}} //</span><span style="{{r.vs}}">{{r.v}}</span></span></sc-for>
+    </div>
+    <a href="Connect.dc.html" title="Agents  ⌘⇧A" style="{{agentsChip}}">AGENTS <span style="opacity: .7">// 2 LIVE</span></a>
+    <label style="display: flex; align-items: center; gap: 6px; width: 200px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" aria-label="Jump to table, column or query" placeholder="JUMP_TO" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+      <span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">⌘K</span>
+    </label>
+  </div>
+
+  <div style="height: 854px; flex: none; display: flex; gap: 4px; min-height: 0">
+
+    <!-- NAVIGATOR -->
+    <nav aria-label="Database navigator" style="{{navFrame}}">
+      <div style="padding: 10px; border-bottom: 1px solid var(--line)">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="{{cap}}">shop</span><span style="{{capDim}}">// local</span><span style="flex: 1"></span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--ink3)"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg></span>
+        <span style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px"><span style="font-size: 36px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">1.5M</span><span style="{{capDim}}">rows · 12 tables</span></span>
+        <span style="display: block; margin-top: 4px; {{capDim}}">postgres 17 · localhost:5432</span>
+      </div>
+      <label style="display: flex; align-items: center; gap: 6px; height: 26px; margin: 8px 8px 2px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="text" placeholder="FILTER" aria-label="Filter navigator" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+        <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">⌥⌘F</span>
+      </label>
+      <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 8px 8px">
+        <sc-for list="{{navSections}}" as="s" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 8px; padding: 0 2px">
+            <span style="{{cap}}">{{s.name}}</span><span style="{{capDim}}">// {{s.count}}</span>
+            <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+          </div>
+          <sc-for list="{{s.items}}" as="it" hint-placeholder-count="6">
+            <a href="{{it.href}}" aria-current="{{it.current}}" title="{{it.tip}}" style="{{it.style}}">
+              <span style="{{it.nameStyle}}">{{it.name}}</span>
+              <span aria-hidden="true" style="display: inline-flex; gap: 1px"><sc-for list="{{it.meter}}" as="m" hint-placeholder-count="8"><span style="{{m}}"></span></sc-for></span>
+              <span style="{{it.tagStyle}}">{{it.tag}}</span>
+              <span style="{{it.countStyle}}">{{it.count}}</span>
+            </a>
+          </sc-for>
+        </sc-for>
+      </div>
+      <div style="height: 26px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-top: 1px solid var(--line)">
+        <span style="{{capDim}}">status //</span><span style="{{cap}}">connected · 4 ms</span>
+        <span style="flex: 1"></span>
+        <button type="button" aria-label="New connection (⌘N)" title="New connection  ⌘N" style="width: 20px; height: 18px; border: 1px solid var(--line); border-radius: 3px; background: transparent; color: var(--ink2); font-size: 13px; line-height: 1; cursor: pointer; padding: 0">+</button>
+      </div>
+    </nav>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+      <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+
+        <!-- GRID -->
+        <section aria-label="orders, merged with store layers" style="{{frame}} flex: 1; display: flex; flex-direction: column">
+          <div style="height: 34px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+            <h1 style="margin: 0; {{cap}}; font-size: 12px">orders</h1><span style="{{capDim}}">// public · 48,000 rows · 6.1 MB</span>
+            <span aria-hidden="true" style="width: 1px; height: 18px; background: var(--line); margin: 0 2px"></span>
+            <div role="radiogroup" aria-label="Grid mode" style="display: flex">
+              <sc-for list="{{modes}}" as="md" hint-placeholder-count="2">
+                <button type="button" role="radio" aria-checked="{{md.on}}" aria-disabled="{{md.dis}}" title="{{md.tip}}" onClick="{{md.pick}}" style="{{md.style}}">{{md.t}}<span style="{{md.kStyle}}">{{md.k}}</span></button>
+              </sc-for>
+            </div>
+            <span style="flex: 1"></span>
+            <span style="{{capDim}}; font-size: 10px">see as</span>
+            <div role="radiogroup" aria-label="See the table as" style="display: flex">
+              <sc-for list="{{seeAs}}" as="sa" hint-placeholder-count="3">
+                <button type="button" role="radio" aria-checked="{{sa.on}}" title="{{sa.tip}}" onClick="{{sa.pick}}" style="{{sa.style}}">{{sa.t}}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- explanatory strip -->
+          <div style="height: 68px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--sunken)">
+            <svg width="240" height="60" viewBox="0 0 240 60" role="img" aria-label="{{sheetsLabel}}" style="flex: none">
+              <path d="{{sDb.d}}" style="{{sDb.s}}"></path><path d="{{sDb.m}}" style="{{sDb.ms}}"></path><text x="102" y="{{sDb.ty}}" style="{{sDb.ts}}">{{sDb.t}}</text>
+              <path d="{{sMine.d}}" style="{{sMine.s}}"></path><path d="{{sMine.m}}" style="{{sMine.ms}}"></path><text x="102" y="{{sMine.ty}}" style="{{sMine.ts}}">{{sMine.t}}</text>
+              <path d="{{sCc.d}}" style="{{sCc.s}}"></path><path d="{{sCc.m}}" style="{{sCc.ms}}"></path><text x="102" y="{{sCc.ty}}" style="{{sCc.ts}}">{{sCc.t}}</text>
+              <path d="{{sCx.d}}" style="{{sCx.s}}"></path><path d="{{sCx.m}}" style="{{sCx.ms}}"></path><text x="102" y="{{sCx.ty}}" style="{{sCx.ts}}">{{sCx.t}}</text>
+            </svg>
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+              <span style="display: flex; align-items: center; gap: 7px"><sc-for list="{{chain}}" as="ch" hint-placeholder-count="7"><span style="{{ch.s}}">{{ch.t}}</span></sc-for></span>
+              <span style="font-size: 12px; color: var(--ink2); white-space: nowrap">Agents read DATABASE + MINE + their own layer, write only their own layer.</span>
+              <span style="{{capDim}}; font-size: 10px">top layer wins · no approval needed · postgres untouched until you apply</span>
+            </div>
+          </div>
+
+          <div role="grid" aria-label="{{gridLabel}}" aria-rowcount="48001" style="flex: 1; min-height: 0; display: flex; flex-direction: column">
+            <div role="row" style="{{gridHeadStyle}}">
+              <sc-for list="{{heads}}" as="h" hint-placeholder-count="8">
+                <span role="columnheader" title="{{h.tip}}" style="{{h.style}}"><span style="{{h.nStyle}}">{{h.n}}</span><span style="{{h.tStyle}}">{{h.t}}</span></span>
+              </sc-for>
+            </div>
+            <sc-if value="{{cmpOn}}" hint-placeholder-val="{{false}}">
+              <div style="height: 24px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line); background: var(--fill12)">
+                <span style="{{cap}}; font-size: 10.5px">{{cmpTitle}}</span><span style="{{capDim}}; font-size: 10px">{{cmpSub}}</span>
+                <span style="flex: 1"></span>
+                <button type="button" title="Back to merged view  ⌘D" onClick="{{exitCompare}}" style="{{boxS}}">MERGED ⌘D</button>
+              </div>
+            </sc-if>
+            <div style="flex: 1; min-height: 0; overflow: hidden; font-family: var(--code); font-size: 11.5px">
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="20">
+                <div role="row" aria-selected="{{r.on}}" title="{{r.tip}}" onClick="{{r.pick}}" style="{{r.style}}">
+                  <span role="rowheader" style="{{r.gStyle}}"><span style="{{r.nStyle}}">{{r.n}}</span><span style="{{r.tagStyle}}">{{r.tag}}</span></span>
+                  <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="7"><span role="gridcell" style="{{c.s}}"><span style="{{c.aS}}">{{c.a}}</span><span style="{{c.bS}}">{{c.b}}</span></span></sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- provenance -->
+          <div role="region" aria-label="{{prov.label}}" style="height: 184px; flex: none; box-sizing: border-box; border-top: 1px solid var(--lineStrong); display: flex; flex-direction: column">
+            <div style="height: 28px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px">
+              <span style="{{cap}}">row {{prov.id}}</span><span style="{{capDim}}">// bottom → top · top wins</span>
+              <span style="flex: 1"></span>
+              <span style="{{prov.verdictStyle}}">{{prov.verdict}}</span>
+            </div>
+            <div role="table" aria-label="Value of each column per layer" style="padding: 0 12px">
+              <div role="row" style="display: grid; grid-template-columns: 128px repeat(5, minmax(0, 1fr)); height: 20px; align-items: center; border-bottom: 1px solid var(--lineStrong)">
+                <sc-for list="{{prov.head}}" as="ph" hint-placeholder-count="6"><span role="columnheader" style="{{ph.s}}"><span style="{{ph.aS}}">{{ph.a}}</span><span style="{{ph.bS}}">{{ph.b}}</span></span></sc-for>
+              </div>
+              <sc-for list="{{prov.rows}}" as="pr" hint-placeholder-count="7">
+                <div role="row" style="display: grid; grid-template-columns: 128px repeat(5, minmax(0, 1fr)); height: 19px; align-items: center; border-bottom: 1px solid var(--line); font-family: var(--code); font-size: 11px">
+                  <sc-for list="{{pr}}" as="pc" hint-placeholder-count="6"><span role="cell" style="{{pc.s}}"><span style="{{pc.aS}}">{{pc.a}}</span><span style="{{pc.bS}}">{{pc.b}}</span></span></sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+
+        <!-- STORE INSPECTOR -->
+        <aside aria-label="DBMan store layers" style="{{frame}} flex: 0 0 360px; display: flex; flex-direction: column">
+          <div style="height: 34px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-bottom: 1px solid var(--line)">
+            <span style="{{cap}}; font-size: 12px">store</span><span style="{{capDim}}">// shop · store.sqlite · 412 KB</span>
+            <span style="flex: 1"></span>
+            <span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">⌥⌘L</span>
+          </div>
+
+          <!-- layers -->
+          <div role="listbox" aria-label="Layers, top layer first" style="position: relative; flex: none; padding: 4px 6px 6px; border-bottom: 1px solid var(--line)">
+            <div style="display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 6px">
+              <span style="{{cap}}">layers</span><span style="{{capDim}}">// 4 · top wins</span>
+              <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+            </div>
+            <span aria-hidden="true" style="position: absolute; left: 48px; top: 46px; width: 1px; height: 120px; background: var(--fill30); z-index: 0"></span>
+            <sc-for list="{{layers}}" as="ly" hint-placeholder-count="4">
+              <div style="{{ly.row}}">
+                <button type="button" role="switch" aria-checked="{{ly.visOn}}" aria-disabled="{{ly.visDis}}" aria-label="{{ly.visLabel}}" title="{{ly.visLabel}}" onClick="{{ly.toggle}}" style="{{ly.tgStyle}}"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="{{ly.tgA}}" style="{{ly.tgAS}}"></path><path d="{{ly.tgB}}" style="{{ly.tgBS}}"></path></svg></button>
+                <button type="button" role="option" aria-selected="{{ly.on}}" title="{{ly.tip}}" onClick="{{ly.pick}}" style="{{ly.selStyle}}">
+                  <span style="{{ly.tileStyle}}">{{ly.mono}}</span>
+                  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                    <span style="display: flex; align-items: baseline; gap: 6px"><span style="{{ly.nameStyle}}">{{ly.name}}</span><span style="{{ly.roStyle}}">{{ly.ro}}</span></span>
+                    <span style="display: flex; gap: 0; min-width: 0; overflow: hidden"><span style="{{ly.metaStyle}}">{{ly.meta}}</span><span style="{{ly.warnStyle}}">{{ly.warn}}</span></span>
+                  </span>
+                  <span style="{{ly.countStyle}}">{{ly.count}}</span>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- selected layer -->
+          <div style="flex: none; padding: 10px 12px 0">
+            <div style="display: flex; align-items: center; gap: 6px; height: 14px"><span style="{{cap}}">layer</span><span style="{{capDim}}">// {{det.kind}}</span><span style="flex: 1"></span><span style="{{capDim}}; font-size: 10px">{{det.who}}</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 6px; height: 30px"><span style="font-size: 32px; font-weight: 300; letter-spacing: -0.03em; line-height: 30px">{{det.count}}</span><span style="{{capDim}}">{{det.unit}}</span><span style="{{det.nameStyle}}">{{det.name}}</span></div>
+            <div style="{{capDim}}; font-size: 10px; margin-top: 3px; height: 13px">{{det.rule}}</div>
+          </div>
+
+          <sc-if value="{{isDbSel}}" hint-placeholder-val="{{false}}">
+            <div style="flex: 1; min-height: 0; overflow: auto; padding: 10px 12px 8px">
+              <sc-for list="{{dbKv}}" as="kv" hint-placeholder-count="5">
+                <div style="display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 8px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)"><span style="{{capDim}}; font-size: 10px">{{kv.k}}</span><span style="{{kv.vs}}">{{kv.v}}</span></div>
+              </sc-for>
+              <div style="display: flex; align-items: center; gap: 6px; height: 22px; margin-top: 12px"><span style="{{cap}}">hidden from agents</span><span style="{{capDim}}">// {{hiddenCount}} · auto by name</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+              <sc-for list="{{hiddenCols}}" as="hc" hint-placeholder-count="7">
+                <div style="display: flex; align-items: center; gap: 8px; height: 22px; border-bottom: 1px solid var(--line)">
+                  <span style="{{hc.nStyle}}">{{hc.n}}</span><span style="flex: 1"></span><span style="{{capDim}}; font-size: 10px">{{hc.why}}</span>
+                  <button type="button" title="{{hc.tip}}" onClick="{{hc.pick}}" style="{{hc.btn}}">{{hc.bt}}</button>
+                </div>
+              </sc-for>
+              <div style="margin-top: 10px; font-size: 12px; line-height: 1.5; color: var(--ink2)">Agents get <span style="font-family: var(--code); color: var(--ink)">«redacted»</span> for these and can still COUNT or GROUP BY a hashed form. Nothing an agent does can write here — only APPLY TO DATABASE from a layer, by you, through the review sheet.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{notDbSel}}" hint-placeholder-val="{{true}}">
+            <div style="flex: none; display: flex; flex-direction: column; gap: 4px; padding: 8px 12px 10px; border-bottom: 1px solid var(--line)">
+              <button type="button" role="switch" aria-checked="{{cmpAttr}}" title="Compare this layer with the database  ⌘D" onClick="{{toggleCompare}}" style="{{cmpBtn}}"><span>COMPARE WITH DATABASE</span><span style="{{cmpKeyStyle}}">{{cmpKey}}</span></button>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px">
+                <button type="button" aria-disabled="{{adoptAllDis}}" title="{{adoptAllTip}}" onClick="{{adoptAll}}" style="{{adoptAllBtn}}">ADOPT ALL → MINE</button>
+                <button type="button" aria-disabled="{{discardDis}}" title="{{discardTip}}" onClick="{{discardLayer}}" style="{{discardBtn}}">DISCARD LAYER</button>
+              </div>
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px">
+                <button type="button" aria-haspopup="dialog" aria-disabled="{{applyDis}}" title="{{applyTip}}" onClick="{{openSheet}}" style="{{applyBtn}}">APPLY TO DATABASE… <span style="font-weight: 400; opacity: .7; letter-spacing: 0">⇧⌘↩</span></button>
+                <button type="button" aria-disabled="{{applyDis}}" title="Export migration .sql — same statements as the review sheet  ⇧⌘E" onClick="{{exportSql}}" style="{{exportBtn}}">EXPORT MIGRATION <span style="font-family: var(--code); font-weight: 400; letter-spacing: 0; text-transform: none">.sql</span></button>
+              </div>
+            </div>
+
+            <div role="list" aria-label="{{itemsLabel}}" style="flex: 1; min-height: 0; overflow: auto; padding: 4px 12px 0">
+              <sc-if value="{{noItems}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 18px 2px 0; font-size: 12px; line-height: 1.5; color: var(--ink2)">{{emptyText}}</div>
+              </sc-if>
+              <sc-for list="{{groups}}" as="g" hint-placeholder-count="6">
+                <div style="display: flex; align-items: flex-end; gap: 6px; height: 18px; padding-bottom: 2px; box-sizing: border-box">
+                  <span style="{{cap}}; font-size: 10px">{{g.t}}</span><span style="{{capDim}}; font-size: 10px">// {{g.sub}}</span>
+                  <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line); margin-bottom: 4px"></span>
+                </div>
+                <sc-for list="{{g.items}}" as="it" hint-placeholder-count="3">
+                  <div role="listitem" style="{{it.row}}">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{it.gS}}"><path d="{{it.g}}"></path></svg>
+                    <button type="button" aria-expanded="{{it.openAttr}}" title="{{it.tip}}" onClick="{{it.pick}}" style="{{it.nameBtn}}"><span style="{{it.nS}}">{{it.n}}</span><span style="{{it.sS}}">{{it.s}}</span></button>
+                    <span style="{{it.chipS}}">{{it.chip}}</span>
+                    <button type="button" title="{{it.adoptTip}}" onClick="{{it.adopt}}" style="{{it.adoptS}}">→ MINE</button>
+                    <button type="button" title="{{it.diffTip}}" onClick="{{it.diff}}" style="{{it.diffS}}">DIFF</button>
+                    <button type="button" aria-label="{{it.discardTip}}" title="{{it.discardTip}}" onClick="{{it.discard}}" style="{{it.xS}}">✕</button>
+                  </div>
+                  <sc-if value="{{it.open}}" hint-placeholder-val="{{false}}">
+                    <div style="{{it.detS}}"><sc-for list="{{it.lines}}" as="ln" hint-placeholder-count="1"><div style="{{ln.s}}">{{ln.t}}</div></sc-for></div>
+                  </sc-if>
+                </sc-for>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="height: 22px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-top: 1px solid var(--line)">
+            <span style="{{capDim}}; font-size: 10px">last //</span><span style="{{lastStyle}}">{{lastText}}</span>
+          </div>
+        </aside>
+      </div>
+
+      <!-- STATUS LINE -->
+      <div style="height: 20px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 4px; white-space: nowrap; overflow: hidden">
+        <span style="{{cap}}; font-size: 10.5px">{{statusCounts}}</span>
+        <span style="{{hiddenChip}}">{{hiddenChipText}}</span>
+        <span aria-hidden="true" style="display: inline-flex; align-items: center; gap: 12px">
+          <sc-for list="{{legend}}" as="lg" hint-placeholder-count="5"><span style="display: inline-flex; align-items: center; gap: 5px"><span style="{{lg.ms}}">{{lg.m}}</span><span style="{{capDim}}; font-size: 10px">{{lg.t}}</span></span></sc-for>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW SHEET (v1) -->
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+  <div style="{{scrimStyle}}"></div>
+  <div role="dialog" aria-modal="true" aria-labelledby="apply-title" style="position: absolute; top: 56px; left: 50%; transform: translateX(-50%); width: 720px; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 8px 8px 0 var(--fill12); overflow: hidden; z-index: 11">
+    <div style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-bottom: 1px solid var(--lineStrong)">
+      <span id="apply-title" style="{{cap}}">{{sh.title}}</span><span style="{{capDim}}">// shop · local · postgres 17</span>
+      <span style="flex: 1"></span><span style="{{capDim}}">ONE TRANSACTION</span>
+    </div>
+    <div style="padding: 10px 14px 0">
+      <div style="font-size: 12px; line-height: 1.5; color: var(--ink2)">{{sh.intro}}</div>
+      <sc-if value="{{sh.hasSkip}}" hint-placeholder-val="{{false}}">
+        <div style="margin-top: 6px; {{capDim}}; font-size: 10.5px; color: var(--amber)">{{sh.skip}}</div>
+      </sc-if>
+      <div role="table" aria-label="Changes" style="margin-top: 10px; font-family: var(--code); font-size: 11.5px; border-top: 1px solid var(--lineStrong)">
+        <sc-for list="{{sh.changes}}" as="d" hint-placeholder-count="7">
+          <div role="row" style="display: grid; grid-template-columns: 62px 128px 128px minmax(0, 1fr); gap: 10px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)">
+            <span role="cell" style="{{cap}}; font-size: 10px">{{d.kind}}</span>
+            <span role="cell" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{d.target}}</span>
+            <span role="cell" style="color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{d.col}}</span>
+            <span role="cell" style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><s style="color: var(--ink3)">{{d.before}}</s> → <b style="font-weight: 600">{{d.after}}</b></span>
+          </div>
+        </sc-for>
+      </div>
+      <div role="textbox" aria-readonly="true" aria-label="Generated SQL" style="margin-top: 10px; padding: 8px 12px; background: var(--sunken); border: 1px solid var(--line); border-radius: 3px; font-family: var(--code); font-size: 11px; line-height: 17px; white-space: pre; overflow: hidden">
+        <sc-for list="{{sh.sql}}" as="sl" hint-placeholder-count="14"><div><sc-for list="{{sl}}" as="tk" hint-placeholder-count="6"><span style="{{tk.s}}">{{tk.t}}</span></sc-for></div></sc-for>
+      </div>
+      <div style="margin-top: 8px; {{capDim}}; font-size: 10px">human only // no MCP tool can reach this sheet · layer items are marked applied after commit</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 14px">
+      <button type="button" title="Copy SQL  ⌘C" style="{{boxL}}">COPY_SQL</button>
+      <button type="button" title="Export migration .sql  ⇧⌘E" onClick="{{exportSql}}" style="{{boxL}}">EXPORT .SQL</button>
+      <span style="flex: 1"></span>
+      <button type="button" onClick="{{closeSheet}}" style="{{boxL}}">CANCEL // ESC</button>
+      <button type="button" onClick="{{commit}}" style="{{boxPrimary}}">{{sh.commitText}}</button>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {sel: 'cc', vis: {mine: true, cc: true, cx: true}, compare: false, seeAs: 'you', row: 58429, item: 'p1',
+      owner: {}, gone: {}, done: {}, sheet: false, last: null, commitAt: null, unmarked: false};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    // ---------------------------------------------------------------- shared styles
+    const S = this.state;
+    const set = (o) => this.setState(o);
+    const noop = () => {};
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;';
+    const boxS = box;
+    const boxSPrimary = boxBase + 'height: 20px; padding: 0 8px; font-size: 10.5px; background: var(--ink); color: var(--paper);';
+    const segStyle = (on, first, last, h) => CAPS + 'font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px; height: ' + (h || 22) + 'px; padding: 0 8px; box-sizing: border-box; cursor: pointer; border: 1px solid var(--lineStrong); border-radius: ' + (first && last ? '2px' : first ? '2px 0 0 2px' : last ? '0 2px 2px 0' : '0') + ';' + (first ? '' : 'margin-left: -1px;') + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);');
+    const mono = (sz, extra) => 'font-family: var(--code); font-size: ' + sz + 'px; white-space: nowrap;' + (extra || '');
+    const ell = 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;';
+    const dis = (b) => b ? 'opacity: .35; cursor: default;' : '';
+    const tagCss = (color, filled) => CAPS + 'font-size: 9px; letter-spacing: .06em; display: inline-flex; align-items: center; height: 13px; padding: 0 3px; box-sizing: border-box; border-radius: 2px; border: 1px solid ' + color + ';' + (filled ? 'background: ' + color + '; color: var(--paper);' : 'color: ' + color + ';');
+    const HIDE = 'display: none;';
+
+    // ---------------------------------------------------------------- data (V2-SPEC §1.10, F3)
+    const NAME = {db: 'DATABASE', mine: 'MINE', cc: 'claude-code', cx: 'codex'};
+    const MONO = {db: 'DB', mine: 'ME', cc: 'CC', cx: 'CX'};
+    const LC = {mine: 'var(--ink)', cc: 'var(--accent)', cx: 'var(--accent)'};
+    const ORDER = ['mine', 'cc', 'cx']; // bottom → top over DATABASE
+    const EMAIL = {1904: 'r.alvarez@fastmail.com', 612: 'k.lindqvist@proton.me', 2311: 'ada.okafor@hey.com', 1187: 't.nakamura@icloud.com', 2044: 'j.moreau@gmail.com',
+      938: 'p.haddad@outlook.com', 1520: 'l.becker@posteo.de', 377: 'n.osei@gmail.com', 1666: 'm.rossi@libero.it', 845: 's.patel@fastmail.com', 2207: 'b.kowalski@wp.pl',
+      2270: 'b.kowalska@wp.pl', 1349: 'e.walsh@icloud.com', 2093: 'o.berg@proton.me', 1771: 'c.dubois@orange.fr', 503: 'y.tanaka@gmail.com', 1408: 'a.nwosu@hey.com',
+      2150: 'f.costa@sapo.pt', 726: 'g.ivanova@yandex.ru', 1182: 'v.ramos@hey.com'};
+    const DB0 = [
+      [58431, 1904, 'pending', 86.40, '2026-11-09 14:18', null], [58430, 612, 'paid', 1240.00, '2026-11-09 14:02', null],
+      [58429, 2311, 'pending', 318.25, '2026-11-09 13:47', null], [58428, 1187, 'paid', 54.90, '2026-11-09 13:31', null],
+      [58427, 2044, 'shipped', 412.00, '2026-11-09 12:58', '2026-11-09 14:10'], [58426, 938, 'paid', 412.80, '2026-11-09 12:40', null],
+      [58425, 1520, 'delivered', 129.00, '2026-11-09 11:52', '2026-11-09 13:05'], [58424, 377, 'paid', 1092.00, '2026-11-09 11:20', null],
+      [58423, 1666, 'shipped', 236.10, '2026-11-09 10:44', '2026-11-09 12:30'], [58422, 845, 'refunded', 72.00, '2026-11-09 10:12', null],
+      [58421, 2207, 'paid', 645.00, '2026-11-09 09:58', null], [58420, 1349, 'delivered', 99.90, '2026-11-09 09:31', '2026-11-09 11:02'],
+      [58419, 2093, 'paid', 158.40, '2026-11-09 09:07', null], [58418, 1771, 'paid', 310.00, '2026-11-09 08:49', null],
+      [58417, 1771, 'paid', 310.00, '2026-11-09 08:49', null], [58416, 503, 'shipped', 1875.50, '2026-11-09 08:15', '2026-11-09 10:40'],
+      [58415, 1408, 'pending', 44.00, '2026-11-09 07:52', null], [58414, 2150, 'delivered', 512.75, '2026-11-08 23:36', '2026-11-09 09:12'],
+      [58413, 726, 'paid', 268.00, '2026-11-08 22:58', null],
+    ].map(([id, cust, status, total, created, shipped]) => ({id, cust, status, total, created, shipped}));
+
+    const ITEMS = [
+      {id: 'm1', from: 'mine', kind: 'saved', n: 'Revenue by plan', s: 'saved 1 h ago', lines: ['SELECT c.plan, sum(o.total) FROM orders o JOIN customers c …']},
+      {id: 'v1', from: 'cc', kind: 'view', n: 'daily_revenue', s: '3 cols · used by Sales health', lines: ['CTE · SELECT created_at::date AS day, count(*), sum(total) …'],
+        ch: ['VIEW', 'daily_revenue', 'CREATE VIEW', '∅', '3 columns'],
+        sql: ['CREATE VIEW daily_revenue AS SELECT created_at::date AS day,', '  count(*) AS orders, sum(total) AS revenue FROM orders GROUP BY 1;']},
+      {id: 'r1', from: 'cc', kind: 'rel', n: 'events.customer_id', s: '→ customers.id', lines: ['inferred by name + type · 99.2 % match · virtual FK, never DDL'],
+        ch: ['FK', 'events → customers', 'NOT VALID', 'inferred', 'declared'],
+        sql: ['ALTER TABLE events ADD CONSTRAINT events_customer_id_fkey', '  FOREIGN KEY (customer_id) REFERENCES customers (id) NOT VALID;']},
+      {id: 'p1', from: 'cc', kind: 'patch', op: 'update', rid: 58429, set: {status: 'shipped', shipped: '2026-11-09 14:05'}, base: {status: 'pending', shipped: null},
+        n: '#58429', s: 'status · shipped_at', lines: ['status pending → shipped · shipped_at ∅ → 14:05'],
+        ch: ['UPDATE', 'orders #58429', 'status, shipped_at', 'pending · ∅', 'shipped · 14:05'],
+        sql: ["UPDATE orders SET status = 'shipped', shipped_at = '2026-11-09 14:05'", "  WHERE id = 58429 AND status = 'pending' AND shipped_at IS NULL;"]},
+      {id: 'p2', from: 'cc', kind: 'patch', op: 'update', rid: 58426, set: {total: 371.52}, base: {total: 412.80},
+        n: '#58426', s: 'total · SPRING10 −10 %', lines: ['total 412.80 → 371.52 · coupon SPRING10 missed at checkout'],
+        ch: ['UPDATE', 'orders #58426', 'total', '412.80', '371.52'],
+        sql: ['UPDATE orders SET total = 371.52 WHERE id = 58426 AND total = 412.80;']},
+      {id: 'p3', from: 'cc', kind: 'patch', op: 'update', rid: 58421, set: {cust: 2270}, base: {cust: 2207},
+        n: '#58421', s: 'customer_id · typo fix', lines: ['customer_id 2207 → 2270 · matched support ticket #8812'],
+        ch: ['UPDATE', 'orders #58421', 'customer_id', '2207', '2270'],
+        sql: ['UPDATE orders SET customer_id = 2270 WHERE id = 58421 AND customer_id = 2207;']},
+      {id: 'p4', from: 'cc', kind: 'patch', op: 'insert', rid: 58432, row: {cust: 1182, status: 'pending', total: 214.00, created: '2026-11-09 14:20', shipped: null},
+        n: '#58432', s: 'insert · phone order', lines: ['1182 · pending · 214.00 · 2026-11-09 14:20'],
+        ch: ['INSERT', 'orders #58432', '5 columns', '∅', '1182 · pending · 214.00'],
+        sql: ['INSERT INTO orders (id, customer_id, status, total, created_at)', "  VALUES (58432, 1182, 'pending', 214.00, '2026-11-09 14:20');"]},
+      {id: 'p5', from: 'cc', kind: 'patch', op: 'delete', rid: 58418, n: '#58418', s: 'delete · duplicate', lines: ['same customer, total and second as #58417'],
+        ch: ['DELETE', 'orders #58418', 'row', '1771 · paid · 310.00', '∅'],
+        sql: ['DELETE FROM orders WHERE id = 58418;  -- duplicate of 58417']},
+      {id: 'd1', from: 'cc', kind: 'dash', n: 'Sales health', s: '6 widgets · 30 s', lines: ['kpi ×3 · line · bars.horizontal · table — reads daily_revenue']},
+      {id: 's1', from: 'cc', kind: 'saved', n: 'Late shipments > 5 d', s: 'saved query', lines: ["… WHERE shipped_at IS NULL AND created_at < now() - '5 d'"]},
+      {id: 's2', from: 'cc', kind: 'saved', n: 'Repeat buyers 90 d', s: 'saved query', lines: ['… GROUP BY customer_id HAVING count(*) > 1']},
+      {id: 'n1', from: 'cc', kind: 'note', n: 'orders.total', s: 'gross, incl. VAT', lines: ['“gross, incl. VAT; refunds live in refunds.amount”']},
+      {id: 'n2', from: 'cc', kind: 'note', n: 'orders.shipped_at', s: 'null until scan', lines: ['“null until the carrier’s first scan”']},
+      {id: 'x1', from: 'cx', kind: 'patch', op: 'update', rid: 58424, set: {total: 1129.00}, base: {total: 1029.00},
+        n: '#58424', s: 'total', lines: ['patched 1,029.00 → 1,129.00', 'database is now 1,092.00 — changed after the patch'],
+        ch: ['UPDATE', 'orders #58424', 'total', '1,029.00', '1,129.00'],
+        sql: ['UPDATE orders SET total = 1129.00 WHERE id = 58424 AND total = 1029.00;']},
+      {id: 'x2', from: 'cx', kind: 'view', n: 'weekly_cohorts', s: '4 cols', lines: ["SELECT date_trunc('week', c.created_at) AS cohort, …"],
+        ch: ['VIEW', 'weekly_cohorts', 'CREATE VIEW', '∅', '4 columns'],
+        sql: ["CREATE VIEW weekly_cohorts AS SELECT date_trunc('week', c.created_at) AS cohort,", '  … FROM customers c JOIN orders o ON o.customer_id = c.id GROUP BY 1;']},
+      {id: 'x3', from: 'cx', kind: 'saved', n: 'Refund rate by plan', s: 'saved query', lines: ['… JOIN refunds r ON r.invoice_id = i.id GROUP BY c.plan']},
+      {id: 'x4', from: 'cx', kind: 'note', n: 'customers.plan', s: 'free · pro · team', lines: ['“free · pro · team — team billed per seat”']},
+    ];
+
+    // ---------------------------------------------------------------- store resolution
+    const own = (it) => S.owner[it.id] || it.from;
+    const live = ITEMS.filter((it) => !S.gone[it.id] && !S.done[it.id]);
+    const DB = DB0.map((r) => ({...r}));
+    ITEMS.forEach((it) => {
+      if (!S.done[it.id] || it.kind !== 'patch') return;
+      const i = DB.findIndex((r) => r.id === it.rid);
+      if (it.op === 'insert' && i < 0) DB.push({id: it.rid, ...it.row});
+      else if (it.op === 'delete' && i >= 0) DB.splice(i, 1);
+      else if (it.op === 'update' && i >= 0) Object.assign(DB[i], it.set);
+    });
+    DB.sort((a, b) => b.id - a.id);
+    const dbOf = (id) => DB.find((r) => r.id === id) || null;
+    const isStale = (it) => {
+      if (it.kind !== 'patch' || it.op !== 'update') return false;
+      const d = dbOf(it.rid);
+      return !!d && Object.keys(it.base).some((k) => d[k] !== it.base[k]);
+    };
+    const agentView = S.seeAs !== 'you';
+    const VISL = agentView ? ['mine', S.seeAs] : ORDER.filter((l) => S.vis[l]);
+    const resolve = (id, layers) => {
+      const d = dbOf(id);
+      let row = d ? {...d} : null;
+      const src = {}, stale = {};
+      let op = null, by = null, staleBy = null;
+      ORDER.filter((l) => layers.includes(l)).forEach((l) => {
+        live.filter((it) => it.kind === 'patch' && it.rid === id && own(it) === l).forEach((it) => {
+          if (it.op === 'insert') { row = {id, ...it.row}; ['id', 'cust', 'status', 'total', 'created', 'shipped'].forEach((k) => { src[k] = l; }); op = 'insert'; by = l; }
+          else if (it.op === 'delete') { if (row) { op = 'delete'; by = l; } }
+          else if (row) {
+            Object.keys(it.set).forEach((k) => { row[k] = it.set[k]; src[k] = l; });
+            if (isStale(it)) { Object.keys(it.set).forEach((k) => { stale[k] = true; }); staleBy = l; }
+            if (op !== 'insert' && op !== 'delete') { op = 'update'; by = l; }
+          }
+        });
+      });
+      if (src.cust) src.email = src.cust;
+      return {d, row, src, op, by, stale, staleBy};
+    };
+    const money = (v) => v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const fmt = (k, row, redact) => {
+      if (!row) return '';
+      if (k === 'id') return String(row.id);
+      if (k === 'cust') return String(row.cust);
+      if (k === 'email') return redact ? '«redacted»' : (EMAIL[row.cust] || '—');
+      if (k === 'total') return money(row.total);
+      if (k === 'status') return row.status;
+      return row[k] || '····';
+    };
+    const COLS = [
+      {k: 'id', h: 'id', t: 'int8', num: true}, {k: 'cust', h: 'customer_id', t: '→ customers', num: true},
+      {k: 'email', h: 'customers.email', t: 'lookup'}, {k: 'status', h: 'status', t: 'order_status'},
+      {k: 'total', h: 'total', t: 'numeric', num: true}, {k: 'created', h: 'created_at', t: 'timestamptz'}, {k: 'shipped', h: 'shipped_at', t: 'timestamptz'},
+    ];
+    const GC = '54px 60px 82px 150px 80px 152px 122px minmax(0, 1fr)';
+
+    // ---------------------------------------------------------------- counts
+    const cnt = (l) => live.filter((it) => own(it) === l).length;
+    const staleN = (l) => live.filter((it) => own(it) === l && isStale(it)).length;
+    const totalItems = live.length;
+    const totalStale = live.filter(isStale).length;
+    const applicable = (l) => live.filter((it) => own(it) === l && ((it.kind === 'patch' && !isStale(it)) || it.kind === 'view' || it.kind === 'rel'));
+    const skipped = (l) => live.filter((it) => own(it) === l && isStale(it));
+    const selL = S.sel;
+    const cmpL = S.compare && selL !== 'db' ? selL : null;
+
+    // ---------------------------------------------------------------- top strip + navigator
+    const NAVI = {overview: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', tables: 'M3 4h18v16H3zM3 10h18M9 4v16', query: 'M4 17l6-5-6-5M12 19h8',
+      schema: 'M3 4h6v5H3zM15 4h6v5h-6zM9 15h6v5H9zM9 6.5h6M6 9v3.5h6V15M18 9v3.5h-6', activity: 'M3 12h4l3-8 4 16 3-8h4'};
+    const navCap = CAPS + 'white-space: nowrap;';
+    const navs = [['overview', 'Overview', 'Overview.dc.html', '⌘0'], ['tables', 'Tables', 'Table.dc.html', '⌘T'], ['query', 'Query', 'Query.dc.html', '⌘⏎'], ['schema', 'Schema map', 'SchemaMap.dc.html', '⌘4'], ['activity', 'Activity', 'Overview.dc.html', '⇧⌘A']].map(([id, label, href, key]) => {
+      const on = id === 'tables';
+      return {t: label, href, icon: NAVI[id], tip: label + '  ' + key, current: on ? 'page' : 'false',
+        style: navCap + ' display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px; text-decoration: none;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [['session', 'shop'], ['engine', 'pg 17.2'], ['latency', '4 ms'], ['store', totalItems + ' items'], ['clock', '14:32:09']].map(([k, v], i) => ({k, v, vs: cap + '; color: ' + (i === 3 ? 'var(--accent)' : 'var(--ink)')}));
+    const agentsChip = CAPS + 'display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); text-decoration: none; white-space: nowrap;';
+    const navFrame = 'flex: 0 0 220px; height: 854px; display: flex; flex-direction: column; box-sizing: border-box; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; overflow: hidden;';
+    const TROWS = {addresses: 3120, audit_log: 1200000, categories: 18, coupons: 64, customers: 2400, events: 61532, invoices: 9812, order_coupons: 5206, order_items: 168214, orders: 48000, products: 240, refunds: 412};
+    const fmtK = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace('.0', '') + 'K' : String(n);
+    const navItem = (name, href, o) => {
+      const strong = !!o.strong;
+      const filled = o.rows ? Math.max(1, Math.round(Math.log10(o.rows) / 7 * 8)) : 0;
+      const tl = o.layer;
+      return {name, href, current: strong ? 'page' : 'false', tip: o.tip || name, count: o.count || '', tag: tl ? MONO[tl] : '',
+        meter: o.rows ? Array.from({length: 8}, (_, k) => 'width: 3px; height: 8px; background: ' + (k < filled ? (strong ? 'var(--paper)' : 'var(--ink)') : 'var(--fill12)')) : [],
+        tagStyle: tl ? tagCss(tl === 'mine' ? 'var(--ink)' : 'var(--accent)') : HIDE,
+        nameStyle: 'flex: 1; ' + ell,
+        countStyle: 'font-family: var(--code); font-size: 11px; min-width: 34px; text-align: right;' + (strong ? 'color: var(--paper); opacity: .75' : 'color: var(--ink3)'),
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 6px; border-radius: 2px; text-align: left; font-family: var(--ui); text-decoration: none; font-size: 12px; box-sizing: border-box; cursor: pointer;' +
+          (strong ? 'background: var(--ink); color: var(--paper); font-weight: 600;' : 'color: var(--ink);')};
+    };
+    const layerItems = (kind) => live.filter((it) => it.kind === kind && VISL.includes(own(it)) || (it.kind === kind && own(it) === 'mine'));
+    const navViews = layerItems('view').map((it) => navItem(it.n, 'Query.dc.html', {layer: own(it), tip: it.n + ' — virtual view in ' + NAME[own(it)]}));
+    const navSaved = layerItems('saved').map((it) => navItem(it.n, 'Query.dc.html', {layer: own(it), tip: it.n + ' — saved query in ' + NAME[own(it)]}));
+    const navSections = [
+      {name: 'workspace', count: '03', items: [navItem('Overview', 'Overview.dc.html', {count: '⌘0'}), navItem('Query 1 *', 'Query.dc.html', {count: 'edited'}), navItem('Schema map', 'SchemaMap.dc.html', {count: '⌘4'})]},
+      {name: 'tables', count: '12', items: Object.keys(TROWS).map((n) => navItem(n, n === 'orders' ? 'Store.dc.html' : 'Table.dc.html', {strong: n === 'orders', rows: TROWS[n], count: fmtK(TROWS[n]), tip: n + ' · ' + TROWS[n].toLocaleString('en-US') + ' rows'}))},
+      {name: 'virtual views', count: String(navViews.length).padStart(2, '0'), items: navViews},
+      {name: 'saved', count: String(navSaved.length).padStart(2, '0'), items: navSaved},
+    ];
+
+    // ---------------------------------------------------------------- grid header controls
+    const modes = [['merged', 'MERGED', '', 'Database with every visible layer on top'], ['compare', 'COMPARE WITH DATABASE', '⌘D', 'Before / after for the selected layer']].map(([id, label, k, tip], i) => {
+      const on = id === 'compare' ? !!cmpL : !cmpL;
+      const off = id === 'compare' && selL === 'db';
+      return {t: label, k, on: on ? 'true' : 'false', dis: off ? 'true' : 'false', tip: off ? 'Select a layer to compare' : tip + (k ? '  ' + k : ''),
+        pick: off ? noop : () => set({compare: id === 'compare'}),
+        kStyle: k ? 'font-family: var(--code); font-weight: 400; letter-spacing: 0; opacity: .7' : HIDE,
+        style: segStyle(on, i === 0, i === 1, 22) + dis(off)};
+    });
+    const seeAs = [['you', 'YOU', 'Everything you can see'], ['cc', 'CC', 'Exactly what claude-code’s query.run returns'], ['cx', 'CX', 'Exactly what codex’s query.run returns']].map(([id, label, tip], i) => {
+      const on = S.seeAs === id;
+      return {t: label, on: on ? 'true' : 'false', tip, pick: () => set({seeAs: id}), style: segStyle(on, i === 0, i === 2, 22)};
+    });
+
+    // ---------------------------------------------------------------- sheets diagram + chain
+    const SH = [['db', 40], ['mine', 29], ['cc', 18], ['cx', 7]];
+    const sheetOn = (l) => l === 'db' || VISL.includes(l);
+    const sheets = SH.map(([l, y]) => {
+      const on = sheetOn(l), sel = selL === l;
+      const d = 'M16 ' + y + 'H92L80 ' + (y + 14) + 'H4Z';
+      const marks = {db: '', mine: 'M50 ' + (y + 7) + 'h8', cc: 'M26 ' + (y + 7) + 'h10M42 ' + (y + 7) + 'h6M54 ' + (y + 7) + 'h12', cx: 'M44 ' + (y + 7) + 'h8'}[l];
+      const markColor = l === 'mine' ? 'var(--ink)' : l === 'cx' && staleN('cx') ? 'var(--amber)' : 'var(--accent)';
+      return {d, m: on && marks && cnt(l) ? marks : 'M0 0',
+        s: l === 'db' ? 'fill: var(--fill30); stroke: var(--lineStrong); stroke-width: ' + (sel ? 1.8 : 1) + ';'
+          : on ? 'fill: var(--paper); fill-opacity: .82; stroke: ' + (sel ? 'var(--accent)' : 'var(--ink)') + '; stroke-width: ' + (sel ? 1.6 : 1) + ';'
+          : 'fill: none; stroke: var(--ink3); stroke-width: 1; stroke-dasharray: 3 2; opacity: .5;',
+        ms: 'fill: none; stroke: ' + markColor + '; stroke-width: 2; stroke-linecap: square;',
+        ty: String(y + 10), t: l === 'db' ? 'DATABASE · READ-ONLY' : NAME[l].toUpperCase() + (on ? '' : ' · HIDDEN'),
+        ts: 'font: 600 9px var(--ui); letter-spacing: .08em; fill: ' + (on ? (sel ? 'var(--accent)' : 'var(--ink)') : 'var(--ink3)') + ';' + (on ? '' : ' text-decoration: line-through;')};
+    });
+    const sheetsLabel = 'Layer stack: DATABASE at the bottom, then MINE, claude-code, codex on top' + (VISL.length < 3 ? '; hidden: ' + ORDER.filter((l) => !VISL.includes(l)).map((l) => NAME[l]).join(', ') : '');
+    const chain = [];
+    ['db', 'mine', 'cc', 'cx'].forEach((l, i) => {
+      if (i) chain.push({t: '←', s: 'color: var(--ink3); font-size: 12px'});
+      const on = sheetOn(l);
+      chain.push({t: l === 'db' ? 'DATABASE' : NAME[l].toUpperCase(), s: CAPS + 'white-space: nowrap; color: ' + (on ? (l === 'db' || l === 'mine' ? 'var(--ink)' : 'var(--accent)') : 'var(--ink3)') + ';' + (on ? '' : ' text-decoration: line-through;')});
+    });
+
+    // ---------------------------------------------------------------- grid
+    const redact = agentView;
+    const heads = [{h: '', t: '', k: 'g'}].concat(COLS).map((c) => {
+      const isMail = c.k === 'email';
+      return {n: c.k === 'g' ? '#' : c.h, t: isMail ? (agentView ? 'REDACTED FOR ' + MONO[S.seeAs] : 'HIDDEN FROM AGENTS') : c.t,
+        tip: c.k === 'g' ? 'row · layer mark' : isMail ? 'customers.email via orders.customer_id — auto-marked sensitive; agents get «redacted»' : c.h + ' · ' + c.t,
+        style: 'display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 0 8px; border-right: 1px solid var(--line); overflow: hidden; min-width: 0;' + (c.num ? 'align-items: flex-end;' : 'align-items: flex-start;'),
+        nStyle: cap + '; font-size: 10.5px;' + (c.k === 'g' ? ' color: var(--ink3);' : '') + (c.k === 'id' ? ' text-decoration: underline 1px solid; text-underline-offset: 3px;' : c.k === 'cust' ? ' text-decoration: underline dotted; text-underline-offset: 3px;' : ''),
+        tStyle: isMail ? tagCss('var(--ink)', agentView) : mono(10, ' color: var(--ink3);')};
+    });
+    const gridHeadStyle = 'display: grid; grid-template-columns: ' + GC + '; height: 36px; flex: none; box-sizing: border-box; border-bottom: 1px solid var(--lineStrong);';
+    const cellCss = (c, extra) => 'padding: 0 8px; display: flex; align-items: center; gap: 6px; border-right: 1px solid var(--line); overflow: hidden; min-width: 0;' + (c.num ? 'justify-content: flex-end;' : '') + (extra || '');
+    const span = (a, aS, b, bS) => ({a, aS: ell + (aS || ''), b: b || '', bS: b ? 'flex: none; ' + (bS || '') : HIDE});
+    const dots = 'background-image: radial-gradient(circle, var(--fill30) 0.8px, transparent 1.1px); background-size: 5px 5px;';
+    const rowCss = (on, extra) => 'display: grid; grid-template-columns: ' + GC + '; height: 24px; box-sizing: border-box; cursor: default;' +
+      (on ? 'background: var(--fill12); box-shadow: inset 0 1px 0 var(--ink), inset 0 -1px 0 var(--ink);' : 'box-shadow: inset 0 -1px 0 var(--line);') + (extra || '');
+    const gutCss = (bar) => 'display: flex; align-items: center; gap: 5px; padding-left: 7px; border-right: 1px solid var(--line); box-shadow: inset ' + (bar ? '2px 0 0 ' + bar : '0 0 0 transparent') + ';';
+    const tagFor = (color) => tagCss(color);
+
+    let rows = [];
+    let cmpTitle = '', cmpSub = '';
+    const pickRow = (id) => () => set({row: id});
+    if (!cmpL) {
+      const ids = DB.map((r) => r.id);
+      live.filter((it) => it.kind === 'patch' && it.op === 'insert' && VISL.includes(own(it)) && !ids.includes(it.rid)).forEach((it) => ids.push(it.rid));
+      ids.sort((a, b) => b - a);
+      rows = ids.map((id, i) => {
+        const R = resolve(id, VISL);
+        const on = S.row === id;
+        const col = R.by ? (R.staleBy ? 'var(--amber)' : LC[R.by]) : null;
+        const tag = R.op === 'insert' ? '+' + MONO[R.by] : R.op === 'delete' ? '−' + MONO[R.by] : R.op ? MONO[R.staleBy || R.by] : '';
+        const cells = COLS.map((c) => {
+          const v = fmt(c.k, R.row, redact);
+          if (R.op === 'delete') return {s: cellCss(c), ...span(v, 'color: var(--ink3); text-decoration: line-through;')};
+          const from = R.src[c.k];
+          if (R.stale[c.k]) return {s: cellCss(c), ...span(fmt(c.k, R.d), 'color: var(--ink3); font-size: 11px;', '≠ ' + v, 'color: var(--amber); font-weight: 600; font-size: 11px;')};
+          if (from) return {s: cellCss(c), ...span(v, 'color: ' + LC[from] + '; font-weight: 600;' + (redact && c.k === 'email' ? ' font-weight: 400; color: var(--ink3);' : ''))};
+          return {s: cellCss(c), ...span(v, (c.k === 'shipped' && !R.row.shipped) || (redact && c.k === 'email') ? 'color: var(--ink3);' : '')};
+        });
+        const tip = R.op === 'insert' ? 'Inserted in ' + NAME[R.by] + ' — not in the database' : R.op === 'delete' ? 'Deleted in ' + NAME[R.by] + ' — still in the database' : R.staleBy ? 'STALE patch from ' + NAME[R.staleBy] + ' — the database changed since' : R.op ? 'Patched in ' + NAME[R.by] : 'Database row';
+        return {on: on ? 'true' : 'false', n: String(i + 1).padStart(2, '0'), tag, tip, pick: pickRow(id), cells,
+          nStyle: mono(10.5, ' width: 14px; ' + (on ? 'color: var(--ink); font-weight: 700;' : 'color: var(--ink3);')),
+          tagStyle: tag ? tagFor(col) : HIDE, gStyle: gutCss(col),
+          style: rowCss(on, R.op === 'insert' ? dots : '')};
+      });
+    } else {
+      const touched = live.filter((it) => it.kind === 'patch' && own(it) === cmpL).sort((a, b) => b.rid - a.rid);
+      const nU = touched.filter((it) => it.op === 'update').length, nI = touched.filter((it) => it.op === 'insert').length, nD = touched.filter((it) => it.op === 'delete').length;
+      const nUn = DB.filter((r) => !touched.some((it) => it.rid === r.id)).length;
+      cmpTitle = 'compare // ' + NAME[cmpL] + ' ↔ database';
+      cmpSub = touched.length ? nU + ' changed · ' + nI + ' inserted · ' + nD + ' deleted · ' + nUn + ' unchanged rows hidden' : 'no row patches in this layer · ' + nUn + ' rows identical';
+      let n = 0;
+      touched.forEach((it) => {
+        const R = resolve(it.rid, [cmpL]);
+        const changed = it.op === 'update' ? Object.keys(it.set).concat(it.set.cust !== undefined ? ['email'] : []) : [];
+        const on = S.row === it.rid;
+        n++;
+        const nn = String(n).padStart(2, '0');
+        const stale = isStale(it);
+        // DATABASE line
+        rows.push({on: on ? 'true' : 'false', n: nn, tag: 'DB', tip: 'Database now', pick: pickRow(it.rid),
+          cells: COLS.map((c) => {
+            if (!R.d) return {s: cellCss(c), ...span(c.k === 'id' ? '∅' : c.k === 'email' ? 'not in database' : '', 'color: var(--ink3);')};
+            const ch = changed.includes(c.k);
+            return {s: cellCss(c), ...span(fmt(c.k, R.d, redact), ch ? (stale ? 'color: var(--ink); font-weight: 600;' : 'color: var(--ink3); text-decoration: line-through;') : 'color: var(--ink2);')};
+          }),
+          nStyle: mono(10.5, ' width: 14px; color: var(--ink3);'), tagStyle: tagFor('var(--ink3)'), gStyle: gutCss(null),
+          style: rowCss(false, 'box-shadow: none;' + (on ? 'background: var(--fill12);' : ''))});
+        if (stale) {
+          rows.push({on: on ? 'true' : 'false', n: '', tag: 'BASE', tip: 'What ' + NAME[cmpL] + ' saw when it patched', pick: pickRow(it.rid),
+            cells: COLS.map((c) => ({s: cellCss(c), ...span(it.base[c.k] !== undefined ? fmt(c.k, {...R.d, ...it.base}) : '', 'color: var(--ink3); text-decoration: line-through;')})),
+            nStyle: mono(10.5, ' width: 14px;'), tagStyle: tagFor('var(--ink3)'), gStyle: gutCss(null),
+            style: rowCss(false, 'box-shadow: none;' + (on ? 'background: var(--fill12);' : ''))});
+        }
+        const lc = stale ? 'var(--amber)' : LC[cmpL];
+        rows.push({on: on ? 'true' : 'false', n: '', tag: (it.op === 'insert' ? '+' : it.op === 'delete' ? '−' : '') + MONO[cmpL], tip: NAME[cmpL] + ' layer', pick: pickRow(it.rid),
+          cells: COLS.map((c) => {
+            const v = fmt(c.k, R.row, redact);
+            if (it.op === 'delete') return {s: cellCss(c), ...span(v, 'color: var(--ink3); text-decoration: line-through;')};
+            if (it.op === 'insert') return {s: cellCss(c), ...span(v, 'color: ' + lc + '; font-weight: 600;')};
+            return changed.includes(c.k) ? {s: cellCss(c, 'background: var(--fill12);'), ...span(v, 'color: ' + lc + '; font-weight: 600;')} : {s: cellCss(c), ...span(v, 'color: var(--ink3);')};
+          }),
+          nStyle: mono(10.5, ' width: 14px;'), tagStyle: tagFor(lc), gStyle: gutCss(lc),
+          style: rowCss(false, 'box-shadow: inset 0 -1px 0 var(--lineStrong);' + (it.op === 'insert' ? dots : '') + (on ? 'background-color: var(--fill12);' : ''))});
+      });
+    }
+    const gridLabel = 'orders rows' + (cmpL ? ', compare ' + NAME[cmpL] + ' with database' : ', merged with ' + (VISL.length ? VISL.map((l) => NAME[l]).join(', ') : 'no layers'));
+
+    // ---------------------------------------------------------------- provenance
+    const allIds = DB.map((r) => r.id).concat(live.filter((it) => it.kind === 'patch' && it.op === 'insert').map((it) => it.rid));
+    const pid = allIds.includes(S.row) ? S.row : DB[0].id;
+    const PR = resolve(pid, VISL);
+    const PCOLS = [['db', 'DATABASE'], ['mine', 'MINE'], ['cc', 'CLAUDE-CODE'], ['cx', 'CODEX'], ['shown', '= SHOWN']];
+    const pcell = 'padding: 0 8px; display: flex; align-items: center; gap: 6px; overflow: hidden; min-width: 0; border-left: 1px solid var(--line);';
+    const provHead = [{s: 'padding: 0 0; display: flex; align-items: center; min-width: 0;', ...span('column', capDim + '; font-size: 10px;')}].concat(PCOLS.map(([l, label]) => {
+      const off = (l === 'mine' || l === 'cc' || l === 'cx') && !VISL.includes(l);
+      return {s: pcell, ...span(label, (l === 'shown' ? cap : capDim) + '; font-size: 10px;' + (l === selL ? ' color: var(--accent);' : '') + (off ? ' text-decoration: line-through;' : ''), off ? (agentView ? 'not visible' : 'hidden') : '', capDim + '; font-size: 9px;')};
+    }));
+    const contrib = (l, k) => {
+      const its = live.filter((it) => it.kind === 'patch' && it.rid === pid && own(it) === l);
+      let out = null, st = false;
+      its.forEach((it) => {
+        if (it.op === 'delete') out = '− row';
+        else if (it.op === 'insert') out = fmt(k, {id: pid, ...it.row});
+        else if (it.set[k] !== undefined) { out = fmt(k, {...(dbOf(pid) || {}), ...it.set}); st = isStale(it); }
+        else if (k === 'email' && it.set.cust !== undefined) { out = fmt('email', {cust: it.set.cust}); st = false; }
+      });
+      return {out, st};
+    };
+    const PK = [['id', 'id'], ['cust', 'customer_id'], ['email', 'customers.email'], ['status', 'status'], ['total', 'total'], ['created', 'created_at'], ['shipped', 'shipped_at']];
+    const provRows = PK.map(([k, label]) => {
+      const out = [{s: 'display: flex; align-items: center; gap: 6px; min-width: 0;', ...span(label, 'color: var(--ink2);', k === 'email' ? 'hidden' : '', tagCss('var(--ink3)'))}];
+      out.push({s: pcell, ...span(PR.d ? fmt(k, PR.d) : (k === 'id' ? '∅ no row' : ''), 'color: var(--ink);' + (PR.d ? '' : ' color: var(--ink3);'))});
+      ['mine', 'cc', 'cx'].forEach((l) => {
+        const c = contrib(l, k);
+        const off = !VISL.includes(l);
+        if (c.out === null) {
+          const red = k === 'email' && l !== 'mine';
+          out.push({s: pcell + (off ? ' opacity: .4;' : ''), ...span(red ? '«redacted»' : '·', 'color: var(--ink3);')});
+        } else out.push({s: pcell + (off ? ' opacity: .4;' : ''), ...span(c.out, 'font-weight: 600; color: ' + (c.st ? 'var(--amber)' : LC[l]) + ';' + (c.out === '− row' ? '' : ''), c.st ? 'stale' : '', tagCss('var(--amber)'))});
+      });
+      const v = fmt(k, PR.row, redact);
+      const from = PR.src[k];
+      const shownStyle = PR.op === 'delete' ? 'color: var(--ink3); text-decoration: line-through;' : PR.stale[k] ? 'color: var(--amber); font-weight: 600;' : from ? 'color: ' + LC[from] + '; font-weight: 600;' : 'color: var(--ink);';
+      out.push({s: pcell + ' background: var(--sunken);', ...span(v, shownStyle)});
+      return out;
+    });
+    let verdict = 'database only', verdictStyle = capDim + '; font-size: 10.5px;';
+    if (PR.op === 'insert') { verdict = 'inserted by ' + NAME[PR.by] + ' // not in database'; verdictStyle = cap + '; font-size: 10.5px; color: ' + LC[PR.by] + ';'; }
+    else if (PR.op === 'delete') { verdict = 'deleted by ' + NAME[PR.by] + ' // still in database'; verdictStyle = cap + '; font-size: 10.5px; color: ' + LC[PR.by] + ';'; }
+    else if (PR.staleBy) { const it = live.find((x) => x.rid === pid && own(x) === PR.staleBy); const k = Object.keys(it.set)[0]; verdict = 'stale // ' + NAME[PR.staleBy] + ' patched ' + k + ' at ' + fmt(k, {...PR.d, ...it.base}) + ' · database now ' + fmt(k, PR.d); verdictStyle = cap + '; font-size: 10.5px; color: var(--amber);'; }
+    else if (PR.op) { const n = Object.keys(PR.src).filter((k) => k !== 'email').length; verdict = 'patched by ' + NAME[PR.by] + ' // ' + n + (n === 1 ? ' column' : ' columns'); verdictStyle = cap + '; font-size: 10.5px; color: ' + LC[PR.by] + ';'; }
+    else if (!PR.d) { verdict = agentView ? 'not visible to ' + NAME[S.seeAs] + ' // other agent’s layer' : 'not visible // layer hidden'; }
+    const prov = {id: '#' + pid, verdict, verdictStyle, head: provHead, rows: provRows, label: 'Row ' + pid + ' resolved through the layer stack'};
+
+    // ---------------------------------------------------------------- layers panel
+    const LOCK_A = 'M3 6h6v4.5H3z', LOCK_B = 'M4.4 6V4.4a1.6 1.6 0 0 1 3.2 0V6';
+    const ago = {mine: Object.keys(S.owner).length ? 'just now' : '1 h ago', cc: '2 min ago', cx: '3 h ago'};
+    const layers = ['cx', 'cc', 'mine', 'db'].map((l) => {
+      const on = selL === l;
+      const isDb = l === 'db';
+      const vis = isDb || (agentView ? VISL.includes(l) : S.vis[l]);
+      const c = cnt(l), st = staleN(l);
+      const meta = isDb ? 'POSTGRES 17 // NEVER WRITTEN BY AGENTS' : l === 'mine' ? 'HUMAN · YOU · ' + ago.mine.toUpperCase() : 'OVERLAY · ' + (l === 'cc' ? 'ACTIVE ' : '') + ago[l].toUpperCase();
+      return {on: on ? 'true' : 'false', name: NAME[l], mono: MONO[l], count: isDb ? '' : String(c), meta, warn: st ? ' · ' + st + ' STALE' : '',
+        ro: isDb ? 'read-only' : l === 'mine' ? 'you' : 'agent',
+        tip: isDb ? 'DATABASE — read-only; agents never write here' : NAME[l] + ' — ' + c + ' items · click to review',
+        pick: () => set({sel: l, item: null, compare: l === 'db' ? false : S.compare}),
+        visOn: vis ? 'true' : 'false', visDis: isDb || agentView ? 'true' : 'false',
+        visLabel: isDb ? 'DATABASE is always visible and read-only' : agentView ? 'Visibility follows SEE AS ' + MONO[S.seeAs] : (vis ? 'Hide ' : 'Show ') + NAME[l] + ' layer',
+        toggle: isDb || agentView ? noop : () => set({vis: {...S.vis, [l]: !S.vis[l]}}),
+        tgA: isDb ? LOCK_A : 'M1.5 1.5h9v9h-9z', tgB: isDb ? LOCK_B : 'M3.5 3.5h5v5h-5z',
+        tgAS: isDb ? 'fill: none; stroke: var(--ink3); stroke-width: 1.2;' : 'fill: none; stroke: ' + (vis ? 'var(--ink)' : 'var(--ink3)') + '; stroke-width: 1;',
+        tgBS: isDb ? 'fill: none; stroke: var(--ink3); stroke-width: 1.2;' : 'fill: ' + (vis ? 'var(--ink)' : 'none') + '; stroke: none;',
+        tgStyle: 'flex: none; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 2px; background: transparent; cursor: ' + (isDb || agentView ? 'default' : 'pointer') + ';',
+        row: 'display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 2px; border-radius: 2px;' + (on ? 'background: var(--fill12); box-shadow: inset 2px 0 0 var(--ink);' : ''),
+        selStyle: 'flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 4px; border: 0; background: transparent; color: var(--ink); font-family: var(--ui); text-align: left; cursor: pointer;' + (vis ? '' : ' opacity: .45;'),
+        tileStyle: 'position: relative; z-index: 1; flex: none; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; border: 1px solid var(--ink); border-radius: 3px; font-size: 10px; font-weight: 700; letter-spacing: .04em;' + (isDb ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+        nameStyle: (isDb || l === 'mine' ? cap + '; font-size: 12px;' : 'font-size: 12.5px; font-weight: 600; white-space: nowrap;'),
+        roStyle: capDim + '; font-size: 9.5px;',
+        metaStyle: capDim + '; font-size: 9.5px; overflow: hidden; text-overflow: ellipsis;',
+        warnStyle: st ? cap + '; font-size: 9.5px; color: var(--amber);' : HIDE,
+        countStyle: 'flex: none; min-width: 26px; text-align: right; font-size: 20px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; color: var(--ink);' + (isDb ? HIDE : '')};
+    });
+
+    // ---------------------------------------------------------------- selected layer detail
+    const isDbSel = selL === 'db';
+    const selCount = isDbSel ? 12 : cnt(selL);
+    const det = {
+      kind: {db: 'read-only · postgres 17', mine: 'your layer · bottom of the store', cc: 'agent layer · overlay', cx: 'agent layer · overlay'}[selL],
+      who: {db: 'localhost:5432', mine: 'human', cc: 'mcp // claude-code 2.4.1', cx: 'mcp // codex'}[selL],
+      count: String(selCount), unit: isDbSel ? 'tables' : selCount === 1 ? 'item' : 'items',
+      name: isDbSel ? '' : NAME[selL],
+      nameStyle: isDbSel ? HIDE : (selL === 'mine' ? cap + '; font-size: 13px;' : 'font-size: 13px; font-weight: 600; color: var(--accent);') + ' margin-left: auto;',
+      rule: {db: 'never written by agents · you write only through apply', mine: 'agents read it · only you write it', cc: 'reads database + mine + own · writes only here', cx: 'reads database + mine + own · writes only here'}[selL],
+    };
+    const hiddenList = [['customers.email', 'email'], ['customers.name', 'name'], ['customers.phone', 'phone'], ['addresses.line1', 'address'], ['addresses.city', 'address'], ['addresses.country', 'address'], ['categories.name', 'name']];
+    const hiddenCount = S.unmarked ? 6 : 7;
+    const hiddenCols = hiddenList.map(([n, why], i) => {
+      const last = i === 6;
+      const un = last && S.unmarked;
+      return {n, why: un ? 'visible to agents' : last ? 'name · likely not personal' : why,
+        nStyle: mono(11, un ? ' color: var(--ink3); text-decoration: line-through;' : ''),
+        bt: un ? 'MARK' : 'UNMARK', tip: un ? 'Hide ' + n + ' from agents again' : 'Let agents read ' + n,
+        pick: last ? () => set({unmarked: !S.unmarked, last: (S.unmarked ? 'HID ' : 'UNMARKED ') + n + (S.unmarked ? ' from agents' : ' — agents can read it now')}) : noop,
+        btn: box + 'height: 18px; padding: 0 5px; font-size: 9.5px;' + (last ? '' : HIDE)};
+    });
+    const dbKv = [
+      ['engine', 'postgres 17.2 · localhost:5432'], ['agents', 'READ · OVERLAY — no write level exists'],
+      ['last write', S.commitAt ? 'you · ' + S.commitAt + ' · review sheet' : 'you · 2 d ago · review sheet'],
+      ['layers', '3 over it · ' + totalItems + ' items'], ['store', '~/Library/Application Support/DBMan/store.sqlite'],
+    ].map(([k, v]) => ({k, v, vs: mono(11, ' overflow: hidden; text-overflow: ellipsis; color: var(--ink);')}));
+
+    // ---------------------------------------------------------------- layer actions
+    const isMine = selL === 'mine';
+    const movable = isDbSel ? [] : live.filter((it) => own(it) === selL && !isStale(it));
+    const adoptAllOff = isMine || isDbSel || !movable.length;
+    const discardOff = isMine || isDbSel || !cnt(selL);
+    const appl = isDbSel ? [] : applicable(selL);
+    const applyOff = !appl.length;
+    const cmpOn = !!cmpL;
+    const cmpBtn = box + 'height: 22px; width: 100%; justify-content: space-between;' + (cmpOn ? 'background: var(--ink); color: var(--paper);' : '');
+    const nowOwner = (ids) => { const o = {...S.owner}; ids.forEach((id) => { o[id] = 'mine'; }); return o; };
+    const adoptAll = adoptAllOff ? noop : () => set({owner: nowOwner(movable.map((it) => it.id)), item: null, compare: false,
+      last: 'ADOPTED ' + movable.length + ' ITEMS → MINE' + (staleN(selL) ? ' · ' + staleN(selL) + ' stale kept' : '') + ' · ' + NAME[selL] + ' notified'});
+    const discardLayer = discardOff ? noop : () => { const g = {...S.gone}; live.filter((it) => own(it) === selL).forEach((it) => { g[it.id] = true; }); set({gone: g, item: null, compare: false, last: 'DISCARDED ' + cnt(selL) + ' ITEMS · ' + NAME[selL] + ' sees it in overlay.status'}); };
+    const fname = 'shop__' + (isDbSel ? 'db' : NAME[selL].toLowerCase()) + '__2026-11-09.sql';
+    const stmtN = appl.length;
+    const exportSql = applyOff ? noop : () => set({last: 'EXPORTED ' + fname + ' · ' + stmtN + ' statements'});
+
+    // ---------------------------------------------------------------- items list
+    const KINDS = [['view', 'virtual views'], ['rel', 'virtual relations'], ['patch', 'row patches'], ['dash', 'dashboards'], ['saved', 'saved queries'], ['note', 'column notes']];
+    const GLYPH = {view: 'M1.5 2.5h9v7h-9zM1.5 5h9M4.5 5v4.5', rel: 'M3 9a1.5 1.5 0 1 1 0.01 0M9 3a1.5 1.5 0 1 1 0.01 0M4.1 7.9l3.8-3.8', update: 'M1.5 2.5h9v7h-9zM4 6h4',
+      insert: 'M1.5 2.5h9v7h-9zM4 6h4M6 4v4', delete: 'M1.5 2.5h9v7h-9zM3.5 4.5l5 3', dash: 'M1.5 1.5h4v4h-4zM6.5 1.5h4v2.5h-4zM6.5 5.5h4v5h-4zM1.5 7h4v3.5h-4z',
+      saved: 'M3.5 4L1.5 6l2 2M8.5 4l2 2-2 2M7 2.5L5 9.5', note: 'M2.5 1.5h5l2 2v7h-7zM4 5.5h4M4 7.5h3'};
+    const mineL = live.filter((it) => own(it) === selL);
+    const groups = isDbSel ? [] : KINDS.map(([k, label]) => {
+      const its = mineL.filter((it) => it.kind === k);
+      if (!its.length) return null;
+      let sub = String(its.length);
+      if (k === 'patch') {
+        const u = its.filter((x) => x.op === 'update').length, ins = its.filter((x) => x.op === 'insert').length, d = its.filter((x) => x.op === 'delete').length;
+        sub = 'orders' + (u ? ' ×' + u : '') + (ins ? ' +' + ins : '') + (d ? ' −' + d : '');
+      }
+      return {t: label, sub, items: its.map((it) => {
+        const open = S.item === it.id;
+        const st = isStale(it);
+        const adopted = !!S.owner[it.id] && it.from !== 'mine';
+        const label2 = it.kind === 'patch' ? (it.op === 'insert' ? '+ ' : it.op === 'delete' ? '− ' : '') + it.n : it.n;
+        const chip = st ? 'STALE' : adopted ? 'FROM ' + MONO[it.from] : '';
+        const sameLayer = isMine;
+        return {n: label2, s: it.s, open, openAttr: open ? 'true' : 'false', chip,
+          tip: it.n + ' — ' + it.s + ' · click for details',
+          g: GLYPH[it.kind === 'patch' ? it.op : it.kind],
+          gS: 'flex: none; color: ' + (st ? 'var(--amber)' : it.kind === 'patch' ? LC[selL] : 'var(--ink2)') + ';',
+          pick: () => set({item: open ? null : it.id, row: it.rid || S.row}),
+          adopt: sameLayer ? noop : () => set({owner: nowOwner([it.id]), item: null, last: 'ADOPTED ' + label2 + ' → MINE · ' + NAME[selL] + ' notified'}),
+          diff: () => set({item: it.id, compare: it.kind === 'patch' ? true : S.compare, row: it.rid || S.row}),
+          discard: () => set({gone: {...S.gone, [it.id]: true}, item: null, last: 'DISCARDED ' + label2 + (isMine ? '' : ' · ' + NAME[selL] + ' sees it in overlay.status')}),
+          adoptTip: 'Adopt into MINE  ⇧⌘A', diffTip: it.kind === 'patch' ? 'View diff against the database  ⌘D' : 'View definition', discardTip: 'Discard ' + it.n + (isMine ? '' : ' — the agent is told'),
+          row: 'display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 0 0 2px;' + (open ? 'background: var(--fill12); box-shadow: inset 2px 0 0 var(--ink);' : 'box-shadow: inset 0 -1px 0 var(--line);'),
+          nameBtn: 'flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 7px; height: 22px; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; font-family: var(--ui); align-items: center;',
+          nS: (it.kind === 'saved' || it.kind === 'dash' ? 'font-size: 12px; font-weight: 600;' : mono(11.5, ' font-weight: 600;')) + ' flex: none; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;' + (it.kind === 'patch' && it.op === 'delete' ? ' text-decoration: line-through;' : ''),
+          sS: 'font-size: 11px; color: var(--ink3); ' + ell,
+          chipS: chip ? tagCss(st ? 'var(--amber)' : 'var(--ink3)') + ' flex: none;' : HIDE,
+          adoptS: sameLayer ? HIDE : box + 'height: 18px; padding: 0 5px; font-size: 9.5px; flex: none;',
+          diffS: box + 'height: 18px; padding: 0 5px; font-size: 9.5px; flex: none; border-color: var(--line);',
+          xS: box + 'height: 18px; width: 18px; padding: 0; justify-content: center; font-size: 10px; flex: none; border-color: var(--line); color: var(--ink2);',
+          detS: 'margin: 0 0 2px; padding: 4px 8px 4px 20px; background: var(--sunken); box-shadow: inset 2px 0 0 var(--ink), inset 0 -1px 0 var(--line);',
+          lines: it.lines.map((ln) => ({t: ln, s: mono(11, ' line-height: 15px; overflow: hidden; text-overflow: ellipsis; color: ' + (st ? 'var(--amber)' : 'var(--ink2)') + ';')}))};
+      })};
+    }).filter(Boolean);
+    const noItems = !isDbSel && !mineL.length;
+    const emptyText = isMine ? 'MINE is empty. ADOPT items from an agent layer to make them yours.' : NAME[selL] + '’s layer is empty. It writes here through the overlay.* tools — nothing reaches the database.';
+    const itemsLabel = isDbSel ? '' : NAME[selL] + ' items, ' + mineL.length;
+
+    // ---------------------------------------------------------------- feedback line
+    const lastDefault = {db: 'agents connect READ or OVERLAY — no level writes here', mine: 'you saved “Revenue by plan” 1 h ago',
+      cc: 'claude-code wrote 3 row patches 2 min ago via overlay.patch_rows', cx: 'codex patched #58424 3 h ago — database changed since'}[selL];
+    const lastText = S.last || lastDefault;
+    const lastStyle = 'font-size: 11px; ' + ell + (S.last ? ' color: var(--accent); font-weight: 600;' : ' color: var(--ink2);');
+
+    // ---------------------------------------------------------------- review sheet
+    const KW = new Set(['BEGIN', 'COMMIT', 'UPDATE', 'SET', 'WHERE', 'AND', 'INSERT INTO', 'VALUES', 'DELETE FROM', 'CREATE VIEW', 'AS', 'SELECT', 'FROM', 'GROUP BY', 'ALTER TABLE', 'ADD CONSTRAINT', 'FOREIGN KEY', 'REFERENCES', 'NOT VALID', 'IS NULL', 'JOIN', 'ON']);
+    const RX = /('[^']*'|--.*$|\b(?:BEGIN|COMMIT|UPDATE|SET|WHERE|AND|INSERT INTO|VALUES|DELETE FROM|CREATE VIEW|AS|SELECT|FROM|GROUP BY|ALTER TABLE|ADD CONSTRAINT|FOREIGN KEY|REFERENCES|NOT VALID|IS NULL|JOIN|ON)\b)/;
+    const tok = (line) => line.split(RX).filter((p) => p).map((p) => ({t: p, s: p[0] === "'" ? 'color: var(--ink2)' : p.startsWith('--') ? 'color: var(--ink3)' : KW.has(p) ? 'font-weight: 700' : ''}));
+    const sk = isDbSel ? [] : skipped(selL);
+    const sqlRaw = ['BEGIN;', '-- from layer ' + (isDbSel ? '' : NAME[selL]) + ' · ' + appl.length + ' items · generated 14:32:41']
+      .concat(...appl.map((it) => it.sql)).concat(['COMMIT;']);
+    const sheetView = {
+      title: 'REVIEW // APPLY_' + (isDbSel ? '' : NAME[selL].toUpperCase().replace('-', '_')) + '_TO_DATABASE',
+      intro: 'Generated from ' + appl.length + ' layer items. Each UPDATE is guarded by the value the patch was based on — if a guard misses, the whole transaction rolls back. Dashboards, saved queries and notes stay in the store.',
+      hasSkip: sk.length > 0, skip: sk.length ? sk.length + ' stale patch skipped // ' + sk.map((it) => it.n + ' ' + Object.keys(it.set).join(', ')).join(' · ') + ' — database changed since the patch; resolve it in the layer first' : '',
+      changes: appl.map((it) => ({kind: it.ch[0], target: it.ch[1], col: it.ch[2], before: it.ch[3], after: it.ch[4]})),
+      sql: sqlRaw.map(tok),
+      commitText: 'COMMIT_' + appl.length + '_CHANGES // ⌘↩',
+    };
+    const applyBtn = boxPrimary + 'height: 26px; padding: 0 10px; font-size: 10.5px; justify-content: space-between; min-width: 0;' + dis(applyOff);
+    const exportBtn = box + 'height: 26px; padding: 0 8px;' + dis(applyOff);
+    const adoptAllBtn = box + 'height: 22px; justify-content: center;' + dis(adoptAllOff);
+    const discardBtn = box + 'height: 22px; justify-content: center;' + dis(discardOff);
+    const commit = () => { const dn = {...S.done}; appl.forEach((it) => { dn[it.id] = true; }); set({done: dn, sheet: false, compare: false, item: null, commitAt: '14:33', commitN: appl.length, last: 'COMMITTED ' + appl.length + ' STATEMENTS TO shop · items marked applied'}); };
+    const scrimStyle = 'position: absolute; inset: 0; z-index: 10; background: ' + (dark ? 'rgba(5,5,6,0.62)' : 'rgba(243,243,241,0.72)') + ';';
+
+    // ---------------------------------------------------------------- status
+    const layerCount = ORDER.length;
+    const statusCounts = 'store // ' + layerCount + ' layers // ' + totalItems + ' items // ' + totalStale + ' stale // ' + (S.commitAt ? 'database // ' + (S.commitN || 0) + ' committed by you ' + S.commitAt : 'database untouched');
+    const hiddenChip = CAPS + 'font-size: 10px; display: inline-flex; align-items: center; height: 15px; padding: 0 5px; border: 1px solid var(--ink); border-radius: 2px; color: var(--ink);';
+    const hiddenChipText = hiddenCount + ' columns hidden from agents';
+    const legend = [['CC', 'agent patch', tagCss('var(--accent)')], ['ME', 'yours', tagCss('var(--ink)')], ['+CC', 'inserted', tagCss('var(--accent)')], ['−CC', 'deleted', tagCss('var(--accent)')], ['≠', 'stale', tagCss('var(--amber)')]].map(([m, tx, ms]) => ({m, t: tx, ms}));
+
+    return {
+      themeVars, cap, capDim, box, boxL, boxPrimary, field, frame, boxS, boxSPrimary, navs, readouts, agentsChip, navFrame, navSections,
+      modes, seeAs, sDb: sheets[0], sMine: sheets[1], sCc: sheets[2], sCx: sheets[3], sheetsLabel, chain,
+      gridLabel, gridHeadStyle, heads, rows, cmpOn, cmpTitle, cmpSub, exitCompare: () => set({compare: false}), prov,
+      layers, det, isDbSel, notDbSel: !isDbSel, dbKv, hiddenCount: String(hiddenCount), hiddenCols,
+      cmpAttr: cmpOn ? 'true' : 'false', cmpBtn, cmpKey: (cmpOn ? 'ON' : 'OFF') + ' · ⌘D', cmpKeyStyle: 'font-family: var(--code); font-weight: 400; letter-spacing: 0; opacity: .75;',
+      toggleCompare: isDbSel ? noop : () => set({compare: !S.compare}),
+      adoptAll, adoptAllBtn, adoptAllDis: adoptAllOff ? 'true' : 'false', adoptAllTip: isMine ? 'Already MINE' : 'Move every item (except stale) into MINE  ⇧⌘A',
+      discardLayer, discardBtn, discardDis: discardOff ? 'true' : 'false', discardTip: isMine ? 'Discard items one by one in MINE' : 'Discard everything in this layer — the agent is told',
+      openSheet: applyOff ? noop : () => set({sheet: true}), applyBtn, applyDis: applyOff ? 'true' : 'false',
+      applyTip: applyOff ? 'Nothing to apply — only row patches, views and relations become SQL' : 'Human only — opens the review sheet with generated SQL  ⇧⌘↩',
+      exportSql, exportBtn,
+      groups, noItems, emptyText, itemsLabel, lastText, lastStyle,
+      sheetOpen: !!S.sheet && !applyOff, sh: sheetView, closeSheet: () => set({sheet: false}), commit, scrimStyle,
+      statusCounts, hiddenChip, hiddenChipText, legend,
+    };
+  }
+}
+</script>
+</body>
+</html>

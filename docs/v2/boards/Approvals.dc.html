@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agent approvals — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="max-width: 1440px; margin: 0 auto; padding: 16px 20px 0; box-sizing: border-box">
+
+  <header style="display: flex; align-items: flex-end; gap: 14px; height: 62px; box-sizing: border-box; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--lineStrong)">
+    <div style="font-size: 56px; font-weight: 300; letter-spacing: -2px; line-height: .9">15</div>
+    <div style="min-width: 0">
+      <div style="{{cap}}">Agent approvals — credentials, prod guard, layer review</div>
+      <div style="font-size: 12px; color: var(--ink2); margin-top: 4px">Agents never write to a database: their writes land in their own layer of the DBMan store, so they need no approval. DBMan asks a human only for credentials, prod-guard overrides and promotion to the database — and the agent always gets a typed answer back.</div>
+    </div>
+    <span style="flex: 1"></span>
+    <span style="{{capDim}}">MCP // DBMAN // 2025-06-18 // STDIO</span>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, 452px); gap: 4px">
+
+    <!-- 01 F2 secure credential sheet -->
+    <section aria-label="Secure credential sheet" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">01 // F2 · SECURE_CREDENTIAL_SHEET</span><span style="{{capDim}}">// TESLERS_LAW</span><span style="flex: 1"></span><span style="{{monoDim}}">connections.add</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 12px; display: flex; gap: 12px; background: var(--sunken)">
+
+        <div role="dialog" aria-labelledby="cred-title" style="flex: 0 0 432px; display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 6px 6px 0 var(--fill12); overflow: hidden">
+          <div style="{{head}}"><span style="{{tile}}">CC</span><span id="cred-title" style="{{cap}}">CLAUDE-CODE WANTS TO ADD A CONNECTION</span></div>
+          <div style="padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 15px; font-weight: 600">billing-replica</span><span style="{{capDim}}">// POSTGRES // FROM THE AGENT</span></div>
+            <span style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px; background: var(--sunken)">
+              <span style="flex: 1; min-width: 0; font-family: var(--code); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">postgres://reporter@billing-replica.internal:5432/billing</span>
+              <span style="{{cap}}">✓ 4/4</span>
+            </span>
+            <div style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 40px minmax(0, 0.6fr); gap: 6px 8px; align-items: center">
+              <span style="{{capDim}}; text-align: right">HOST</span><span style="{{fieldRO}}">billing-replica.internal</span>
+              <span style="{{capDim}}; text-align: right">PORT</span><span style="{{fieldRO}}">5432</span>
+              <span style="{{capDim}}; text-align: right">DATABASE</span><span style="{{fieldRO}}">billing</span>
+              <span style="{{capDim}}; text-align: right">USER</span><span style="{{fieldRO}}">reporter</span>
+              <span style="{{capDim}}; text-align: right">TAG</span>
+              <span role="radiogroup" aria-label="Environment tag" style="grid-column: span 3; display: inline-flex; align-items: center; gap: 3px">
+                <sc-for list="{{tags}}" as="s" hint-placeholder-count="3"><span role="radio" aria-checked="{{s.on}}" style="{{s.style}}">{{s.t}}</span></sc-for>
+                <span style="{{capDim}}; margin-left: 4px">AGENTS // OVERLAY</span>
+              </span>
+              <span style="{{capDim}}; text-align: right">PASSWORD</span>
+              <span style="grid-column: span 3; display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 8px; box-sizing: border-box; border: 1.5px solid var(--accent); border-radius: 3px">
+                <input type="password" aria-label="Password for reporter" value="correcthorse" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 12px var(--ui); color: var(--ink)">
+                <span style="{{capDim}}">→ KEYCHAIN</span>
+              </span>
+            </div>
+            <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2); padding-left: 72px">claude-code never sees this password: it goes straight to the Keychain and the agent only receives an id.</div>
+            <div style="display: flex; align-items: center; gap: 8px; height: 26px; padding-left: 72px">
+              <button type="button" title="Test connection  ⌥⌘⏎" style="{{box}}">TEST</button>
+              <span style="{{cap}}">✓ REACHED // 11 MS // PG 16.4</span>
+            </div>
+          </div>
+          <span style="flex: 1"></span>
+          <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid var(--line)">
+            <span style="{{capDim}}">SAVED TO // STAGING</span>
+            <span style="flex: 1"></span>
+            <button type="button" title="Cancel  Esc" style="{{boxL}}">CANCEL // ESC</button>
+            <button type="button" title="Save  ⌘S" style="{{boxPrimary}}">SAVE // ⌘S</button>
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+          <span style="{{cap}}">AGENT SENT</span>
+          <pre style="{{pre}}">{{sentJson}}</pre>
+          <div style="font-size: 11px; line-height: 1.4; color: var(--ink3)">No password parameter exists in the tool schema; a password inside the URL is refused.</div>
+          <div style="height: 1px; background: var(--line); margin: 4px 0"></div>
+          <span style="{{cap}}">AGENT RECEIVES</span>
+          <pre style="{{pre}}">{{gotJson}}</pre>
+          <div style="font-size: 11px; line-height: 1.4; color: var(--ink3)">The call waits while the sheet is open; it expires after 10 min.</div>
+        </div>
+      </div>
+      <div style="{{foot}}"><span style="{{capDim}}">WHY //</span><span style="{{why}}">The secret never crosses the agent boundary. DBMan absorbs the complexity; the human types one field.</span></div>
+    </section>
+
+    <!-- 02 F3 layer review -->
+    <section aria-label="Layer review" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">02 // F3 · LAYER_REVIEW</span><span style="{{capDim}}">// HICKS_LAW</span><span style="flex: 1"></span><span style="{{monoDim}}">overlay.patch_rows</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 12px; background: var(--sunken)">
+        <div role="dialog" aria-labelledby="rev-title" style="display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 6px 6px 0 var(--fill12); overflow: hidden">
+          <div style="{{head}}">
+            <span style="{{tile}}">CC</span>
+            <span id="rev-title" style="{{cap}}">CLAUDE-CODE LAYER // 3 PATCHES //</span><span style="font-family: var(--code); font-size: 12px; font-weight: 600">shop</span><span style="{{chip}}">LOCAL</span>
+            <span style="flex: 1"></span>
+            <span title="Database rows unchanged since the patches were written" style="{{badge}}">DATABASE // UNTOUCHED // 0 STALE</span>
+          </div>
+          <div style="padding: 10px 12px 0">
+            <div style="display: flex; gap: 10px; padding: 2px 0 2px 10px; border-left: 2px solid var(--accent)">
+              <span style="{{capDim}}">AGENT NOTE</span>
+              <span style="font-size: 12px; line-height: 1.45; color: var(--ink2)">“Patched in my layer: orders 58417 and 58422 were paid but are still pending, customer 1182 upgraded on invoice 9804 but is still on free.”</span>
+            </div>
+            <div role="table" aria-label="Patches in the claude-code layer" style="margin-top: 10px; font-family: var(--code); font-size: 12px; border-top: 1px solid var(--lineStrong)">
+              <div role="row" style="display: grid; grid-template-columns: 54px 80px 50px 54px minmax(0, 1fr) 58px; gap: 8px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)">
+                <span role="columnheader" style="{{capDim}}; font-size: 10px">PATCH</span><span role="columnheader" style="{{capDim}}; font-size: 10px">TABLE</span><span role="columnheader" style="{{capDim}}; font-size: 10px">PK</span><span role="columnheader" style="{{capDim}}; font-size: 10px">COLUMN</span><span role="columnheader" style="{{capDim}}; font-size: 10px">DATABASE → LAYER</span><span role="columnheader" style="{{capDim}}; font-size: 10px">STATE</span>
+              </div>
+              <sc-for list="{{revDiff}}" as="d" hint-placeholder-count="3">
+                <div role="row" style="display: grid; grid-template-columns: 54px 80px 50px 54px minmax(0, 1fr) 58px; gap: 8px; align-items: center; height: 24px; border-bottom: 1px solid var(--line); box-shadow: inset 2px 0 0 var(--accent)">
+                  <span role="cell" style="{{kind}}; padding-left: 6px">{{d.kind}}</span>
+                  <span role="cell">{{d.table}}</span>
+                  <span role="cell" style="color: var(--ink3)">{{d.id}}</span>
+                  <span role="cell">{{d.col}}</span>
+                  <span role="cell" style="white-space: nowrap"><s style="color: var(--ink3)">{{d.before}}</s> → <b style="font-weight: 600; color: var(--accent)">{{d.after}}</b></span>
+                  <span role="cell" style="{{capDim}}; font-size: 10px">{{d.state}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px"><span style="{{capDim}}">IF YOU APPLY TO DATABASE // REVIEW SHEET GENERATES</span><span style="flex: 1"></span><span style="{{capDim}}">YOU COMMIT ⌘↩</span></div>
+            <pre style="{{pre}}; margin-top: 4px"><b>UPDATE</b> orders <b>SET</b> status = 'paid' <b>WHERE</b> id <b>IN</b> (58417, 58422);
+<b>UPDATE</b> customers <b>SET</b> plan = 'pro' <b>WHERE</b> id = 1182;</pre>
+          </div>
+          <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-top: 10px; border-top: 1px solid var(--line)">
+            <input type="text" aria-label="Discard note, sent to the agent" placeholder="note to claude-code…" style="{{field}}; width: 150px; height: 28px">
+            <button type="button" title="Discard the 3 patches and send the note to claude-code  ⌘⌫" style="{{boxL}}">DISCARD</button>
+            <span style="flex: 1"></span>
+            <button type="button" title="Copy the patches into your layer (MINE); nothing reaches the database  ⌘⇧A" style="{{boxL}}">ADOPT INTO MINE</button>
+            <button type="button" title="Human only: opens the Review sheet with the generated SQL — COMMIT ⌘↩ there" style="{{boxPrimary}}">APPLY TO DATABASE…</button>
+          </div>
+        </div>
+      </div>
+      <div style="{{foot}}"><span style="{{capDim}}">WHY //</span><span style="{{why}}">Three exits, none of them the agent’s: ADOPT keeps it in DBMan, APPLY opens your Review sheet, DISCARD sends a note back so “no” still moves the work.</span></div>
+    </section>
+
+    <!-- 03 F4 prod guard -->
+    <section aria-label="Prod guard block" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">03 // F4 · PROD_GUARD_BLOCK</span><span style="{{capDim}}">// GOAL_GRADIENT</span><span style="flex: 1"></span><span style="{{capAmber}}">ANALYTICS // PRODUCTION</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 12px">
+        <div style="{{feedRow}}; opacity: .5"><span style="color: var(--ink3)">14:31:58</span><span style="{{tile}}">CX</span><span style="font-family: var(--code)">query.run</span><span style="color: var(--ink3); overflow: hidden; text-overflow: ellipsis">analytics · customers · 500 rows</span><span style="text-align: right; color: var(--ink3)">212 MS</span><span style="{{capDim}}; text-align: right">OK</span></div>
+
+        <div role="alert" style="margin: 4px 0; border: 1.5px solid var(--alert); border-radius: 3px">
+          <div style="{{feedRow}}; border-bottom: 1px solid var(--line); padding: 0 8px"><span style="color: var(--ink3)">14:32:07</span><span style="{{tile}}">CC</span><span style="font-family: var(--code); font-weight: 600">query.run</span><span style="color: var(--ink2); overflow: hidden; text-overflow: ellipsis">analytics · events</span><span style="text-align: right; color: var(--ink3)">0 MS</span><span style="{{capAlert}}; text-align: right">BLOCKED</span></div>
+          <div style="padding: 8px 10px; display: flex; flex-direction: column; gap: 7px">
+            <div style="display: flex; align-items: center; gap: 8px"><span style="{{capAlert}}">BLOCKED_BY_PROD_GUARD</span><span style="{{capDim}}">// RULE: EST. COST &gt; 1e6 // TIMEOUT 5 S</span></div>
+            <pre style="{{pre}}"><b>SELECT</b> customer_id, count(*) <b>FROM</b> events <b>WHERE</b> type = 'checkout' <b>GROUP BY</b> 1;</pre>
+            <pre style="{{pre}}; background: var(--paper)"><span style="color: var(--ink3)">EXPLAIN //</span>
+HashAggregate  (est. cost 2.1e6  rows 2,400)
+  -&gt;  <span style="font-weight: 600; text-decoration: underline 1.5px var(--alert); text-underline-offset: 3px">Seq Scan on events</span>  (rows 61,532  filter: type = 'checkout')</pre>
+            <div style="display: flex; align-items: baseline; gap: 8px; font-size: 12px; line-height: 1.4"><span style="{{cap}}">SUGGEST</span><span style="color: var(--ink2)">add <span style="font-family: var(--code); color: var(--ink)">WHERE created_at &gt; …</span> — uses <span style="font-family: var(--code); color: var(--ink)">idx_events_created_at</span>, est. cost 3.2e3</span></div>
+            <div style="display: flex; align-items: center; gap: 6px">
+              <button type="button" title="Run this one query once" style="{{boxAmber}}">ALLOW_ONCE</button>
+              <button type="button" title="Raise the statement timeout for this agent" style="{{boxL}}">RAISE_TIMEOUT // 5 S → 30 S</button>
+              <span style="flex: 1"></span>
+              <button type="button" title="Keep blocked  ⏎" style="{{boxPrimary}}">KEEP_BLOCKED // ⏎</button>
+            </div>
+            <div style="border-top: 1px dashed var(--line); padding-top: 7px">
+              <div style="{{capDim}}">AGENT RECEIVES // ERROR</div>
+              <div style="font-family: var(--code); font-size: 11.5px; margin-top: 4px; white-space: nowrap">BLOCKED_BY_PROD_GUARD (seq scan on events, 61,532 rows est. cost 2.1e6)</div>
+              <div style="font-family: var(--code); font-size: 11px; margin-top: 2px; color: var(--ink3); white-space: nowrap">hint: add WHERE created_at &gt; … (uses idx_events_created_at)</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="{{feedRow}}; opacity: .5"><span style="color: var(--ink3)">14:32:09</span><span style="{{tile}}">CC</span><span style="font-family: var(--code)">query.explain</span><span style="color: var(--ink3); overflow: hidden; text-overflow: ellipsis">analytics · events · created_at &gt; …</span><span style="text-align: right; color: var(--ink3)">9 MS</span><span style="{{capDim}}; text-align: right">OK</span></div>
+      </div>
+      <div style="{{foot}}"><span style="{{capDim}}">WHY //</span><span style="{{why}}">A block that ships the fix: reason plus an indexed rewrite, so the agent’s next call usually passes on its own.</span></div>
+    </section>
+
+    <!-- 04 human promotes a virtual view -->
+    <section aria-label="Human promotes a virtual view" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">04 // HUMAN · PROMOTE_VIRTUAL_VIEW</span><span style="{{capDim}}">// JAKOBS_LAW</span><span style="flex: 1"></span><span style="{{monoDim}}">views.create → CREATE VIEW</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; padding: 12px; background: var(--sunken)">
+        <div role="dialog" aria-labelledby="ddl-title" style="display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 6px 6px 0 var(--fill12); overflow: hidden">
+          <div style="{{head}}">
+            <span id="ddl-title" style="{{cap}}">APPLY TO DATABASE //</span><span style="font-family: var(--code); font-size: 12px; font-weight: 600">daily_revenue</span><span style="{{capDim}}">// FROM</span><span style="{{tile}}">CC</span><span style="{{capDim}}">LAYER →</span><span style="font-family: var(--code); font-size: 12px">shop</span><span style="{{chip}}">LOCAL</span>
+            <span style="flex: 1"></span>
+            <span style="{{badge}}">STARTED BY YOU</span>
+          </div>
+          <div style="padding: 10px 12px 0">
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px">
+              <div style="border: 1px solid var(--line); border-radius: 3px; overflow: hidden">
+                <div style="display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-bottom: 1px solid var(--line)"><span style="{{capAccent}}">VIRTUAL</span><span style="{{capDim}}">// CLAUDE-CODE LAYER // CTE</span></div>
+                <div style="padding: 4px 0">
+                  <sc-for list="{{oldLines}}" as="l" hint-placeholder-count="7"><div style="{{l.style}}"><span style="{{l.gutter}}">{{l.n}}</span><span style="{{l.markStyle}}">{{l.mark}}</span><span style="{{l.textStyle}}">{{l.text}}</span></div></sc-for>
+                </div>
+              </div>
+              <div style="border: 1px solid var(--lineStrong); border-radius: 3px; overflow: hidden">
+                <div style="display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">DATABASE</span><span style="{{capDim}}">// CREATE VIEW ON SHOP</span></div>
+                <div style="padding: 4px 0">
+                  <sc-for list="{{newLines}}" as="l" hint-placeholder-count="7"><div style="{{l.style}}"><span style="{{l.gutter}}">{{l.n}}</span><span style="{{l.markStyle}}">{{l.mark}}</span><span style="{{l.textStyle}}">{{l.text}}</span></div></sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 3px">
+              <span style="{{cap}}">USED BY</span>
+              <span style="font-size: 12px">dashboard <b style="font-weight: 600">Revenue // 30 d</b></span>
+              <span style="{{capDim}}">// 2 WIDGETS // CC LAYER</span>
+              <span style="flex: 1"></span>
+              <span style="font-size: 11.5px; color: var(--ink2)">After COMMIT they read the real view.</span>
+            </div>
+            <div style="display: flex; gap: 14px; margin-top: 8px">
+              <span style="{{capDim}}">EXPLAIN // COST 1,240 // SEQ SCAN ORDERS 48,000</span>
+              <span style="{{capDim}}">VALIDATED // DRY RUN IN ROLLBACK</span>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 8px; padding: 2px 0 2px 10px; border-left: 2px solid var(--lineStrong); font-size: 11.5px; line-height: 1.4; color: var(--ink2)">
+              <span style="{{cap}}">AGENTS CAN’T DO THIS</span><span>views.create only writes a virtual view to the agent’s layer. CREATE VIEW runs when you press COMMIT.</span>
+            </div>
+          </div>
+          <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-top: 10px; border-top: 1px solid var(--line)">
+            <button type="button" style="{{boxL}}">COPY_SQL</button>
+            <button type="button" title="Export as a migration .sql instead of running it" style="{{boxL}}">EXPORT MIGRATION</button>
+            <span style="flex: 1"></span>
+            <button type="button" title="Cancel  Esc" style="{{boxL}}">CANCEL // ESC</button>
+            <button type="button" title="Run CREATE VIEW on shop  ⌘↩" style="{{boxPrimary}}">COMMIT // ⌘↩</button>
+          </div>
+        </div>
+      </div>
+      <div style="{{foot}}"><span style="{{capDim}}">WHY //</span><span style="{{why}}">Virtual and real side by side, like a code review; promotion to the database is always a human act — no agent tool reaches DDL.</span></div>
+    </section>
+
+    <!-- 05 AGENTS inspector -->
+    <section aria-label="Agents inspector tab" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">05 // G6 G14 · INSPECTOR_AGENTS</span><span style="{{capDim}}">// VON_RESTORFF</span><span style="flex: 1"></span><span style="{{capDim}}">WORKSPACE // SHOP</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; display: flex">
+
+        <div aria-hidden="true" style="flex: 1; min-width: 0; opacity: .55; display: flex; flex-direction: column">
+          <div style="{{head}}"><span style="{{cap}}">ORDERS</span><span style="{{capDim}}">// 48,000 ROWS // 2 PATCHED IN CODEX LAYER</span></div>
+          <div style="font-family: var(--code); font-size: 12px">
+            <sc-for list="{{slice}}" as="r" hint-placeholder-count="14"><div style="{{r.style}}"><span style="{{r.gl}}">{{r.mark}}</span><span>{{r.id}}</span><span style="{{r.stStyle}}">{{r.status}}</span><span style="text-align: right; padding-right: 8px">{{r.total}}</span></div></sc-for>
+          </div>
+        </div>
+
+        <aside aria-label="Inspector" style="flex: 0 0 410px; display: flex; flex-direction: column; border-left: 1px solid var(--lineStrong); background: var(--paper)">
+          <div role="tablist" style="display: flex; gap: 3px; height: 30px; flex: none; align-items: center; padding: 0 8px; border-bottom: 1px solid var(--line)">
+            <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="3"><span role="tab" aria-selected="{{tb.on}}" style="{{tb.style}}">{{tb.t}}</span></sc-for>
+            <span style="flex: 1"></span>
+            <button type="button" title="Pause all agents: every call returns APP_LOCKED until resumed" style="{{box}}">‖ PAUSE_ALL_AGENTS</button>
+          </div>
+          <div style="display: flex; gap: 4px; padding: 6px 8px; flex: none">
+            <sc-for list="{{clients}}" as="c" hint-placeholder-count="2"><span style="{{clientChip}}"><span style="{{tile}}">{{c.m}}</span><span style="font-family: var(--code); font-size: 11.5px; font-weight: 600">{{c.name}}</span><span style="{{capDim}}">// {{c.perm}}</span></span></sc-for>
+          </div>
+          <div role="status" style="margin: 0 8px 6px; padding: 7px 8px; border: 1.5px solid var(--accent); border-radius: 3px; flex: none">
+            <div style="display: flex; align-items: center; gap: 6px"><span style="{{capAccent}}">PENDING // 1</span><span style="{{tile}}">CX</span><span style="{{capAmber}}">PROD GUARD OVERRIDE</span><span style="flex: 1"></span><span style="{{cap}}">EXPIRES IN 09:41</span></div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px"><span style="font-size: 12px; color: var(--ink2)"><span style="font-family: var(--code)">query.run</span> on <span style="font-family: var(--code)">analytics</span> · seq scan events · 2.1e6</span><span style="flex: 1"></span><button type="button" title="Review  ⇧⌘R" style="{{boxPrimarySm}}">REVIEW // ⇧⌘R</button></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; height: 20px; padding: 0 8px; border-top: 1px solid var(--line); flex: none"><span style="{{capDim}}">FEED // LAST 2 MIN</span><span style="flex: 1"></span><span style="{{capDim}}">ALL CLIENTS</span></div>
+          <div style="flex: 1; min-height: 0; overflow: hidden">
+            <sc-for list="{{feed}}" as="f" hint-placeholder-count="6">
+              <div style="{{feedRow}}; padding: 0 8px; border-bottom: 1px dashed var(--line)"><span style="color: var(--ink3)">{{f.time}}</span><span style="{{tile}}">{{f.m}}</span><span style="font-family: var(--code)">{{f.tool}}</span><span style="color: var(--ink3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{f.args}}</span><span style="text-align: right; color: var(--ink3)">{{f.ms}}</span><span style="{{f.stStyle}}">{{f.st}}</span></div>
+            </sc-for>
+            <div style="margin: 6px 8px 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 3px; display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; align-items: center; gap: 6px"><span style="{{tile}}">CC</span><span style="{{cap}}">CLAUDE-CODE LAYER</span><span style="{{capDim}}">// 3 PATCHES · 1 VIEW</span><span style="flex: 1"></span><span style="{{capDim}}">DB UNTOUCHED</span></div>
+              <div style="display: flex; align-items: center; gap: 6px">
+                <button type="button" title="Revert one item from the layer: pick it in the feed  ⌫" style="{{box}}">↶ REVERT ITEM</button>
+                <span style="flex: 1"></span>
+                <button type="button" title="Drop every item in the claude-code layer; the agent is told" style="{{box}}">DISCARD CLAUDE-CODE LAYER</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+      <div style="{{foot}}"><span style="{{capDim}}">WHY //</span><span style="{{why}}">The one item that needs a human is pinned and outlined; the rest is a quiet log. Agent work sits in layers: revert an item or discard a layer — the database never moved.</span></div>
+    </section>
+
+    <!-- 06 notification + dock + menu -->
+    <section aria-label="Notification, Dock badge and Agents menu" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">06 // G5 G12 · OUT_OF_WINDOW</span><span style="{{capDim}}">// ZEIGARNIK_EFFECT</span><span style="flex: 1"></span><span style="{{capDim}}">DBMAN IN BACKGROUND</span></div>
+      <div style="flex: 1; min-height: 0; overflow: hidden; position: relative; background: var(--sunken)">
+        <!-- menu bar -->
+        <div style="display: flex; align-items: center; gap: 14px; height: 24px; padding: 0 12px; background: var(--paper); border-bottom: 1px solid var(--line); font-size: 12.5px">
+          <span style="font-weight: 700">DBMan</span><span>File</span><span>Edit</span><span>View</span>
+          <span style="padding: 1px 7px; margin: 0 -7px; border-radius: 3px; background: var(--ink); color: var(--paper)">Agents <span style="font-size: 10.5px; font-weight: 700">2</span></span>
+          <span>Window</span><span>Help</span>
+          <span style="flex: 1"></span><span style="font-variant-numeric: tabular-nums">Mon 9 Nov 14:32</span>
+        </div>
+        <!-- dropdown -->
+        <div role="menu" aria-label="Agents" style="position: absolute; left: 196px; top: 26px; width: 252px; padding: 4px 0; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 6px; box-shadow: 6px 6px 0 var(--fill12)">
+          <div style="{{capDim}}; padding: 3px 12px 4px">PENDING APPROVALS // 2</div>
+          <sc-for list="{{menuPending}}" as="p" hint-placeholder-count="2">
+            <div role="menuitem" style="{{p.style}}">
+              <div style="display: flex; align-items: center; gap: 6px"><span style="{{p.tileStyle}}">{{p.m}}</span><span style="font-size: 12.5px; font-weight: 600">{{p.who}}</span><span style="flex: 1"></span><span style="{{p.expStyle}}">EXPIRES IN {{p.exp}}</span></div>
+              <div style="{{p.subStyle}}">{{p.what}}</div>
+            </div>
+          </sc-for>
+          <div style="height: 1px; background: var(--line); margin: 4px 0"></div>
+          <sc-for list="{{menuItems}}" as="mi" hint-placeholder-count="4">
+            <div role="menuitem" style="display: flex; align-items: center; height: 22px; padding: 0 12px; font-size: 12.5px"><span>{{mi.t}}</span><span style="flex: 1"></span><span style="color: var(--ink3)">{{mi.k}}</span></div>
+          </sc-for>
+        </div>
+        <!-- notification banner -->
+        <div role="alert" style="position: absolute; right: 12px; top: 34px; width: 230px; display: flex; gap: 9px; padding: 10px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 6px 6px 0 var(--fill12)">
+          <img src="icon-dbman.svg" alt="" aria-hidden="true" style="width: 32px; height: 32px; flex: none">
+          <div style="min-width: 0">
+            <div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 12.5px; font-weight: 700">DBMan</span><span style="flex: 1"></span><span style="font-size: 11px; color: var(--ink3)">now</span></div>
+            <div style="font-size: 12px; line-height: 1.35; margin-top: 2px">codex hit the prod guard on analytics — allow once?</div>
+            <div style="{{capDim}}; margin-top: 4px">EXPIRES IN 09:41</div>
+            <div style="display: flex; gap: 6px; margin-top: 6px"><span style="{{box}}">REVIEW</span><span style="{{box}}; border-color: var(--line)">LATER</span></div>
+          </div>
+        </div>
+        <!-- dock -->
+        <div style="position: absolute; right: 12px; bottom: 12px; display: flex; align-items: flex-end; gap: 8px; height: 64px; padding: 6px 10px; box-sizing: border-box; background: var(--paper); border: 1px solid var(--line); border-radius: 14px">
+          <sc-for list="{{dock}}" as="d" hint-placeholder-count="4"><span aria-hidden="true" style="{{d}}"></span></sc-for>
+          <span style="position: relative; display: inline-flex">
+            <img src="icon-dbman.svg" alt="DBMan, 2 pending approvals" style="width: 50px; height: 50px; flex: none">
+            <span aria-hidden="true" style="position: absolute; top: -5px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; background: var(--alert); color: #FFFFFF; font-size: 11px; font-weight: 700">2</span>
+          </span>
+        </div>
+        <div style="position: absolute; left: 14px; bottom: 14px; width: 250px">
+          <div style="{{cap}}">DOCK // ONLY WHILE PENDING</div>
+          <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2); margin-top: 4px">Launched hidden by the shim (open -g -j). DBMan appears in the Dock only while an approval waits; the badge is macOS’s own.</div>
+          <div style="{{capDim}}; margin-top: 6px">AT 00:00 // AGENT GETS NEEDS_APPROVAL_TIMEOUT</div>
+        </div>
+      </div>
+      <div style="{{foot}}"><span style="{{capDim}}">WHY //</span><span style="{{why}}">An open approval follows you out of the window (banner, badge, menu count) and expires after 10 min instead of stalling the agent.</span></div>
+    </section>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:1500px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const capAmber = CAPS + ' color: var(--amber); white-space: nowrap';
+    const capAlert = CAPS + ' color: var(--alert); white-space: nowrap';
+    const capAccent = CAPS + ' color: var(--accent); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    // board-local styles (built from the tokens above)
+    const boxPrimarySm = boxBase + 'height: 22px; padding: 0 9px; font-size: 10.5px; background: var(--ink); color: var(--paper);';
+    const boxAmber = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; border-color: var(--amber); background: transparent; color: var(--amber);';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; overflow: hidden; min-width: 0; display: flex; flex-direction: column; height: 452px';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 30px; flex: none; padding: 0 10px; box-sizing: border-box; border-bottom: 1px solid var(--line); overflow: hidden';
+    const foot = 'display: flex; align-items: center; gap: 8px; height: 30px; flex: none; padding: 0 10px; box-sizing: border-box; border-top: 1px solid var(--line); overflow: hidden';
+    const why = 'font-size: 12px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis';
+    const monoDim = 'font-family: var(--code); font-size: 11.5px; color: var(--ink3); white-space: nowrap';
+    const tile = 'display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; font: 700 9px var(--ui); letter-spacing: .02em; color: var(--ink)';
+    const chip = 'display: inline-flex; align-items: center; height: 18px; padding: 0 6px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 2px;' + CAPS + 'font-size: 10px; color: var(--ink); white-space: nowrap';
+    const badge = 'display: inline-flex; align-items: center; height: 20px; padding: 0 7px; box-sizing: border-box; border: 1px solid var(--accent); border-radius: 2px;' + CAPS + 'font-size: 10px; color: var(--accent); white-space: nowrap';
+    const fieldRO = field + '; display: flex; align-items: center; background: var(--sunken); white-space: nowrap; overflow: hidden; text-overflow: ellipsis';
+    const pre = 'margin: 0; padding: 7px 10px; background: var(--sunken); border: 1px solid var(--line); border-radius: 3px; font-family: var(--code); font-size: 11px; line-height: 1.55; white-space: pre; overflow: hidden; color: var(--ink)';
+    const feedRow = 'display: grid; grid-template-columns: 50px 18px 128px minmax(0, 1fr) 40px 62px; gap: 6px; align-items: center; height: 24px; font-size: 11.5px; white-space: nowrap';
+    const kind = 'font-family: var(--ui); font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--ink)';
+    const clientChip = 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px 0 4px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px';
+    const appIcon = 'display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; background: var(--ink); color: var(--paper); font-weight: 700; letter-spacing: .12em';
+
+    // 01 credential sheet
+    const seg = (on, warn) => 'display: inline-flex; align-items: center; height: 22px; padding: 0 8px; box-sizing: border-box; border: 1px solid ' + (warn ? 'var(--amber)' : 'var(--lineStrong)') + '; border-radius: 2px;' + CAPS + 'font-size: 10.5px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'color: ' + (warn ? 'var(--amber)' : 'var(--ink)') + ';');
+    const tags = ['LOCAL', 'STAGING', 'PRODUCTION'].map((x) => ({t: x, on: x === 'STAGING' ? 'true' : 'false', style: seg(x === 'STAGING', x === 'PRODUCTION')}));
+    const sentJson = '{"name": "billing-replica",\n "url": "postgres://reporter@\n   billing-replica.internal\n   :5432/billing",\n "env": "staging"}';
+    const gotJson = '{"id": "c_7f3a",\n "name": "billing-replica",\n "status": "saved"}';
+
+    // 02 review sheet
+    const revDiff = [
+      {kind: 'UPDATE', table: 'orders', id: '58417', col: 'status', before: "'pending'", after: "'paid'", state: 'FRESH'},
+      {kind: 'UPDATE', table: 'orders', id: '58422', col: 'status', before: "'pending'", after: "'paid'", state: 'FRESH'},
+      {kind: 'UPDATE', table: 'customers', id: '1182', col: 'plan', before: "'free'", after: "'pro'", state: 'FRESH'},
+    ];
+
+    // 04 view diff
+    const line = (n, text, mark) => ({n: n ? String(n) : '', text, mark: mark || ' ',
+      style: 'display: grid; grid-template-columns: 22px 12px minmax(0, 1fr); height: 17px; align-items: center; font-family: var(--code); font-size: 10px;' + (mark === '+' ? 'background: var(--fill12); box-shadow: inset 2px 0 0 var(--accent);' : mark === '−' ? 'background: var(--fill12);' : ''),
+      gutter: 'text-align: right; padding-right: 4px; color: var(--ink3); font-size: 10px',
+      markStyle: 'font-weight: 700; color: ' + (mark === '+' ? 'var(--accent)' : 'var(--ink3)'),
+      textStyle: 'white-space: pre; overflow: hidden;' + (mark === '−' ? 'color: var(--ink3); text-decoration: line-through;' : mark === '+' ? 'font-weight: 600;' : '')});
+    const oldLines = [
+      line(1, 'WITH daily_revenue AS (  -- virtual'),
+      line(2, "SELECT date_trunc('day', created_at) AS day,"),
+      line(3, '       sum(total) AS revenue,'),
+      line(4, '       count(*) AS orders'),
+      line(5, 'FROM orders'),
+      line(6, "WHERE status IN ('paid', 'shipped')"),
+      line(7, 'GROUP BY 1)'),
+    ];
+    const newLines = [
+      line(1, 'CREATE VIEW daily_revenue AS', '+'),
+      line(2, "SELECT date_trunc('day', created_at) AS day,"),
+      line(3, '       sum(total) AS revenue,'),
+      line(4, '       count(*) AS orders'),
+      line(5, 'FROM orders'),
+      line(6, "WHERE status IN ('paid', 'shipped')"),
+      line(7, 'GROUP BY 1;'),
+    ];
+
+    // 05 inspector
+    const sliceRows = [['58436', 'paid', '412.00'], ['58437', 'shipped', '1,177.20'], ['58438', 'paid', '88.40'], ['58439', 'delivered', '2,040.00'], ['58440', 'pending', '96.10', true], ['58441', 'pending', '340.00', true], ['58442', 'paid', '62.30'], ['58443', 'shipped', '418.75'], ['58444', 'paid', '1,020.00'], ['58445', 'pending', '57.90'], ['58446', 'paid', '233.10'], ['58447', 'delivered', '760.00'], ['58448', 'paid', '45.20'], ['58449', 'shipped', '129.99']];
+    const slice = sliceRows.map(([id, status, total, staged]) => ({id, total, mark: staged ? '~' : '',
+      status: staged ? "pending → cancelled" : status,
+      style: 'display: grid; grid-template-columns: 22px 56px minmax(0, 1fr) 68px; height: 24px; align-items: center; border-bottom: 1px dashed var(--line);' + (staged ? 'background: var(--fill12);' : ''),
+      gl: 'text-align: center; color: var(--accent); font-weight: 700;' + (staged ? 'box-shadow: inset 3px 0 0 var(--accent); height: 100%; display: flex; align-items: center; justify-content: center;' : ''),
+      stStyle: 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (staged ? 'font-weight: 600' : '')}));
+    const tabStyle = (on) => 'display: inline-flex; align-items: center; height: 20px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 2px;' + CAPS + 'font-size: 10.5px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'color: var(--ink);');
+    const tabs = [['ROW', false], ['COLUMN', false], ['AGENTS // 2 LIVE', true]].map(([x, on]) => ({t: x, on: on ? 'true' : 'false', style: tabStyle(on)}));
+    const clients = [{m: 'CC', name: 'claude-code', perm: 'OVERLAY', calls: '14 CALLS'}, {m: 'CX', name: 'codex', perm: 'OVERLAY', calls: '6 CALLS'}];
+    const stColor = {OK: 'var(--ink3)', BLOCKED: 'var(--alert)', OVERLAY: 'var(--accent)', DENIED: 'var(--alert)'};
+    const feed = [
+      ['14:32:10', 'CX', 'query.run', 'analytics · events · seq scan', '0 MS', 'BLOCKED'],
+      ['14:32:07', 'CC', 'query.run', 'analytics · events', '0 MS', 'BLOCKED'],
+      ['14:31:58', 'CX', 'overlay.patch_rows', 'shop · orders 58440, 58441', '4 MS', 'OVERLAY'],
+      ['14:31:40', 'CC', 'schema.describe', 'shop · invoices', '6 MS', 'OK'],
+      ['14:30:55', 'CC', 'stats.column', 'customers.email «redacted»', '18 MS', 'OK'],
+      ['14:20:03', 'CC', 'views.create', 'shop · daily_revenue (virtual)', '3 MS', 'OVERLAY'],
+    ].map(([time, m, tool, args, ms, st]) => ({time, m, tool, args, ms, st, stStyle: CAPS + 'font-size: 10px; text-align: right; white-space: nowrap; color: ' + stColor[st]}));
+
+    // 06 menu + dock
+    const menuPending = [
+      {m: 'CX', who: 'codex', what: 'hit the prod guard · analytics', exp: '09:41', on: true},
+      {m: 'CC', who: 'claude-code', what: 'wants to add a connection', exp: '06:12', on: false},
+    ].map((p) => ({...p,
+      style: 'margin: 0 4px; padding: 5px 8px; border-radius: 3px;' + (p.on ? 'background: var(--accent); color: var(--paper);' : ''),
+      tileStyle: tile + (p.on ? '; border-color: var(--paper); color: var(--paper)' : ''),
+      expStyle: CAPS + 'font-size: 10px; white-space: nowrap;' + (p.on ? 'color: var(--paper)' : 'color: var(--ink3)'),
+      subStyle: 'font-family: var(--code); font-size: 11px; margin-top: 3px; padding-left: 24px;' + (p.on ? 'color: var(--paper); opacity: .85' : 'color: var(--ink3)')}));
+    const menuItems = [['Connect an Agent…', '⌘⇧A'], ['Show Agent Activity', ''], ['Permissions…', ''], ['Pause All Agents', '']].map(([x, k]) => ({t: x, k}));
+    const dock = [0, 1, 2, 3].map(() => 'display: inline-block; width: 50px; height: 50px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 11px; background: var(--sunken)');
+
+    return {themeVars, dark, cap, capDim, capAmber, capAlert, capAccent, box, boxL, boxPrimary, boxPrimarySm, boxAmber, field, fieldRO, frame, head, foot, why, monoDim, tile, chip, badge, pre, feedRow, kind, clientChip, appIcon,
+      tags, sentJson, gotJson, revDiff, oldLines, newLines, slice, tabs, clients, feed, menuPending, menuItems, dock};
+  }
+}
+</script>
+</body>
+</html>

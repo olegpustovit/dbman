@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Staged writes on production — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 4px">
+    <span style="{{logo}}">DBMAN</span>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <a href="{{n.href}}" title="{{n.tip}}" aria-current="{{n.current}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>{{n.t}}</a>
+    </sc-for>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; height: 30px; padding: 0 12px; overflow: hidden; white-space: nowrap; border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="5"><span style="{{cap}}"><span style="color: var(--ink3)">{{r.k}}</span> {{r.v}}</span></sc-for>
+    </div>
+    <label style="display: flex; align-items: center; gap: 6px; width: 190px; height: 30px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" aria-label="Jump to table, column or query" placeholder="JUMP_TO" style="flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 600 11px var(--ui); letter-spacing: .08em">
+      <span style="{{capDim}}">⌘K</span>
+    </label>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+    <div style="flex: 0 0 220px; height: 852px">
+      <dc-import name="Sidebar" active="customers" conn="analytics" dark="{{dark}}" hint-size="220px,852px"></dc-import>
+    </div>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; position: relative">
+      <!-- production strip -->
+      <div role="status" style="height: 26px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 10px; border: 1.5px solid var(--amber); border-radius: 3px; background: var(--paper)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--amber)"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 017.5-2"></path></svg>
+        <span style="{{capAmber}}">PRODUCTION // ANALYTICS // WRITES UNLOCKED FOR THIS SESSION</span>
+        <span style="flex: 1"></span>
+        <span style="{{capDim}}">READ-ONLY AGAIN ON RECONNECT</span>
+        <button type="button" title="Lock again  ⌘L" style="{{boxAmber}}">LOCK // ⌘L</button>
+      </div>
+
+      <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+        <nav aria-label="Views" style="flex: 0 0 28px; display: flex; flex-direction: column; gap: 4px">
+          <sc-for list="{{rail}}" as="v" hint-placeholder-count="4">
+            <button type="button" title="{{v.tip}}" aria-pressed="{{v.on}}" style="{{v.style}}"><span>{{v.n}}</span><span style="{{v.labelStyle}}">{{v.t}}</span></button>
+          </sc-for>
+        </nav>
+
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+          <section aria-label="customers" style="{{frame}}; flex: 1; min-height: 0">
+            <div style="{{head}}"><span style="{{cap}}">CUSTOMERS</span><span style="{{capDim}}">// 2,400 ROWS // ANALYTICS.PUBLIC // 3 STAGED</span><span style="flex: 1"></span><button type="button" title="Add row  ⌥⌘N" style="{{box}}">+ ROW</button><button type="button" title="Undo  ⌘Z" style="{{box}}">UNDO</button></div>
+            <div style="flex: 1; min-height: 0; overflow: auto">
+              <div role="grid" aria-label="customers, 3 staged changes" style="font-family: var(--code); font-size: 12px">
+                <div role="row" style="display: grid; grid-template-columns: {{cols}}; height: 26px; align-items: center; border-bottom: 1px solid var(--lineStrong)">
+                  <sc-for list="{{heads}}" as="h" hint-placeholder-count="8"><span role="columnheader" title="{{h.tip}}" style="{{h.style}}">{{h.t}}</span></sc-for>
+                </div>
+                <sc-for list="{{rows}}" as="r" hint-placeholder-count="16">
+                  <div role="row" style="{{r.style}}">
+                    <span role="gridcell" style="{{r.gl}}">{{r.mark}}{{r.n}}</span>
+                    <span role="gridcell" style="{{r.idStyle}}">{{r.id}}</span>
+                    <span role="gridcell" style="padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+                    <span role="gridcell" style="{{r.emailStyle}}"><sc-if value="{{r.emailEdited}}" hint-placeholder-val="{{false}}"><s style="color: var(--ink3); margin-right: 6px">{{r.emailOld}}</s></sc-if>{{r.email}}</span>
+                    <span role="gridcell" style="{{r.planStyle}}"><sc-if value="{{r.planEdited}}" hint-placeholder-val="{{false}}"><s style="color: var(--ink3); margin-right: 6px">{{r.planOld}}</s></sc-if>{{r.plan}}</span>
+                    <span role="gridcell" style="padding: 0 8px">{{r.city}}</span>
+                    <span role="gridcell" style="padding: 0 8px; color: var(--ink2)">{{r.created}}</span>
+                    <span role="gridcell" style="{{r.gr}}">{{r.n}}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </section>
+
+          <!-- staged bar -->
+          <div role="region" aria-label="Staged changes" style="height: 50px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 10px 0 14px; border: 1.5px solid var(--lineStrong); border-radius: 3px; background: var(--paper)">
+            <div style="font-size: 30px; font-weight: 300; letter-spacing: -1px; line-height: 1">3</div>
+            <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+              <span style="{{capAmber}}">STAGED // NOT_WRITTEN</span>
+              <span style="{{capDim}}">2 UPDATES // 1 DELETE // CASCADES 2 ORDERS → 7 ORDER_ITEMS, 1 INVOICE // 14 EVENTS SET NULL</span>
+            </div>
+            <span style="flex: 1"></span>
+            <button type="button" title="Undo last  ⌘Z" style="{{boxL}}">UNDO // ⌘Z</button>
+            <button type="button" style="{{boxL}}">DISCARD_ALL</button>
+            <button type="button" onClick="{{openSheet}}" title="Review and commit  ⇧⌘R" style="{{boxPrimary}}">REVIEW_&amp;_COMMIT // ⇧⌘R</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 20px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden; white-space: nowrap">
+        <span style="{{capDim}}">PROD-DB.INTERNAL:5432</span><span style="{{capAmber}}">TRANSACTION_OPEN // 3 STAGED</span><span style="flex: 1"></span><span style="{{capDim}}">ANALYST // WRITE_GRANT</span><span style="{{cap}}">ANALYTICS // PG 17.2 // 18 MS</span>
+      </div>
+
+      <!-- review sheet -->
+      <sc-if value="{{sheet}}" hint-placeholder-val="{{true}}">
+        <div style="position: absolute; inset: 0; background: var(--scrim)"></div>
+        <div role="dialog" aria-modal="true" aria-labelledby="review-title" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: min(680px, calc(100% - 40px)); background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 8px 8px 0 var(--fill12); overflow: hidden">
+          <div style="{{head}}">
+            <span id="review-title" style="{{cap}}">REVIEW // COMMIT_3_CHANGES</span><span style="{{capAmber}}">// PRODUCTION // ANALYTICS</span>
+            <span style="flex: 1"></span><span style="{{capDim}}">ONE TRANSACTION</span>
+          </div>
+          <div style="padding: 10px 14px 0">
+            <div style="font-size: 12px; line-height: 1.5; color: var(--ink2)">If any statement fails, nothing is written. Before-values stay in History for 24 hours.</div>
+            <div role="table" aria-label="Changes" style="margin-top: 10px; font-family: var(--code); font-size: 12px; border-top: 1px solid var(--lineStrong)">
+              <sc-for list="{{diff}}" as="d" hint-placeholder-count="3">
+                <div role="row" style="display: grid; grid-template-columns: 70px 60px 70px minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line)">
+                  <span role="cell" style="{{d.kindStyle}}">{{d.kind}}</span>
+                  <span role="cell" style="color: var(--ink3)">{{d.id}}</span>
+                  <span role="cell">{{d.col}}</span>
+                  <span role="cell" style="min-width: 0"><s style="color: var(--ink3)">{{d.before}}</s> → <b style="font-weight: 600">{{d.after}}</b><sc-if value="{{d.hasNote}}" hint-placeholder-val="{{false}}"><span style="display: block; margin-top: 3px; font-family: var(--ui); font-size: 11px; color: var(--alert)">{{d.note}}</span></sc-if></span>
+                </div>
+              </sc-for>
+            </div>
+            <pre style="margin: 10px 0 0; padding: 10px 12px; background: var(--sunken); border: 1px solid var(--line); border-radius: 3px; font-family: var(--code); font-size: 11.5px; line-height: 1.6; white-space: pre; overflow-x: auto"><b>BEGIN</b>;
+<b>UPDATE</b> customers <b>SET</b> plan = 'pro' <b>WHERE</b> id = 1182;
+<b>UPDATE</b> customers <b>SET</b> email = 'hedy@lamarr.dev' <b>WHERE</b> id = 1190;
+<b>DELETE FROM</b> customers <b>WHERE</b> id = 1201;
+<span style="color: var(--ink3)">-- cascades: 2 orders → 7 order_items, 1 invoice; 14 events.customer_id SET NULL</span>
+<b>COMMIT</b>;</pre>
+            <label style="display: block; margin-top: 12px">
+              <span style="display: block; margin-bottom: 5px"><span style="{{cap}}">TYPE</span> <span style="font-family: var(--code); font-size: 12px; font-weight: 600">analytics</span> <span style="{{capDim}}">TO CONFIRM A PRODUCTION WRITE</span></span>
+              <span style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1.5px solid var(--accent); border-radius: 3px">
+                <input type="text" value="{{typed}}" aria-label="Database name" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--code); font-size: 13px; color: var(--ink)">
+                <sc-if value="{{confirmed}}" hint-placeholder-val="{{true}}"><span style="{{cap}}">✓ MATCH</span></sc-if>
+              </span>
+            </label>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; padding: 14px">
+            <button type="button" style="{{boxL}}">COPY_SQL</button>
+            <span style="flex: 1"></span>
+            <button type="button" onClick="{{closeSheet}}" style="{{boxL}}">CANCEL // ESC</button>
+            <button type="button" onClick="{{closeSheet}}" style="{{boxPrimary}}">COMMIT_3_CHANGES // ⌘⏎</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {sheet: true};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A',scrim:'rgba(243,243,241,0.7)'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E',scrim:'rgba(5,5,6,0.7)'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const capAmber = CAPS + ' color: var(--amber); white-space: nowrap';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; min-width: 0';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; flex: none; border-bottom: 1px solid var(--line)';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; border: 1px solid var(--lineStrong); background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; border: 1px solid var(--lineStrong); background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper);';
+    const boxAmber = boxBase + 'height: 18px; padding: 0 7px; font-size: 10.5px; border: 1px solid var(--amber); background: transparent; color: var(--amber);';
+    const logo = 'display: inline-flex; align-items: center; height: 30px; padding: 0 10px; box-sizing: border-box; background: var(--ink); color: var(--paper); border-radius: 3px; font-size: 12px; font-weight: 700; letter-spacing: .14em';
+
+    const navDef = [['OVERVIEW', 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', 'Overview.dc.html', '⌘0'], ['TABLES', 'M3 4h18v16H3zM3 10h18M9 4v16', 'Table.dc.html', '⌘1'], ['QUERY', 'M4 17l6-5-6-5M12 19h8', 'Query.dc.html', '⌘2'], ['EXPLAIN', 'M12 3v6M6 9h12M6 9v6M18 9v6M3 15h6v6H3zM15 15h6v6h-6z', 'Query.dc.html', '⌥⌘E'], ['ACTIVITY', 'M3 12h4l3-8 4 16 3-8h4', 'Overview.dc.html', '⌘3']];
+    const nav = navDef.map(([n, icon, href, key]) => {
+      const on = n === 'TABLES';
+      return {t: n, icon, href, tip: n + '  ' + key, current: on ? 'page' : 'false',
+        style: 'display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; text-decoration: none;' + CAPS + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [{k: 'SESSION //', v: 'ANALYTICS'}, {k: 'ENGINE //', v: 'PG 17.2'}, {k: 'LAT //', v: '18 MS'}, {k: 'LOAD //', v: '1.2K TX/S'}, {k: 'TIME //', v: '14:32:09'}];
+    const rail = [['01', 'DATA'], ['02', 'STRUCTURE'], ['03', 'RELATIONS'], ['04', 'STATS']].map(([n, label], i) => ({n, t: label, on: i === 0 ? 'true' : 'false', tip: label + '  ⌘' + (i + 1),
+      style: 'display: flex; flex-direction: column; align-items: center; gap: 6px; width: 28px; padding: 6px 0 8px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; cursor: pointer; font: 700 11px var(--ui); letter-spacing: .04em;' + (i === 0 ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+      labelStyle: 'writing-mode: vertical-rl; transform: rotate(180deg); font-size: 9.5px; font-weight: 600; letter-spacing: .1em'}));
+
+    const cols = '40px 64px 150px minmax(0, 1.4fr) 110px 110px 140px 40px';
+    const heads = [['#', ''], ['ID', 'int8 · primary key'], ['NAME', 'text'], ['EMAIL', 'text · unique'], ['PLAN', 'enum'], ['CITY', 'text'], ['CREATED_AT', 'timestamptz'], ['#', '']].map(([x, tip], i) => ({t: x, tip,
+      style: CAPS + 'color: ' + (i === 0 || i === 7 ? 'var(--ink3)' : 'var(--ink)') + '; padding: 0 8px;' + (i === 1 ? 'text-decoration: underline 1px solid; text-underline-offset: 3px;' : '') + (i === 7 ? 'text-align: right;' : '')}));
+    const base = [
+      [1178, 'Grace Hopper', 'grace@hopper.dev', 'team', 'Arlington', '2025-03-02'],
+      [1179, 'Alan Turing', 'alan@turing.uk', 'pro', 'Wilmslow', '2025-03-02'],
+      [1180, 'Katherine Johnson', 'kj@langley.gov', 'free', 'Hampton', '2025-03-04'],
+      [1181, 'Claude Shannon', 'claude@bell.example', 'pro', 'Winchester', '2025-03-05'],
+      [1182, 'Ada Lovelace', 'ada@engine.co', 'free', 'London', '2025-03-05'],
+      [1183, 'Barbara Liskov', 'liskov@mit.example', 'team', 'Cambridge', '2025-03-06'],
+      [1184, 'Edsger Dijkstra', 'ewd@nuenen.nl', 'free', 'Nuenen', '2025-03-08'],
+      [1185, 'Radia Perlman', 'radia@stp.net', 'pro', 'Redmond', '2025-03-09'],
+      [1186, 'Ken Thompson', 'ken@unix.example', 'free', 'Murray Hill', '2025-03-11'],
+      [1187, 'Frances Allen', 'fran@ibm.example', 'team', 'Peru, NY', '2025-03-12'],
+      [1188, 'Linus Pauling', 'linus@caltech.example', 'free', 'Pasadena', '2025-03-14'],
+      [1189, 'Margaret Hamilton', 'mh@apollo.example', 'pro', 'Boston', '2025-03-15'],
+      [1190, 'Hedy Lamarr', 'h.lamarr@old.example', 'free', 'Vienna', '2025-03-15'],
+      [1191, 'John Backus', 'backus@fortran.example', 'free', 'Ashland', '2025-03-17'],
+      [1201, 'Test Account', 'qa+delete@example.com', 'free', '—', '2025-03-21'],
+      [1202, 'Annie Easley', 'annie@nasa.example', 'pro', 'Cleveland', '2025-03-22'],
+    ];
+    const rows = base.map(([id, name, email, plan, city, created], i) => {
+      const planEdited = id === 1182, emailEdited = id === 1190, deleted = id === 1201;
+      const staged = planEdited || emailEdited;
+      return {
+        n: String(i + 1).padStart(2, '0'), id: String(id), name, city, created,
+        email: emailEdited ? 'hedy@lamarr.dev' : email, emailOld: email, emailEdited,
+        plan: planEdited ? 'pro' : plan, planOld: plan, planEdited,
+        mark: deleted ? '− ' : staged ? '~ ' : '',
+        gl: 'padding: 0 8px; font-size: 11px; color: ' + (deleted ? 'var(--alert)' : staged ? 'var(--amber)' : 'var(--ink3)') + ';' + (staged ? 'box-shadow: inset 3px 0 0 var(--amber);' : deleted ? 'box-shadow: inset 3px 0 0 var(--alert);' : ''),
+        gr: 'padding: 0 8px; font-size: 11px; color: var(--ink3); text-align: right',
+        idStyle: 'padding: 0 8px;' + (deleted ? 'color: var(--alert); font-weight: 600' : 'color: var(--ink2)'),
+        emailStyle: 'padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (emailEdited ? 'font-weight: 600; box-shadow: inset 0 -2px 0 var(--amber);' : ''),
+        planStyle: 'padding: 0 8px;' + (planEdited ? 'font-weight: 600; box-shadow: inset 0 -2px 0 var(--amber);' : ''),
+        style: 'display: grid; grid-template-columns: ' + cols + '; height: 26px; align-items: center; border-bottom: 1px dashed var(--line);' +
+          (deleted ? 'text-decoration: line-through; color: var(--alert); background: var(--fill12);' : staged ? 'background: var(--fill12);' : ''),
+      };
+    });
+    const diff = [
+      {kind: 'UPDATE', id: '1182', col: 'plan', before: "'free'", after: "'pro'"},
+      {kind: 'UPDATE', id: '1190', col: 'email', before: "'h.lamarr@old.example'", after: "'hedy@lamarr.dev'"},
+      {kind: 'DELETE', id: '1201', col: 'row', before: 'Test Account', after: 'removed', note: 'Cascades: 2 orders → 7 order_items and 1 invoice deleted; 14 events.customer_id set to NULL.'},
+    ].map((d) => ({...d, note: d.note || '', hasNote: !!d.note, kindStyle: 'font-family: var(--ui); font-size: 11px; font-weight: 700; letter-spacing: .08em; color: ' + (d.kind === 'DELETE' ? 'var(--alert)' : 'var(--ink)')}));
+    return {
+      themeVars, dark, cap, capDim, capAmber, frame, head, box, boxL, boxPrimary, boxAmber, logo, nav, readouts, rail, cols, heads, rows, diff,
+      sheet: this.state.sheet, typed: 'analytics', confirmed: true,
+      openSheet: () => this.setState({sheet: true}),
+      closeSheet: () => this.setState({sheet: false}),
+    };
+  }
+}
+</script>
+</body>
+</html>

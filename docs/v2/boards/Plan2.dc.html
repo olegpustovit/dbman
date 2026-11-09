@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>v2 implementation plan — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="width: 100%; max-width: 1440px; margin: 0 auto; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+
+  <!-- TOP STRIP -->
+  <div style="{{strip}}">
+    <span style="{{navOn}}">V2 PLAN</span>
+    <sc-for list="{{navs}}" as="n" hint-placeholder-count="5"><span style="{{nav}}">{{n}}</span></sc-for>
+    <span style="flex: 1"></span>
+    <span style="{{capDim}}">BASE // <span style="color: var(--ink)">V1 · 6.4K LINES · 4 TARGETS</span></span>
+    <span style="{{capDim}}; margin-left: 10px">ORDER // <span style="color: var(--ink)">P0 → P1 → (P2 ∥ P3) → (P4 ∥ P5) → P6 → P7</span></span>
+    <span style="{{capDim}}; margin: 0 8px 0 10px">FOR REVIEW // <span style="color: var(--ink)">9 NOV 2026</span></span>
+  </div>
+
+  <!-- MASTHEAD -->
+  <section aria-label="v2 implementation plan" style="{{frame}}; padding: 16px 18px 16px; display: flex; gap: 28px; align-items: flex-end">
+    <div style="flex: 1 1 auto; min-width: 0">
+      <div style="{{capDim}}">21 // V2 IMPLEMENTATION PLAN // STORE · MCP · OVERLAYS · DASHBOARDS · SCHEMA MAP</div>
+      <h1 style="margin: 12px 0 0; font-size: 132px; font-weight: 300; letter-spacing: -0.045em; line-height: 0.86; white-space: nowrap">BUILD V2</h1>
+      <div style="{{capDim}}; margin-top: 12px">SWIFT 6 TOOLCHAIN // LANGUAGE MODE V5 // MACOS 26 // ONE NEW DEPENDENCY</div>
+    </div>
+    <div style="flex: 0 0 720px; min-width: 0">
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink2)"><b style="font-weight: 600; color: var(--ink)">Store first; everything else is a reader of it.</b> P0 replaces v1’s <span style="font-family: var(--code); font-size: 11.5px">connections.json</span> and <span style="font-family: var(--code); font-size: 11.5px">@AppStorage</span> with one introspectable <span style="font-family: var(--code); font-size: 11.5px">dbman.sqlite</span>; the MCP server, agent layers, dashboards and schema-map layouts all persist into it. <b style="font-weight: 600; color: var(--ink)">Reuse v1 wherever it already works</b> — SQLiteDriver’s C API, SQLSplit, ChangeSet, ReviewSheet, DataGrid, Halftone instruments. <b style="font-weight: 600; color: var(--ink)">Only new dependency:</b> the official MCP Swift SDK. Every phase ends green: unit + golden tests, a live Claude Code CLI round-trip from P1 on, and DevHooks screenshots reviewed by one QA pass.</p>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 12px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+          <div style="border: 1px solid var(--line); border-radius: 3px; padding: 8px 12px">
+            <div style="{{capDim}}">{{s.k}}</div>
+            <div style="font-size: 44px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 4px">{{s.v}}</div>
+            <div style="font-size: 11px; color: var(--ink3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.d}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 TARGETS -->
+  <section aria-label="Targets and modules" style="{{frame}}">
+    <div style="{{head}}"><span>01 // TARGETS &amp; MODULES</span><span style="{{meta}}">PACKAGE.SWIFT // DEPENDENCIES POINT DOWN // RUNTIME LINKS DASHED</span><span style="flex: 1"></span><span style="{{chipAccent}}">5 NEW TARGETS</span><span style="{{chip}}">4 KEPT FROM V1</span><span style="{{chipOn}}">1 NEW DEPENDENCY</span></div>
+    <div style="display: flex; gap: 16px; padding: 10px 12px 12px">
+      <svg width="930" height="440" viewBox="0 0 930 440" role="img" aria-label="Module diagram. DBMan app depends on Halftone, DBStore and DBManMCP. DBManMCP depends on DBStore, DBCore and the swift-sdk MCP product. DBStore depends on DBCore. DBCore depends on postgres-nio, mysql-nio and system sqlite3. The dbman-mcp helper has no package dependencies and talks to the app at runtime over mcp.sock." style="flex: none; display: block; font-family: var(--ui)">
+        <defs>
+          <marker id="p2A" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" style="fill: var(--ink)"></path></marker>
+          <marker id="p2C" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" style="fill: var(--accent)"></path></marker>
+        </defs>
+        <g style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">
+          <text x="16" y="18">EXECUTABLES</text><text x="16" y="174">LIBRARIES</text><text x="200" y="338">FOUNDATION</text><text x="748" y="174">PACKAGE DEPENDENCY</text><text x="748" y="338">KEPT DEPENDENCIES</text>
+        </g>
+
+        <!-- DBMan app -->
+        <rect x="16" y="26" width="670" height="110" rx="3" style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1"></rect>
+        <text x="28" y="45" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DBMAN <tspan style="fill: var(--ink3)">// APP · EXECUTABLE · EXTENDED</tspan></text>
+        <text x="674" y="45" text-anchor="end" style="font-family: var(--code); font-size: 10px; fill: var(--ink3)">Sources/DBMan/</text>
+        <rect x="28" y="54" width="206" height="72" rx="2" style="fill: none; stroke: var(--accent)"></rect>
+        <text x="38" y="70" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">APP/ // NEW</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="38" y="86">AppStore.swift  @Observable</text><text x="38" y="100">MCPHost.swift  actor, mcp.sock</text><text x="38" y="114">HelperLink · Notifications</text></g>
+        <rect x="244" y="54" width="206" height="72" rx="2" style="fill: none; stroke: var(--accent)"></rect>
+        <text x="254" y="70" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">FEATURES/ // NEW</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="254" y="86">Agents/ · Layers/</text><text x="254" y="100">Dashboards/ · SchemaMap/</text><text x="254" y="114">Approvals/</text></g>
+        <rect x="460" y="54" width="214" height="72" rx="2" style="fill: none; stroke: var(--line)"></rect>
+        <text x="470" y="70" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">REUSE V1</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="470" y="86">ReviewSheet → APPLY TO DB</text><text x="470" y="100">DataGrid → layer marks</text><text x="470" y="114">OverviewView → default dash</text></g>
+
+        <!-- helper -->
+        <rect x="748" y="26" width="170" height="110" rx="3" style="fill: var(--paper); stroke: var(--accent); stroke-width: 1"></rect>
+        <text x="760" y="45" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DBMAN-MCP</text>
+        <text x="906" y="45" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">NEW</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="760" y="64">Helpers/dbman-mcp</text><text x="760" y="78">main.swift · ~150 lines</text></g>
+        <g style="font-size: 11px; fill: var(--ink)"><text x="760" y="96">stdio ⇄ Unix socket</text><text x="760" y="111">launches app: open -g -j</text></g>
+        <text x="760" y="127" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">FOUNDATION ONLY</text>
+        <line x1="689" y1="92" x2="745" y2="92" marker-start="url(#p2C)" marker-end="url(#p2C)" style="stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 4 3"></line>
+        <text x="717" y="84" text-anchor="middle" style="font-size: 9px; font-weight: 600; letter-spacing: .06em; fill: var(--accent)">SOCKET</text>
+
+        <!-- arrows app -> libs -->
+        <line x1="96" y1="137" x2="96" y2="182" marker-end="url(#p2A)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <line x1="315" y1="137" x2="315" y2="182" marker-end="url(#p2C)" style="stroke: var(--accent); stroke-width: 1.2"></line>
+        <line x1="571" y1="137" x2="571" y2="182" marker-end="url(#p2C)" style="stroke: var(--accent); stroke-width: 1.2"></line>
+
+        <!-- Halftone -->
+        <rect x="16" y="184" width="160" height="116" rx="3" style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1"></rect>
+        <text x="28" y="203" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">HALFTONE</text>
+        <text x="164" y="203" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">REUSE V1</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="28" y="222">Instruments · Feed</text><text x="28" y="236">Frame · Readout</text><text x="28" y="250">Rail · Status</text></g>
+        <text x="28" y="272" style="font-family: var(--code); font-size: 10px; fill: var(--accent)">+ Widgets/ ×19  (P4)</text>
+        <text x="28" y="290" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">NO APP KNOWLEDGE</text>
+
+        <!-- DBStore -->
+        <rect x="200" y="184" width="230" height="116" rx="3" style="fill: var(--paper); stroke: var(--accent); stroke-width: 1.5"></rect>
+        <text x="212" y="203" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DBSTORE <tspan style="fill: var(--ink3)">// LIBRARY</tspan></text>
+        <text x="418" y="203" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">NEW · P0</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="212" y="222">StoreDB · Migrator · Backup</text><text x="212" y="236">Migrations/0001_init.sql</text><text x="212" y="250">Repos/ · V1Import · Watcher</text></g>
+        <text x="212" y="272" style="font-family: var(--code); font-size: 10px; fill: var(--accent)">+ Overlay/ · Dashboards/ (P3–4)</text>
+        <text x="212" y="290" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">DBMAN.SQLITE // WAL // 14 TABLES</text>
+
+        <!-- DBManMCP -->
+        <rect x="456" y="184" width="230" height="116" rx="3" style="fill: var(--paper); stroke: var(--accent); stroke-width: 1.5"></rect>
+        <text x="468" y="203" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DBMANMCP <tspan style="fill: var(--ink3)">// LIBRARY</tspan></text>
+        <text x="674" y="203" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">NEW · P1</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="468" y="222">MCPServer · SocketTransport</text><text x="468" y="236">PermissionGate · Redaction</text><text x="468" y="250">ProdGuard · Cursor</text></g>
+        <text x="468" y="272" style="font-family: var(--code); font-size: 10px; fill: var(--accent)">Tools/ ×30 · Install/ (P2)</text>
+        <text x="468" y="290" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">PURE // NO UI // FULLY TESTABLE</text>
+        <line x1="455" y1="242" x2="433" y2="242" marker-end="url(#p2C)" style="stroke: var(--accent); stroke-width: 1.2"></line>
+
+        <!-- swift-sdk -->
+        <line x1="687" y1="242" x2="745" y2="242" marker-end="url(#p2C)" style="stroke: var(--accent); stroke-width: 1.2"></line>
+        <text x="716" y="234" text-anchor="middle" style="font-size: 9px; font-weight: 600; letter-spacing: .06em; fill: var(--accent)">MCP</text>
+        <rect x="748" y="184" width="170" height="116" rx="3" style="fill: var(--sunken); stroke: var(--lineStrong); stroke-width: 1; stroke-dasharray: 4 3"></rect>
+        <text x="760" y="203" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">SWIFT-SDK</text>
+        <text x="906" y="203" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--accent)">ONLY NEW</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="760" y="222">modelcontextprotocol/</text><text x="760" y="236">swift-sdk · product MCP</text></g>
+        <g style="font-size: 11px; fill: var(--ink)"><text x="760" y="256">Server + custom Transport</text><text x="760" y="271">replaces hand JSON-RPC</text></g>
+        <text x="760" y="290" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">PINNED EXACT VERSION</text>
+
+        <!-- libs -> DBCore -->
+        <line x1="315" y1="301" x2="315" y2="346" marker-end="url(#p2A)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <line x1="571" y1="301" x2="571" y2="346" marker-end="url(#p2A)" style="stroke: var(--ink); stroke-width: 1"></line>
+
+        <!-- DBCore -->
+        <rect x="200" y="348" width="486" height="84" rx="3" style="fill: var(--paper); stroke: var(--lineStrong); stroke-width: 1"></rect>
+        <text x="212" y="367" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">DBCORE <tspan style="fill: var(--ink3)">// MODELS · DRIVERS · SESSIONS · STAGED WRITES</tspan></text>
+        <text x="674" y="367" text-anchor="end" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">REUSE V1</text>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="212" y="386">SQLiteDriver C API → StoreDB</text><text x="212" y="401">SQLSplit → CTE tokenizer</text><text x="212" y="416">ChangeSet → APPLY TO DATABASE</text></g>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--accent)"><text x="456" y="386">+ Graph/SchemaGraph  (P5)</text><text x="456" y="401">+ Graph/InferRelations  (P5)</text><text x="456" y="416">~ Models: virtualRelations (P3)</text></g>
+
+        <!-- externals -->
+        <line x1="687" y1="390" x2="745" y2="390" marker-end="url(#p2A)" style="stroke: var(--ink); stroke-width: 1"></line>
+        <rect x="748" y="348" width="170" height="84" rx="3" style="fill: var(--sunken); stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 3"></rect>
+        <g style="font-family: var(--code); font-size: 10px; fill: var(--ink2)"><text x="760" y="367">postgres-nio ≥ 1.21</text><text x="760" y="382">mysql-nio ≥ 1.7</text><text x="760" y="397">sqlite3 (system)</text></g>
+        <text x="760" y="420" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">UNCHANGED</text>
+
+        <!-- legend -->
+        <g style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em">
+          <rect x="16" y="352" width="18" height="11" rx="2" style="fill: none; stroke: var(--accent); stroke-width: 1.5"></rect><text x="42" y="361" style="fill: var(--ink)">NEW</text>
+          <rect x="16" y="370" width="18" height="11" rx="2" style="fill: none; stroke: var(--lineStrong)"></rect><text x="42" y="379" style="fill: var(--ink)">REUSE V1</text>
+          <rect x="16" y="388" width="18" height="11" rx="2" style="fill: var(--sunken); stroke: var(--lineStrong); stroke-dasharray: 3 2"></rect><text x="42" y="397" style="fill: var(--ink)">PACKAGE</text>
+          <line x1="16" y1="411" x2="32" y2="411" marker-end="url(#p2A)" style="stroke: var(--ink)"></line><text x="42" y="414" style="fill: var(--ink)">DEPENDS ON</text>
+          <line x1="16" y1="427" x2="32" y2="427" marker-end="url(#p2C)" style="stroke: var(--accent); stroke-dasharray: 3 2"></line><text x="42" y="430" style="fill: var(--ink)">RUNTIME</text>
+        </g>
+      </svg>
+
+      <div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+        <div>
+          <div style="display: flex; gap: 6px; height: 22px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">PACKAGE.SWIFT</span><span style="{{capDim}}">// DIFF</span><span style="flex: 1"></span><span style="{{capDim}}">+ ADD · ~ CHANGE</span></div>
+          <pre style="{{pre}}"><sc-for list="{{pkg}}" as="l" hint-placeholder-count="12"><span style="{{l.style}}">{{l.t}}</span>
+</sc-for></pre>
+        </div>
+        <div>
+          <div style="display: flex; gap: 6px; height: 22px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span style="{{cap}}">REUSE V1</span><span style="{{capDim}}">// FILE → ROLE IN V2</span></div>
+          <sc-for list="{{reuse}}" as="r" hint-placeholder-count="8">
+            <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 8px; align-items: center; height: 22px; border-bottom: 1px solid var(--line)">
+              <span style="font-family: var(--code); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.f}}</span>
+              <span style="font-size: 11px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.v}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 PHASES -->
+  <section aria-label="Phases" style="{{frame}}">
+    <div style="{{head}}"><span>02 // PHASES</span><span style="{{meta}}">EACH ENDS WITH TESTS GREEN + SCREENSHOTS VIA DEVHOOKS + ONE SONNET QA PASS</span><span style="flex: 1"></span><span style="{{chip}}">8 PHASES</span><span style="{{chip}}">2 PARALLEL PAIRS</span><span style="{{chipOn}}">Σ ~{{totalK}}K LINES</span></div>
+    <div style="padding: 10px 12px 4px">
+      <svg width="1402" height="156" viewBox="0 0 1402 156" role="img" aria-label="Dependency strip: P0 Store, then P1 MCP core, then P2 Agents window in parallel with P3 Overlay engine, then P4 Dashboards in parallel with P5 Schema map, then P6 Approvals, then P7 Icon and packaging." style="display: block; font-family: var(--ui)">
+        <sc-for list="{{edges}}" as="e" hint-placeholder-count="10"><path d="{{e.d}}" marker-end="{{e.m}}" style="fill: none; stroke: var(--ink); stroke-width: 1"></path></sc-for>
+        <sc-for list="{{nodes}}" as="n" hint-placeholder-count="8">
+          <rect x="{{n.x}}" y="{{n.y}}" width="197" height="62" rx="3" style="{{n.rect}}"></rect>
+          <text x="{{n.tx}}" y="{{n.ty1}}" style="font-size: 30px; font-weight: 300; letter-spacing: -0.03em; fill: var(--ink)">{{n.id}}</text>
+          <text x="{{n.tx2}}" y="{{n.ty0}}" style="font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--ink)">{{n.name}}</text>
+          <text x="{{n.tx2}}" y="{{n.ty2}}" style="{{n.modelStyle}}">{{n.model}}</text>
+          <text x="{{n.tx2}}" y="{{n.ty3}}" style="font-size: 9.5px; font-weight: 600; letter-spacing: .08em; fill: var(--ink3)">{{n.sub}}</text>
+        </sc-for>
+        <sc-for list="{{pars}}" as="p" hint-placeholder-count="2"><text x="{{p.x}}" y="78" text-anchor="middle" style="font-size: 9.5px; font-weight: 600; letter-spacing: .1em; fill: var(--accent)">∥ PARALLEL</text></sc-for>
+      </svg>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 6px 12px 12px">
+      <sc-for list="{{phases}}" as="p" hint-placeholder-count="8">
+        <article aria-label="{{p.label}}" style="border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px 12px; min-width: 0; display: flex; flex-direction: column">
+          <div style="display: flex; align-items: flex-start; gap: 10px">
+            <span style="font-size: 40px; font-weight: 300; letter-spacing: -0.04em; line-height: 0.9">{{p.id}}</span>
+            <div style="flex: 1; min-width: 0">
+              <div style="{{cap}}; font-size: 12px">{{p.name}}</div>
+              <div style="{{capDim}}; font-size: 10px; margin-top: 3px">AFTER {{p.after}} // ~{{p.k}}K LINES // {{p.target}}</div>
+            </div>
+            <span style="display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end"><sc-for list="{{p.models}}" as="m" hint-placeholder-count="2"><span style="{{m.style}}">{{m.t}}</span></sc-for></span>
+          </div>
+          <div style="{{lbl}}">GOAL</div>
+          <div style="font-size: 12px; line-height: 1.42; color: var(--ink)">{{p.goal}}</div>
+          <div style="{{lbl}}">FILES <span style="color: var(--ink3); font-weight: 500">// {{p.nAdd}} ADD · {{p.nChg}} CHANGE</span></div>
+          <sc-for list="{{p.files}}" as="f" hint-placeholder-count="10">
+            <div style="display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 4px; padding: 2px 0; border-bottom: 1px solid var(--line); line-height: 1.3">
+              <span style="{{f.ms}}">{{f.m}}</span>
+              <span style="min-width: 0"><span style="font-family: var(--code); font-size: 10px; color: var(--ink); overflow-wrap: anywhere">{{f.p}}</span><span style="font-size: 10.5px; color: var(--ink3)">{{f.n}}</span></span>
+            </div>
+          </sc-for>
+          <div style="{{lbl}}">MCP TOOLS <span style="color: var(--ink3); font-weight: 500">// {{p.nTools}}</span></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 3px">
+            <sc-for list="{{p.tools}}" as="t" hint-placeholder-count="6"><span style="{{toolChip}}">{{t}}</span></sc-for>
+            <span style="{{p.noToolsStyle}}">{{p.noTools}}</span>
+          </div>
+          <div style="{{lbl}}">TESTS</div>
+          <sc-for list="{{p.tests}}" as="t" hint-placeholder-count="4">
+            <div style="display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 4px; font-size: 11px; line-height: 1.38; color: var(--ink2); padding: 1px 0"><span aria-hidden="true" style="width: 4px; height: 4px; margin-top: 6px; background: var(--ink)"></span><span>{{t}}</span></div>
+          </sc-for>
+          <div style="flex: 1"></div>
+          <div style="margin-top: 10px; padding: 7px 9px; border: 1px solid var(--lineStrong); border-radius: 3px">
+            <div style="{{cap}}; font-size: 10px">DONE WHEN</div>
+            <div style="font-size: 11.5px; line-height: 1.4; margin-top: 3px">{{p.done}}</div>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- 03 TOOLING -->
+  <section aria-label="Tooling" style="{{frame}}">
+    <div style="{{head}}"><span>03 // TOOLING</span><span style="{{meta}}">MAKE TARGETS + DEVHOOKS ENV // DEBUG BUILDS ONLY // EVERY SCREEN REACHABLE FROM A SCRIPT</span><span style="flex: 1"></span><span style="{{chipAccent}}">7 NEW TARGETS</span><span style="{{chipAccent}}">4 NEW ENV VARS</span></div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 16px; padding: 6px 12px 12px">
+      <div role="table" aria-label="Make targets">
+        <div role="row" style="{{thRow}}; grid-template-columns: 104px minmax(0, 1fr) minmax(0, 1.05fr) 40px"><span role="columnheader">MAKE</span><span role="columnheader">PURPOSE</span><span role="columnheader">RUNS</span><span role="columnheader" style="text-align: right">PHASE</span></div>
+        <sc-for list="{{makes}}" as="m" hint-placeholder-count="13">
+          <div role="row" style="display: grid; grid-template-columns: 104px minmax(0, 1fr) minmax(0, 1.05fr) 40px; gap: 8px; align-items: center; height: 23px; border-bottom: 1px solid var(--line)">
+            <span role="cell" style="{{m.ts}}">{{m.t}}</span>
+            <span role="cell" style="font-size: 11px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{m.p}}</span>
+            <span role="cell" style="font-family: var(--code); font-size: 10px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{m.c}}</span>
+            <span role="cell" style="text-align: right; {{capDim}}; font-size: 10px">{{m.ph}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div role="table" aria-label="DevHooks environment variables">
+        <div role="row" style="{{thRow}}; grid-template-columns: 210px minmax(0, 1fr) 40px"><span role="columnheader">DEVHOOKS ENV</span><span role="columnheader">PURPOSE</span><span role="columnheader" style="text-align: right">PHASE</span></div>
+        <sc-for list="{{envs}}" as="e" hint-placeholder-count="12">
+          <div role="row" style="display: grid; grid-template-columns: 210px minmax(0, 1fr) 40px; gap: 8px; align-items: center; height: 23px; border-bottom: 1px solid var(--line)">
+            <span role="cell" style="{{e.ts}}">{{e.t}}</span>
+            <span role="cell" style="font-size: 11px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{e.p}}</span>
+            <span role="cell" style="text-align: right; {{capDim}}; font-size: 10px">{{e.ph}}</span>
+          </div>
+        </sc-for>
+        <div style="font-size: 11px; color: var(--ink3); margin-top: 8px; line-height: 1.45">Cobalt = new in v2; ink = kept from v1 <span style="font-family: var(--code); font-size: 10px">DevHooks.swift</span>. Release builds get inert stubs, as in v1.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 TEST MATRIX -->
+  <section aria-label="Test matrix" style="{{frame}}">
+    <div style="{{head}}"><span>04 // TEST MATRIX</span><span style="{{meta}}">PER PHASE // SWIFT TEST + GOLDEN FIXTURES + TESTDB (MAKE DB-UP) + REAL CLAUDE CODE CLI + DEVHOOKS SCREENSHOTS</span><span style="flex: 1"></span><span style="{{chipOn}}">{{cellCount}} OF 40 CELLS COVERED</span></div>
+    <div role="table" aria-label="Test matrix" style="padding: 4px 12px 12px">
+      <div role="row" style="{{thRow}}; grid-template-columns: 112px repeat(5, minmax(0, 1fr))"><span role="columnheader">PHASE</span><sc-for list="{{matrixCols}}" as="c" hint-placeholder-count="5"><span role="columnheader">{{c}}</span></sc-for></div>
+      <sc-for list="{{matrix}}" as="r" hint-placeholder-count="8">
+        <div role="row" style="display: grid; grid-template-columns: 112px repeat(5, minmax(0, 1fr)); gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); align-items: start">
+          <span role="rowheader" style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 18px; font-weight: 300; line-height: 1">{{r.id}}</span><span style="{{capDim}}; font-size: 10px">{{r.name}}</span></span>
+          <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5">
+            <span role="cell" style="display: grid; grid-template-columns: 9px minmax(0, 1fr); gap: 5px; font-size: 11px; line-height: 1.38"><span aria-hidden="true" style="{{c.mark}}"></span><span style="{{c.ts}}">{{c.t}}</span></span>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- 05 RISKS -->
+  <section aria-label="Risks and mitigations" style="{{frame}}">
+    <div style="{{head}}"><span>05 // RISKS &amp; MITIGATIONS</span><span style="{{meta}}">WHAT COULD STALL A PHASE // AND THE CHEAPEST GUARD</span><span style="flex: 1"></span><span style="{{chipAmber}}">{{highCount}} HIGH</span><span style="{{chip}}">{{risks.length}} TRACKED</span></div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 8px 12px 12px">
+      <sc-for list="{{risks}}" as="r" hint-placeholder-count="6">
+        <div style="border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px; min-width: 0">
+          <div style="display: flex; align-items: center; gap: 6px"><span style="font-size: 22px; font-weight: 300; line-height: 1; color: var(--ink3)">{{r.n}}</span><span style="{{cap}}; overflow: hidden; text-overflow: ellipsis">{{r.k}}</span><span style="flex: 1"></span><span style="{{r.sevStyle}}">{{r.sev}}</span><span style="{{chipOff}}">{{r.ph}}</span></div>
+          <div style="font-size: 11.5px; color: var(--ink2); line-height: 1.42; margin-top: 6px">{{r.why}}</div>
+          <div style="{{lbl}}; margin-top: 8px">MITIGATION</div>
+          <sc-for list="{{r.mit}}" as="m" hint-placeholder-count="4">
+            <div style="display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 4px; font-size: 11px; line-height: 1.38; padding: 1px 0"><span aria-hidden="true" style="width: 4px; height: 4px; margin-top: 6px; background: var(--accent)"></span><span>{{m}}</span></div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":3700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:3700px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    // board chrome (as in V2Brief)
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; overflow: hidden';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; white-space: nowrap; overflow: hidden; border-bottom: 1px solid var(--line); ' + CAPS + ' color: var(--ink)';
+    const meta = 'color: var(--ink3); font-weight: 500; overflow: hidden; text-overflow: ellipsis';
+    const chipBase = 'display: inline-flex; align-items: center; height: 18px; padding: 0 5px; border-radius: 2px; box-sizing: border-box; white-space: nowrap; ' + CAPS + ' font-size: 10px;';
+    const chip = chipBase + 'border: 1px solid var(--lineStrong); color: var(--ink)';
+    const chipOff = chipBase + 'border: 1px solid var(--line); color: var(--ink3)';
+    const chipOn = chipBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const chipAmber = chipBase + 'border: 1px solid var(--amber); color: var(--amber)';
+    const chipAccent = chipBase + 'border: 1px solid var(--accent); color: var(--accent)';
+    const strip = 'display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 4px; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; box-sizing: border-box';
+    const navBase = 'display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 2px; box-sizing: border-box; ' + CAPS + ' font-size: 10.5px;';
+    const nav = navBase + 'border: 1px solid var(--line); color: var(--ink)';
+    const navOn = navBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const navs = ['01 TARGETS', '02 PHASES', '03 TOOLING', '04 TESTS', '05 RISKS'];
+    const pre = 'margin: 6px 0 0; padding: 8px 10px; background: var(--sunken); border-radius: 3px; font-family: var(--code); font-size: 10px; line-height: 1.55; white-space: pre; overflow: hidden';
+    const lbl = CAPS + ' font-size: 10px; color: var(--ink); white-space: nowrap; margin: 10px 0 4px; padding-bottom: 3px; border-bottom: 1px solid var(--lineStrong)';
+    const thRow = 'display: grid; gap: 8px; align-items: center; height: 24px; border-bottom: 1px solid var(--lineStrong); ' + CAPS + ' font-size: 10px; color: var(--ink3)';
+    const toolChip = 'display: inline-flex; align-items: center; height: 18px; padding: 0 5px; border: 1px solid var(--accent); border-radius: 2px; box-sizing: border-box; font-family: var(--code); font-size: 10px; color: var(--accent); white-space: nowrap';
+
+    // ---------- 01 Package.swift diff ----------
+    const pk = (m, s) => ({t: s, style: m === '+' ? 'color: var(--accent)' : m === '~' ? 'color: var(--ink)' : 'color: var(--ink3)'});
+    const pkg = [
+      pk(' ', '// swift-tools-version: 6.0 · platforms: .macOS("26.0")'),
+      pk('+', '+ .package(url: "…/modelcontextprotocol/swift-sdk", exact: "{pin}")'),
+      pk('+', '+ .executable(name: "dbman-mcp", targets: ["dbman-mcp"])'),
+      pk('+', '+ .target(name: "DBStore", dependencies: ["DBCore"],'),
+      pk('+', '+     resources: [.copy("Migrations")], swiftSettings: v5)'),
+      pk('+', '+ .target(name: "DBManMCP", dependencies: ["DBCore", "DBStore",'),
+      pk('+', '+     .product(name: "MCP", package: "swift-sdk")], swiftSettings: v5)'),
+      pk('+', '+ .executableTarget(name: "dbman-mcp", swiftSettings: v5)'),
+      pk('~', '~ .executableTarget(name: "DBMan", dependencies: ["Halftone",'),
+      pk('~', '~     "DBCore", "DBStore", "DBManMCP"], swiftSettings: v5)'),
+      pk('+', '+ .testTarget(name: "DBStoreTests", dependencies: ["DBStore"])'),
+      pk('+', '+ .testTarget(name: "DBManMCPTests", dependencies: ["DBManMCP"],'),
+      pk('+', '+     resources: [.copy("Golden")])'),
+    ];
+    const reuse = [
+      ['DBCore/Drivers/SQLiteDriver.swift', 'C API wrapper opens dbman.sqlite (WAL, STRICT)'],
+      ['DBCore/Drivers/SQLSplit.swift', 'tokenizer for CTE name resolution'],
+      ['DBCore/ChangeSet.swift', 'overlay → APPLY TO DATABASE, migration .sql'],
+      ['DBMan/Features/Table/ReviewSheet.swift', 'the only path from a layer to a DB'],
+      ['DBMan/Grid/DataGrid.swift', 'row patches merged, cobalt layer mark'],
+      ['DBMan/App/AppModel.swift', 'profiles read from AppStore, not JSON'],
+      ['DBMan/Support/Keychain.swift', 'secret_ref target; dev file store stays'],
+      ['DBMan/App/DevHooks.swift', '+ DBMAN_STORE, _LAYER, routes'],
+      ['Halftone/Instruments.swift', 'widgets + agent activity feed'],
+    ].map(([f, v]) => ({f, v}));
+
+    // ---------- 02 phases ----------
+    const SON = {t: 'SONNET', style: chipOn};
+    const HAI = {t: 'HAIKU', style: chip};
+    const F = (m, p, n) => ({m, p, n: n ? '  ' + n : '', ms: 'font-family: var(--code); font-size: 10.5px; font-weight: 600; color: ' + (m === '+' ? 'var(--accent)' : 'var(--ink3)')});
+    const phaseSpec = [
+      {id: 'P0', name: 'DBMan store', after: '—', k: 1.5, target: 'DBSTORE', models: [SON, HAI],
+       goal: 'One SQLite file bootstraps everything: dbman.sqlite replaces connections.json + @AppStorage (migrated once, originals → *.v1-backup), and DBMan // internal opens it read-only.',
+       files: [F('~', 'Package.swift', 'DBStore + DBStoreTests'), F('+', 'Sources/DBStore/StoreDB.swift', 'WAL, quick_check, application_id'), F('+', 'Sources/DBStore/Migrator.swift', 'user_version, 1 tx each'), F('+', 'Sources/DBStore/Migrations/0001_init.sql', '14 tables + 4 views'), F('+', 'Sources/DBStore/Repos/SettingsRepo.swift', '+ Connections, Agents, Permissions'), F('+', 'Sources/DBStore/V1Import.swift'), F('+', 'Sources/DBStore/Backup.swift', 'VACUUM INTO, keep 7'), F('+', 'Sources/DBStore/StoreWatcher.swift', 'update hook + DispatchSource'), F('+', 'Sources/DBMan/App/AppStore.swift', '@Observable glue'), F('~', 'Sources/DBMan/App/AppModel.swift'), F('~', 'Sources/DBMan/Features/Settings/SettingsView.swift'), F('~', 'Sources/DBMan/Features/Connect/ConnectionsView.swift', 'internal row')],
+       tools: [], noTools: 'NONE // FOUNDATION',
+       tests: ['MigrationTests: empty → v_latest, re-run is a no-op', 'V1ImportTests on fixture connections.json + defaults', 'corrupt file → dbman.corrupt-{ts}.sqlite, recreated', 'CHECK constraints reject bad env / level / status', 'InternalInvisibleTests: no permission row for internal'],
+       done: 'Bootstrap < 50 ms on launch; make store-sql shows 14 tables + 4 views; DBMAN_OPEN=internal screenshot shows the store in the Table browser.'},
+      {id: 'P1', name: 'MCP core', after: 'P0', k: 1.8, target: 'DBMANMCP + HELPER', models: [SON],
+       goal: 'Claude Code lists connections and runs read-only queries through dbman-mcp; gate, redaction, row cap, timeouts and prod guard in front of every call; every call is an activity row.',
+       files: [F('~', 'Package.swift', 'swift-sdk, DBManMCP, dbman-mcp'), F('+', 'Sources/dbman-mcp/main.swift', 'stdio ⇄ mcp.sock, open -g -j'), F('+', 'Sources/DBManMCP/MCPServer.swift', 'the one SDK seam'), F('+', 'Sources/DBManMCP/SocketTransport.swift'), F('+', 'Sources/DBManMCP/PermissionGate.swift'), F('+', 'Sources/DBManMCP/Redaction.swift'), F('+', 'Sources/DBManMCP/ProdGuard.swift', 'EXPLAIN cost per engine'), F('+', 'Sources/DBManMCP/Tools/QueryTools.swift', '+ Connections, Schema, Stats, UI'), F('+', 'Sources/DBMan/App/MCPHost.swift', 'actor, session per clientInfo')],
+       tools: ['connections.list', 'connections.test', 'schema.tables', 'schema.describe', 'schema.graph', 'schema.search', 'query.run', 'query.explain', 'query.sample', 'stats.column', 'ui.open'],
+       tests: ['golden tool I/O for all 11 tools (Golden/*.json)', 'redaction «redacted» + hashed GROUP BY; guard 1e6 / 1M rows', 'inspector --cli tools/list + call against testdb', 'live: claude -p "list my dbman connections"'],
+       done: 'make mcp-smoke passes: the Claude Code CLI lists shop and analytics, never DBMan // internal; activity rows land in dbman.sqlite.'},
+      {id: 'P2', name: 'Agents window', after: 'P1', k: 1.2, target: 'APP + INSTALL/', models: [HAI, SON],
+       goal: 'One CONNECT per platform: writes the native config with a diff preview and backup, then waits for the first initialize handshake. Agentpack panel, Permissions and Activity panes on store tables.',
+       files: [F('+', 'Sources/DBMan/Features/Agents/AgentsWindow.swift'), F('+', 'Sources/DBMan/Features/Agents/AgentpackPanel.swift'), F('+', 'Sources/DBMan/Features/Agents/PermissionsPane.swift'), F('+', 'Sources/DBMan/Features/Agents/ActivityPane.swift'), F('+', 'Sources/DBManMCP/Install/Platforms.swift', 'detectors, 10 + Other'), F('+', 'Sources/DBManMCP/Install/JSONConfigWriter.swift', '7 platforms'), F('+', 'Sources/DBManMCP/Install/TOMLConfigWriter.swift', 'Codex, Grok'), F('~', 'Sources/DBMan/Features/Shell/DBManCommands.swift', '⌘⇧A'), F('~', 'Sources/DBMan/Features/Shell/TopStrip.swift', 'AGENTS // 2 LIVE')],
+       tools: [], noTools: 'NONE // HANDSHAKE → AGENTS ROW',
+       tests: ['golden before/after config per platform (Haiku)', 'idempotent re-apply = empty diff; uninstall restores', 'agentpack mcp add + sync in a temp project', 'live: CONNECT → CONNECTED // claude-code'],
+       done: 'CONNECT Claude Code shows CONNECTED within 5 s; re-apply is a no-op; DBMAN_ROUTE=agents screenshots in light and dark.'},
+      {id: 'P3', name: 'Overlay engine', after: 'P1', k: 1.7, target: 'DBSTORE/OVERLAY', models: [SON],
+       goal: 'Agents write only into their own layer: row patches merged into grid pages by PK, virtual views expanded as CTEs, virtual relations, stale detection; humans adopt, discard or apply via the v1 ReviewSheet.',
+       files: [F('+', 'Sources/DBStore/Overlay/LayerStack.swift'), F('+', 'Sources/DBStore/Overlay/RowPatchMerge.swift'), F('+', 'Sources/DBStore/Overlay/CTEExpander.swift', 'via SQLSplit'), F('+', 'Sources/DBStore/Overlay/StaleDetector.swift', 'base_hash'), F('+', 'Sources/DBStore/Overlay/ApplyPlanner.swift', '→ ChangeSet'), F('+', 'Sources/DBManMCP/Tools/OverlayTools.swift', '+ Views, Relations, Notes, Saved'), F('+', 'Sources/DBMan/Features/Layers/LayerSwitcher.swift'), F('~', 'Sources/DBMan/Grid/DataGrid.swift', 'layer mark, STALE'), F('~', 'Sources/DBMan/Features/Table/ReviewSheet.swift'), F('~', 'Sources/DBCore/Models.swift', 'virtualRelations')],
+       tools: ['overlay.status', 'overlay.patch_rows', 'overlay.diff', 'overlay.reset', 'views.list', 'views.create', 'views.replace', 'views.drop', 'relations.add', 'notes.set', 'saved.list', 'saved.save'],
+       tests: ['merge by PK: insert / update / delete, paging', 'CTE expansion: shadowing, existing WITH, quoted names', 'stale when base row changed; both values kept', 'apply SQL golden × Postgres / MySQL / SQLite'],
+       done: 'Agent patches 3 rows of shop → grid shows the CC mark → ADOPT, or APPLY → ReviewSheet → COMMIT ⌘↩; write SQL returns WRITE_REDIRECTED.'},
+      {id: 'P4', name: 'Dashboards', after: 'P2 + P3', k: 1.9, target: 'APP + HALFTONE', models: [SON],
+       goal: 'Overview becomes "Overview // default": 12-column grid, 19 Halftone widgets, ⌘E editor with drawer and inspector, variables + refresh, agent proposals with per-widget accept.',
+       files: [F('+', 'Sources/DBStore/Dashboards/DashboardSpec.swift', 'Codable v1 + JSON Schema'), F('+', 'Sources/DBStore/Dashboards/SpecValidator.swift'), F('+', 'Sources/Halftone/Widgets/KPIWidget.swift', '+ 18 more, Canvas'), F('+', 'Sources/DBMan/Features/Dashboards/DashboardView.swift'), F('+', 'Sources/DBMan/Features/Dashboards/GridEditor.swift', '8 pt snap'), F('+', 'Sources/DBMan/Features/Dashboards/ProposalReview.swift'), F('+', 'Sources/DBManMCP/Tools/DashboardTools.swift'), F('~', 'Sources/DBMan/Features/Overview/OverviewView.swift', '→ default spec')],
+       tools: ['dashboard.components', 'dashboard.list', 'dashboard.get', 'dashboard.create', 'dashboard.update'],
+       tests: ['spec validation: golden good / bad specs', 'required encodings per widget type (19)', 'grid packing + snap; JSON-patch ops', 'drift: dropped column → widget error state'],
+       done: 'claude -p "build a revenue dashboard for shop" → proposal → ACCEPT 7 OF 8 → ADOPT into MINE; 19 widgets screenshot in light + dark.'},
+      {id: 'P5', name: 'Schema map', after: 'P2 + P3', k: 1.4, target: 'APP + DBCORE', models: [SON],
+       goal: 'Flexible ER canvas: LAYERED, CLUSTERS, FOCUS (1–3 hops), FREE with saved positions; crow’s feet; INFERRED edges with ACCEPT AS RELATION; PATH → join SQL; exports.',
+       files: [F('+', 'Sources/DBCore/Graph/SchemaGraph.swift', 'BFS path'), F('+', 'Sources/DBCore/Graph/InferRelations.swift', 'name / type match'), F('+', 'Sources/DBMan/Features/SchemaMap/SchemaMapView.swift', 'Canvas'), F('+', 'Sources/DBMan/Features/SchemaMap/LayeredLayout.swift', '+ Clusters, Focus, Free'), F('+', 'Sources/DBMan/Features/SchemaMap/Exporters.swift', 'SVG PNG Mermaid DBML'), F('~', 'Sources/DBMan/Features/Shell/NavigatorView.swift', 'SCHEMA MAP ⌘4')],
+       tools: [], noTools: 'NONE NEW // SCHEMA.GRAPH GAINS INFERRED EDGES',
+       tests: ['no-overlap property tests, random graphs ≤ 300', 'path finder customers → products', 'exporters golden (Mermaid, DBML, SVG)', 'inferred: events.customer_id → customers.id'],
+       done: 'FOCUS orders, 2 hops → PATH customers → products → OPEN AS QUERY runs; DBMAN_ROUTE=schema-map screenshots for all 4 layouts.'},
+      {id: 'P6', name: 'Approvals', after: 'P4 + P5', k: 0.7, target: 'APP + DBSTORE', models: [SON],
+       goal: 'The three human-only moments: credential sheet for connections.add, prod-guard overrides, human promotion. 10-minute expiry, notification + Dock badge, PAUSE ALL AGENTS.',
+       files: [F('+', 'Sources/DBMan/Features/Approvals/CredentialSheet.swift'), F('+', 'Sources/DBMan/Features/Approvals/ProdGuardSheet.swift'), F('+', 'Sources/DBStore/Repos/ApprovalsRepo.swift', 'expiry sweep'), F('+', 'Sources/DBMan/App/Notifications.swift', 'UNUserNotification'), F('~', 'Sources/DBManMCP/Tools/ConnectionsTools.swift', 'NEEDS_APPROVAL'), F('~', 'Sources/DBMan/Features/Shell/DBManCommands.swift', 'PAUSE ALL')],
+       tools: ['connections.add', 'connections.remove'],
+       tests: ['lifecycle pending → approved / rejected / expired', 'NEEDS_APPROVAL_TIMEOUT after 10 min', 'password never in a tool result or activity row', 'live: connections.add → sheet → id'],
+       done: 'Flows F2 and F4 run end-to-end from the Claude Code CLI; grep of dbman.sqlite finds no password.'},
+      {id: 'P7', name: 'Icon + packaging', after: 'P6', k: 0.3, target: 'SCRIPTS + BUNDLE', models: [HAI],
+       goal: 'One signed bundle: Icon Composer icon from icon-dbman.svg layers, dbman-mcp inside Contents/Helpers, ~/.local/bin/dbman-mcp symlink maintained on launch.',
+       files: [F('+', 'Resources/AppIcon.icon', 'bg / mid / fg layers'), F('+', 'scripts/icon.sh', 'actool → Assets.car, iconutil .icns'), F('~', 'scripts/bundle.sh', 'Helpers/, inside-out codesign'), F('~', 'Makefile', '7 new targets'), F('+', 'Sources/DBMan/App/HelperLink.swift', '~/.local/bin symlink')],
+       tools: [], noTools: 'NONE // PACKAGING',
+       tests: ['codesign --verify --strict --deep', 'helper launches from Contents/Helpers', 'icon in Default / Dark / Clear / Tinted'],
+       done: 'make install → Claude Code connects via ~/.local/bin/dbman-mcp after a reboot; Finder shows the icon in all 4 modes.'},
+    ];
+    const phases = phaseSpec.map((p) => ({...p, label: p.id + ' ' + p.name, name: p.name.toUpperCase(), k: p.k.toFixed(1),
+      nAdd: p.files.filter((f) => f.m === '+').length, nChg: p.files.filter((f) => f.m === '~').length,
+      nTools: p.tools.length ? String(p.tools.length).padStart(2, '0') : '00',
+      noTools: p.noTools || '', noToolsStyle: p.noTools ? capDim + '; font-size: 10px; line-height: 18px' : 'display: none'}));
+    const totalK = phaseSpec.reduce((s, p) => s + p.k, 0).toFixed(1);
+    const toolTotal = phaseSpec.reduce((s, p) => s + p.tools.length, 0);
+
+    // dependency strip geometry
+    const W = 197, G = 44, sx = (i) => i * (W + G);
+    const Y = {top: 8, mid: 46, bot: 84};
+    const place = [['P0', 0, 'mid'], ['P1', 1, 'mid'], ['P2', 2, 'top'], ['P3', 2, 'bot'], ['P4', 3, 'top'], ['P5', 3, 'bot'], ['P6', 4, 'mid'], ['P7', 5, 'mid']];
+    const nodes = place.map(([id, col, row]) => {
+      const p = phaseSpec.find((q) => q.id === id); const x = sx(col), y = Y[row];
+      const nt = p.tools.length;
+      return {id, x, y, tx: x + 10, ty1: y + 40, tx2: x + 58, ty0: y + 18, ty2: y + 35, ty3: y + 51, name: p.name.toUpperCase(),
+        model: p.models.map((m) => m.t).join(' + '), modelStyle: 'font-size: 10px; font-weight: 600; letter-spacing: .08em; fill: var(--ink2)',
+        sub: '~' + p.k.toFixed(1) + 'K · ' + (nt ? nt + ' TOOLS' : 'NO TOOLS'),
+        rect: 'fill: var(--paper); stroke: ' + (nt ? 'var(--accent)' : 'var(--lineStrong)') + '; stroke-width: ' + (nt ? 1.5 : 1)};
+    });
+    const cy = (row) => Y[row] + 31;
+    const mk = 'url(#p2A)';
+    const right = (col) => sx(col) + W + 1, left = (col) => sx(col) - 2, mid = (col) => sx(col) + W + G / 2;
+    const edges = [
+      {d: `M${right(0)} ${cy('mid')} H${left(1)}`, m: mk},
+      {d: `M${right(1)} ${cy('mid')} H${mid(1)} V${cy('top')} H${left(2)}`, m: mk},
+      {d: `M${mid(1)} ${cy('mid')} V${cy('bot')} H${left(2)}`, m: mk},
+      {d: `M${right(2)} ${cy('top')} H${mid(2)} V${cy('bot')}`, m: ''},
+      {d: `M${right(2)} ${cy('bot')} H${mid(2)}`, m: ''},
+      {d: `M${mid(2)} ${cy('top')} H${left(3)}`, m: mk},
+      {d: `M${mid(2)} ${cy('bot')} H${left(3)}`, m: mk},
+      {d: `M${right(3)} ${cy('top')} H${mid(3)} V${cy('bot')} H${right(3)}`, m: ''},
+      {d: `M${mid(3)} ${cy('mid')} H${left(4)}`, m: mk},
+      {d: `M${right(4)} ${cy('mid')} H${left(5)}`, m: mk},
+    ];
+    const pars = [{x: sx(2) + W / 2}, {x: sx(3) + W / 2}];
+
+    // ---------- 03 tooling ----------
+    const newT = 'font-family: var(--code); font-size: 11px; font-weight: 600; color: var(--accent); white-space: nowrap';
+    const oldT = 'font-family: var(--code); font-size: 11px; color: var(--ink); white-space: nowrap';
+    const makes = [
+      ['mcp', 'build the helper alone, fast loop', 'swift build --product dbman-mcp', 'P1', 1],
+      ['mcp-inspect', 'MCP Inspector against the helper', 'npx @modelcontextprotocol/inspector --cli …/dbman-mcp --stdio', 'P1', 1],
+      ['mcp-smoke', 'real Claude Code CLI round-trip', 'claude mcp add dbman -- …/dbman-mcp --stdio; claude -p "list my dbman connections"', 'P1', 1],
+      ['store-open', 'open DBMan // internal in DBMan', 'DBMAN_OPEN=internal open -n dist/DBMan.app', 'P0', 1],
+      ['store-sql', 'sqlite3 shell on the store', 'sqlite3 ~/Library/Application Support/DBMan/dbman.sqlite', 'P0', 1],
+      ['store-reset', 'backup, then recreate the store', 'VACUUM INTO backups/… && rm dbman.sqlite*', 'P0', 1],
+      ['icon', 'Icon Composer → Assets.car / .icns', 'scripts/icon.sh (actool, iconutil fallback)', 'P7', 1],
+      ['build · run', 'debug bundle, ad-hoc signed, launch', 'scripts/bundle.sh debug && open -n', 'V1', 0],
+      ['test', 'unit + golden + integration', 'swift test', 'V1', 0],
+      ['db-up · db-down', 'testdb Postgres + MySQL for integration', 'testdb/up.sh · testdb/down.sh', 'V1', 0],
+      ['install', 'release, stable identity → /Applications', 'SIGN_IDENTITY=… scripts/bundle.sh release', 'V1', 0],
+    ].map(([t, p, c, ph, n]) => ({t, p, c, ph, ts: n ? newT : oldT}));
+    const envs = [
+      ['DBMAN_STORE=/tmp/x.sqlite', 'throwaway store; tests never touch the real one', 'P0', 1],
+      ['DBMAN_OPEN=internal', 'open DBMan // internal on launch', 'P0', 1],
+      ['DBMAN_ROUTE=agents', 'Agents window, for screenshots', 'P2', 1],
+      ['DBMAN_ROUTE=dashboard:{id}', 'open a dashboard by id', 'P4', 1],
+      ['DBMAN_ROUTE=schema-map', 'Schema map of the opened connection', 'P5', 1],
+      ['DBMAN_LAYER={agent}', 'show only MINE + that agent’s layer', 'P3', 1],
+      ['DBMAN_OPEN=sample|url|path', 'open a connection on launch', 'V1', 0],
+      ['DBMAN_ROUTE=table:|query:', 'land on a table or run a query', 'V1', 0],
+      ['DBMAN_APPEARANCE=dark', 'dark screenshots', 'V1', 0],
+      ['DBMAN_WINDOW=settings|min', 'Settings, or 1100×700 minimum', 'V1', 0],
+      ['DBMAN_REVIEW=1 · _COMMIT=1', 'drive ReviewSheet (apply flow, P3)', 'V1', 0],
+    ].map(([t, p, ph, n]) => ({t, p, ph, ts: n ? newT : oldT}));
+
+    // ---------- 04 test matrix ----------
+    const matrixCols = ['UNIT', 'GOLDEN', 'INTEGRATION // TESTDB', 'LIVE SMOKE // CLAUDE CODE CLI', 'SCREENSHOTS // DEVHOOKS'];
+    const M = [
+      ['P0', 'STORE', ['migrations; CHECK constraints; repos', 'v1 import fixtures', 'corrupt → recover; watcher reload on sqlite3 edit', '', 'DBMAN_OPEN=internal, table browser']],
+      ['P1', 'MCP CORE', ['gate, redaction, guard thresholds, cursor', 'tool I/O × 11 tools', 'inspector --cli vs testdb pg + mysql', 'claude -p "list my dbman connections"', 'activity feed with CC rows']],
+      ['P2', 'AGENTS', ['detector paths per platform', 'config before / after × 10 platforms', 'uninstall restores; agentpack add + sync', 'CONNECT → CONNECTED // claude-code', 'DBMAN_ROUTE=agents, light + dark']],
+      ['P3', 'OVERLAY', ['merge by PK; stale base_hash', 'CTE expansion; apply SQL × 3 engines', 'patch → ADOPT → APPLY → COMMIT', 'claude -p "patch 3 customers in my layer"', 'DBMAN_LAYER=claude-code grid + diff']],
+      ['P4', 'DASHBOARDS', ['spec validation; grid packing', 'good / bad specs; 19 encodings', 'drift: dropped column → error state', 'claude -p "build a revenue dashboard"', '19 widgets × light / dark']],
+      ['P5', 'SCHEMA MAP', ['BFS path; inferred match', 'Mermaid / DBML / SVG exports', 'no-overlap property tests ≤ 300 tables', 'schema.graph returns INFERRED edges', 'DBMAN_ROUTE=schema-map × 4 layouts']],
+      ['P6', 'APPROVALS', ['lifecycle + 10 min expiry', 'no password in results / activity', 'notification + Dock badge; PAUSE ALL', 'connections.add → sheet → id', 'credential + prod-guard sheets']],
+      ['P7', 'PACKAGING', ['', '', 'codesign --verify --deep; Helpers/', 'connect via ~/.local/bin/dbman-mcp', 'icon in 4 appearance modes']],
+    ];
+    let cellCount = 0;
+    const matrix = M.map(([id, name, cells]) => ({id, name, cells: cells.map((c) => {
+      if (c) cellCount++;
+      return {t: c || 'n/a', ts: c ? 'color: var(--ink)' : 'color: var(--ink3)',
+        mark: 'width: 7px; height: 7px; margin-top: 4px; box-sizing: border-box; ' + (c ? 'background: var(--ink)' : 'border: 1px solid var(--line)')};
+    })}));
+
+    // ---------- 05 risks ----------
+    const sevS = {HIGH: chipAmber, MED: chip};
+    const risks = [
+      {k: 'MCP SDK churn', sev: 'HIGH', ph: 'P1', why: 'swift-sdk is young and the protocol revision (2025-06-18) keeps moving; a breaking release mid-build would ripple through 30 tools.',
+       mit: ['pin an exact version in Package.resolved; bump deliberately', 'all SDK use behind MCPServer.swift + SocketTransport.swift — one seam', 'make mcp-inspect conformance run in every QA pass', 'escape hatch: hand-written JSON-RPC behind the same seam']},
+      {k: 'SQLite concurrency', sev: 'HIGH', ph: 'P0', why: 'The app, N MCP sessions and an external sqlite3 shell all touch dbman.sqlite; activity is append-heavy.',
+       mit: ['WAL + one writer actor owning one connection', 'readers on separate read-only connections; busy_timeout 2 s', 'activity inserts batched every 250 ms in one transaction', 'external edits arrive via DispatchSource → targeted reload']},
+      {k: 'Config formats change', sev: 'MED', ph: 'P2', why: 'Ten agents, three formats (JSON, TOML, CLI); paths and keys shift between agent releases.',
+       mit: ['merge, never replace; keep unknown keys and TOML comments', 'golden fixtures per platform version; backup + undo per write', 'Claude Code via claude mcp add, not file edits', 'Other (copy JSON) and agentpack always work']},
+      {k: 'CTE expansion edge cases', sev: 'MED', ph: 'P3', why: 'Virtual views must expand without changing what a query means.',
+       mit: ['tokenize with SQLSplit, never regex; skip strings, comments, quoted names', 'a view name that shadows a real table is refused at views.create', 'merge into an existing WITH; recursive CTEs left intact', 'golden + EXPLAIN-parity tests on testdb per engine']},
+      {k: 'Keychain prompts', sev: 'MED', ph: 'P0', why: 'Every rebuilt ad-hoc binary re-asks for Keychain access; agents and QA runs would stall on prompts.',
+       mit: ['dev file store stays: DEBUG dev-secrets.json, 0600, v1 Keychain.swift unchanged', 'secret_ref points at either store; never a password in dbman.sqlite', 'the helper never touches secrets', 'release signed with a stable identity via make install']},
+      {k: 'Agent reads its own rights', sev: 'HIGH', ph: 'P0–P1', why: 'dbman.sqlite holds the permissions table (G21); an agent able to read or write it could grant itself access.',
+       mit: ['internal connection absent from connections.list', 'CHECK + code forbid permission rows for it', 'query.run on it → PERMISSION_DENIED', 'covered by InternalInvisibleTests and P1 golden']},
+    ].map((r, i) => ({...r, n: String(i + 1).padStart(2, '0'), sevStyle: sevS[r.sev]}));
+    const highCount = risks.filter((r) => r.sev === 'HIGH').length;
+
+    const stats = [
+      {k: 'TARGETS', v: '9', d: '5 new · 4 kept from v1'},
+      {k: 'PHASES', v: '8', d: 'P0–P7 · P2 ∥ P3 · P4 ∥ P5'},
+      {k: 'MCP TOOLS', v: String(toolTotal), d: '+ 4 resources · 4 prompts'},
+      {k: 'EST. LINES', v: '~' + totalK + 'K', d: '9–11K incl. tests · v1 6.4K'},
+    ];
+
+    return {themeVars, cap, capDim, box, boxL, boxPrimary, field, frame, head, meta, chip, chipOff, chipOn, chipAmber, chipAccent, strip, nav, navOn, navs, pre, lbl, thRow, toolChip,
+      stats, pkg, reuse, phases, totalK, nodes, edges, pars, makes, envs, matrixCols, matrix, cellCount, risks, highCount};
+  }
+}
+</script>
+</body>
+</html>

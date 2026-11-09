@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Navigator — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<nav aria-label="Database navigator" style="{{themeVars}}">
+  <button type="button" title="Switch connection  ⌃⌘O" style="display: block; width: 100%; padding: 10px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; cursor: pointer; font: inherit">
+    <span style="display: flex; align-items: center; gap: 6px">
+      <span style="{{cap}} color: var(--ink)">{{c.name}}</span><span style="{{cap}} color: var(--ink3)">//</span><span style="{{c.envStyle}}">{{c.env}}</span>
+      <span style="flex: 1"></span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--ink3)"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg>
+    </span>
+    <span style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px">
+      <span style="font-size: 36px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">290.2K</span>
+      <span style="{{cap}} color: var(--ink3)">rows · 182 MB</span>
+    </span>
+    <span style="display: block; margin-top: 4px; {{cap}} color: var(--ink3)">{{c.engine}}</span>
+  </button>
+
+  <label style="display: flex; align-items: center; gap: 6px; height: 26px; margin: 8px 8px 2px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+    <input type="text" placeholder="FILTER" aria-label="Filter navigator" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+    <span style="font-family: var(--mono); font-size: 10.5px; color: var(--ink3)">⌥⌘F</span>
+  </label>
+
+  <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 8px 8px">
+    <sc-for list="{{sections}}" as="s" hint-placeholder-count="4">
+      <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 8px; padding: 0 2px">
+        <span style="{{cap}} color: var(--ink)">{{s.name}}</span><span style="{{cap}} color: var(--ink3)">// {{s.count}}</span>
+        <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+      </div>
+      <sc-for list="{{s.items}}" as="it" hint-placeholder-count="6">
+        <a href="{{it.href}}" aria-current="{{it.current}}" title="{{it.tip}}" style="{{it.style}}">
+          <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.name}}</span>
+          <sc-if value="{{it.hasMeter}}" hint-placeholder-val="{{false}}">
+            <span aria-hidden="true" style="display: inline-flex; gap: 1px"><sc-for list="{{it.meter}}" as="m" hint-placeholder-count="8"><span style="{{m}}"></span></sc-for></span>
+          </sc-if>
+          <span style="{{it.countStyle}}">{{it.count}}</span>
+        </a>
+      </sc-for>
+    </sc-for>
+  </div>
+
+  <div style="height: 26px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-top: 1px solid var(--line)">
+    <span style="{{cap}} color: var(--ink3)">status //</span><span style="{{c.stateStyle}}">{{c.state}}</span>
+    <span style="flex: 1"></span>
+    <button type="button" aria-label="New connection (⌘N)" title="New connection  ⌘N" style="width: 20px; height: 18px; border: 1px solid var(--line); border-radius: 3px; background: transparent; color: var(--ink2); font-size: 13px; line-height: 1; cursor: pointer; padding: 0">+</button>
+  </div>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["overview","query","saved","customers","events","invoices","order_items","orders","products"],"default":"overview"},"conn":{"editor":"enum","options":["shop","analytics"],"default":"shop"},"offline":{"editor":"boolean","default":false},"dark":{"editor":"boolean","default":false},"$preview":{"width":220,"height":852}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const active = this.props.active ?? 'overview';
+    const conn = this.props.conn ?? 'shop';
+    const offline = this.props.offline ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--mono:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'display:flex;flex-direction:column;box-sizing:border-box;width:100%;height:852px;background:var(--paper);border:1px solid var(--line);border-radius:3px;overflow:hidden;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased';
+    const cap = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80; white-space: nowrap;';
+    const prod = conn === 'analytics';
+    const c = {
+      name: prod ? 'analytics' : 'shop',
+      env: prod ? 'production' : 'local',
+      envStyle: cap + ' color: ' + (prod ? 'var(--amber)' : 'var(--ink3)'),
+      engine: prod ? 'postgres 17 · prod-db.internal' : 'postgres 17 · localhost:5432',
+      state: offline ? 'reconnecting' : (prod ? 'read-only · 18 ms' : 'connected · 4 ms'),
+      stateStyle: cap + ' color: ' + (offline ? 'var(--amber)' : 'var(--ink)'),
+    };
+    const MAX = 168214;
+    const item = (id, name, href, o) => {
+      const on = id === active;
+      o = o || {};
+      const filled = o.rows ? Math.max(1, Math.round(Math.sqrt(o.rows / MAX) * 8)) : 0;
+      return {
+        name, href, current: on ? 'page' : 'false', tip: o.tip || name, hasMeter: !!o.rows, count: o.count || '',
+        meter: Array.from({length: 8}, (_, k) => 'width: 3px; height: 8px; background: ' + (k < filled ? (on ? 'var(--paper)' : 'var(--ink)') : (on ? 'rgba(127,127,127,0.45)' : 'var(--fill12)'))),
+        countStyle: 'font-family: var(--mono); font-size: 11px; min-width: 34px; text-align: right;' + (on ? 'color: var(--paper); opacity: .75' : 'color: var(--ink3)'),
+        style: 'display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 6px; border-radius: 2px; text-decoration: none; font-size: 12px;' + (on ? 'background: var(--ink); color: var(--paper); font-weight: 600;' : 'color: var(--ink);'),
+      };
+    };
+    const fmt = (n) => n >= 1000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace('.0', '') + 'K' : String(n);
+    const tables = [['customers', 2400], ['events', 61532], ['invoices', 9812], ['order_items', 168214], ['orders', 48000], ['products', 240]];
+    const sections = [
+      {name: 'workspace', count: '02', items: [item('overview', 'Overview', 'Overview.dc.html', {count: '⌘0'}), item('query', 'Query 1 *', 'Query.dc.html', {count: 'edited'})]},
+      {name: 'tables', count: '06', items: tables.map(([n, k]) => item(n, n, n === 'customers' ? 'Safety.dc.html' : 'Table.dc.html', {rows: k, count: fmt(k), tip: n + ' · ' + k.toLocaleString('en-US') + ' rows'}))},
+      {name: 'views', count: '01', items: [item('v1', 'revenue_by_month', 'Query.dc.html', {count: 'view'})]},
+      {name: 'saved', count: '03', items: [item('saved', 'Revenue by plan', 'Query.dc.html'), item('s2', 'Pending > 3 days', 'Query.dc.html'), item('s3', 'Slow events p95', 'Query.dc.html')]},
+    ];
+    return {themeVars, cap, c, sections};
+  }
+}
+</script>
+</body>
+</html>

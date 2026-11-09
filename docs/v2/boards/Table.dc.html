@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Table workspace — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: stretch; gap: 4px">
+    <div aria-hidden="true" style="display: flex; align-items: center; gap: 7px; padding: 0 8px">
+      <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+    </div>
+    <nav aria-label="Sections" style="display: flex; gap: 4px">
+      <sc-for list="{{navs}}" as="n" hint-placeholder-count="5">
+        <a href="{{n.href}}" title="{{n.tip}}" aria-current="{{n.current}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg><span>{{n.t}}</span></a>
+      </sc-for>
+    </nav>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="5"><span style="display: inline-flex; gap: 5px"><span style="{{cap}} color: var(--ink3)">{{r.k}} //</span><span style="{{r.vs}}">{{r.v}}</span></span></sc-for>
+    </div>
+    <label style="display: flex; align-items: center; gap: 6px; width: 220px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" aria-label="Jump to table, column or query" placeholder="JUMP_TO" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+      <span style="font-family: var(--mono); font-size: 11px; color: var(--ink3)">⌘K</span>
+    </label>
+  </div>
+
+  <div style="height: 852px; flex: none; display: flex; gap: 4px; min-height: 0">
+    <div style="flex: 0 0 220px; height: 852px">
+      <dc-import name="Sidebar" active="orders" conn="shop" dark="{{dark}}" hint-size="220px,852px"></dc-import>
+    </div>
+
+    <!-- NUMBER RAIL -->
+    <div role="radiogroup" aria-label="View" style="flex: 0 0 28px; display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{views}}" as="v" hint-placeholder-count="4">
+        <button type="button" role="radio" aria-checked="{{v.on}}" title="{{v.tip}}" onClick="{{v.pick}}" style="{{v.style}}"><span style="font-family: var(--mono); font-size: 10.5px">{{v.n}}</span><span style="{{v.labelStyle}}">{{v.t}}</span></button>
+      </sc-for>
+      <div aria-hidden="true" style="flex: 1; border: 1px solid var(--line); border-radius: 3px; background: repeating-linear-gradient(180deg, transparent 0 5px, var(--fill12) 5px 6px)"></div>
+    </div>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+      <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+        <!-- left column: grid + console -->
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+          <section aria-label="orders" style="{{frame}} flex: 1; display: flex; flex-direction: column">
+            <div style="flex: none; padding: 10px 12px 8px">
+              <div style="display: flex; align-items: flex-end; gap: 10px">
+                <div style="min-width: 0">
+                  <div style="display: flex; gap: 6px; align-items: baseline"><h1 style="margin: 0; {{cap}} font-size: 13px; color: var(--ink)">orders</h1><span style="{{cap}} color: var(--ink3)">// public · 6.1 MB · updated 25 s ago</span></div>
+                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 8px; flex-wrap: wrap">
+                    <label style="display: flex; align-items: center; gap: 6px; width: 260px; height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px">
+                      <span style="{{cap}} color: var(--ink3)">where //</span>
+                      <input type="text" aria-label="Filter condition (SQL)" value="{{filterText}}" placeholder="total &gt; 500" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--mono); font-size: 11.5px; color: var(--ink)">
+                    </label>
+                    <div role="group" aria-label="Quick filter by status" style="display: flex; gap: 4px">
+                      <sc-for list="{{chips}}" as="c" hint-placeholder-count="5">
+                        <button type="button" aria-pressed="{{c.on}}" title="{{c.tip}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.name}}<span style="{{c.countStyle}}">{{c.count}}</span></button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+                <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line); margin-bottom: 14px; min-width: 16px"></span>
+                <div style="text-align: right">
+                  <div style="font-size: 44px; font-weight: 300; letter-spacing: -0.03em; line-height: .9">48,000</div>
+                  <div style="{{cap}} color: var(--ink3); margin-top: 4px">rows // sort created_at ↓</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--lineStrong)">
+              <sc-if value="{{isData}}" hint-placeholder-val="{{true}}">
+                <div role="grid" aria-label="orders rows" aria-rowcount="48001" style="min-width: 780px; font-family: var(--mono); font-size: 12px">
+                  <div role="row" style="position: sticky; top: 0; z-index: 1; display: grid; grid-template-columns: {{cols}}; height: 40px; background: var(--paper); border-bottom: 1px solid var(--lineStrong)">
+                    <sc-for list="{{heads}}" as="h" hint-placeholder-count="9">
+                      <span role="columnheader" aria-sort="{{h.sort}}" title="{{h.tip}}" style="{{h.style}}">
+                        <span style="{{h.nameStyle}}">{{h.name}}</span>
+                        <button type="button" aria-label="{{h.brushLabel}}" title="{{h.brushLabel}}" onClick="{{h.brush}}" style="{{h.sparkStyle}}">
+                          <sc-for list="{{h.spark}}" as="d" hint-placeholder-count="36"><span style="background: radial-gradient(circle closest-side, {{d}} 0 78%, transparent 88%)"></span></sc-for>
+                        </button>
+                      </span>
+                    </sc-for>
+                  </div>
+                  <sc-for list="{{rows}}" as="r" hint-placeholder-count="22">
+                    <div role="row" aria-selected="{{r.on}}" aria-rowindex="{{r.ri}}" onClick="{{r.pick}}" style="{{r.style}}">
+                      <span role="rowheader" style="{{r.g}}">{{r.nL}}</span>
+                      <span role="gridcell" style="{{r.c1}}">{{r.id}}</span>
+                      <span role="gridcell" style="{{r.c2}}">{{r.cust}}</span>
+                      <span role="gridcell" style="{{r.c3}}">{{r.status}}</span>
+                      <span role="gridcell" style="{{r.c4}}">{{r.total}}</span>
+                      <span role="gridcell" style="{{r.c5}}">{{r.items}}</span>
+                      <span role="gridcell" style="{{r.c6}}">{{r.created}}</span>
+                      <span role="gridcell" style="{{r.c7}}">{{r.shipped}}</span>
+                      <span aria-hidden="true" style="{{r.gR}}">{{r.nR}}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{isStructure}}" hint-placeholder-val="{{false}}">
+                <div role="table" aria-label="orders columns" style="font-size: 12px">
+                  <div role="row" style="display: grid; grid-template-columns: 38px 140px 130px 56px minmax(0, 1fr) 180px; height: 28px; align-items: center; border-bottom: 1px solid var(--lineStrong)">
+                    <span role="columnheader" style="{{cap}} color: var(--ink3); padding-left: 10px">#</span><span role="columnheader" style="{{cap}} color: var(--ink3)">column</span><span role="columnheader" style="{{cap}} color: var(--ink3)">type</span><span role="columnheader" style="{{cap}} color: var(--ink3)">null</span><span role="columnheader" style="{{cap}} color: var(--ink3)">default</span><span role="columnheader" style="{{cap}} color: var(--ink3)">constraint</span>
+                  </div>
+                  <sc-for list="{{structure}}" as="s" hint-placeholder-count="7">
+                    <div role="row" style="display: grid; grid-template-columns: 38px 140px 130px 56px minmax(0, 1fr) 180px; height: 26px; align-items: center; border-bottom: 1px solid var(--line)">
+                      <span style="font-family: var(--mono); font-size: 11px; color: var(--ink3); padding-left: 10px">{{s.n}}</span>
+                      <span style="{{s.nameStyle}}">{{s.name}}</span>
+                      <span style="font-family: var(--mono); font-size: 11.5px; color: var(--ink2)">{{s.type}}</span>
+                      <span style="font-family: var(--mono); font-size: 11.5px; color: var(--ink2)">{{s.nullable}}</span>
+                      <span style="font-family: var(--mono); font-size: 11.5px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.def}}</span>
+                      <span style="{{s.keyStyle}}">{{s.keys}}</span>
+                    </div>
+                  </sc-for>
+                  <div style="display: flex; align-items: center; gap: 6px; padding: 16px 10px 6px"><span style="{{cap}} color: var(--ink)">indexes</span><span style="{{cap}} color: var(--ink3)">// 03 · 3.2 MB</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+                  <sc-for list="{{indexes}}" as="x" hint-placeholder-count="3">
+                    <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr) 90px; height: 26px; align-items: center; padding: 0 10px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px"><span>{{x.name}}</span><span style="color: var(--ink2)">{{x.def}}</span><span style="color: var(--ink3); text-align: right">{{x.size}}</span></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{isRelations}}" hint-placeholder-val="{{false}}">
+                <div role="img" aria-label="{{erLabel}}" style="position: relative; width: 900px; height: 440px; background-image: radial-gradient(circle, var(--fill30) 1px, transparent 1.3px); background-size: 12px 12px">
+                  <sc-for list="{{erLines}}" as="ln" hint-placeholder-count="13"><span style="{{ln}}"></span></sc-for>
+                  <sc-for list="{{erMarks}}" as="mk" hint-placeholder-count="10"><span aria-hidden="true" style="{{mk.style}}">{{mk.t}}</span></sc-for>
+                  <sc-for list="{{erBoxes}}" as="b" hint-placeholder-count="6">
+                    <a href="{{b.href}}" style="{{b.style}}">
+                      <span style="{{b.head}}"><span>{{b.name}}</span><span style="font-family: var(--mono); font-weight: 400; letter-spacing: 0; text-transform: none; opacity: .75">{{b.rows}}</span></span>
+                      <sc-for list="{{b.cols}}" as="c" hint-placeholder-count="5">
+                        <span style="display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 10px; border-top: 1px solid var(--line)"><span style="{{c.nameStyle}}">{{c.name}}</span><span style="margin-left: auto; font-family: var(--mono); color: var(--ink3); font-size: 10.5px">{{c.type}}</span></span>
+                      </sc-for>
+                    </a>
+                  </sc-for>
+                  <span style="position: absolute; left: 24px; bottom: 12px; {{cap}} color: var(--ink3)">6 tables // 5 foreign keys // paths through orders in bold // drag to arrange</span>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{isStats}}" hint-placeholder-val="{{false}}">
+                <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; background: var(--sunken)">
+                  <sc-for list="{{statCards}}" as="sc" hint-placeholder-count="8">
+                    <section style="{{frame}} padding: 10px 10px 8px">
+                      <div style="display: flex; gap: 5px; align-items: baseline"><span style="{{cap}} color: var(--ink)">{{sc.name}}</span><span style="{{cap}} color: var(--ink3); overflow: hidden; text-overflow: ellipsis">// {{sc.type}}</span></div>
+                      <div style="display: flex; align-items: baseline; gap: 6px; margin-top: 6px"><span style="font-size: 28px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">{{sc.big}}</span><span style="{{cap}} color: var(--ink3)">{{sc.bigLabel}}</span></div>
+                      <div aria-hidden="true" style="display: flex; align-items: flex-end; gap: 1px; height: 34px; margin: 8px 0 6px; border-bottom: 1px solid var(--lineStrong)">
+                        <sc-for list="{{sc.bars}}" as="b" hint-placeholder-count="24"><span style="{{b}}"></span></sc-for>
+                      </div>
+                      <sc-for list="{{sc.kv}}" as="k" hint-placeholder-count="3">
+                        <div style="display: flex; justify-content: space-between; gap: 8px; height: 19px; align-items: center"><span style="{{cap}} font-size: 10.5px; color: var(--ink3)">{{k.k}}</span><span style="{{k.style}}">{{k.v}}</span></div>
+                      </sc-for>
+                    </section>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </section>
+
+          <section aria-label="Console" style="{{frame}} height: 150px; flex: none; display: flex; flex-direction: column">
+            <div role="tablist" aria-label="Console views" style="flex: none; display: flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+              <span style="{{cap}} color: var(--ink); margin-right: 6px">console</span>
+              <sc-for list="{{ctabs}}" as="ct" hint-placeholder-count="4"><span role="tab" aria-selected="{{ct.on}}" style="{{ct.style}}">{{ct.t}}</span></sc-for>
+              <span style="flex: 1"></span><span style="font-family: var(--mono); font-size: 11px; color: var(--ink3)">⌘J</span>
+            </div>
+            <div style="flex: 1; min-height: 0; overflow: auto; padding: 3px 0; font-family: var(--mono); font-size: 11.5px; line-height: 20px">
+              <sc-for list="{{log}}" as="l" hint-placeholder-count="6">
+                <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 140px; gap: 12px; padding: 0 10px">
+                  <span style="color: var(--ink3)">{{l.at}}</span>
+                  <span style="{{l.sqlStyle}}">{{l.sql}}</span>
+                  <span style="{{l.resStyle}}">{{l.res}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+        </div>
+
+        <!-- INSPECTOR -->
+        <aside aria-label="Row inspector" style="{{frame}} flex: 0 0 300px; overflow: auto">
+          <div style="padding: 10px 12px 0">
+            <div style="display: flex; align-items: center; gap: 6px">
+              <span style="{{cap}} color: var(--ink)">row</span><span style="{{cap}} color: var(--ink3)">// orders · ⌥⌘I</span>
+              <span style="flex: 1"></span>
+              <button type="button" title="Copy as JSON  ⌥⌘C" style="{{btn}}">copy</button>
+              <a href="Safety.dc.html" title="Edit row  ⏎" style="{{btnPrimary}}">edit</a>
+            </div>
+            <div style="font-size: 52px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 8px">{{sel.id}}</div>
+            <div style="{{cap}} color: var(--ink3); margin-top: 4px">{{sel.sub}}</div>
+          </div>
+
+          <div style="margin: 10px 12px 0; padding: 8px; border: 1px solid var(--line); border-radius: 3px">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px"><span style="{{cap}} color: var(--ink3)">orders // {{sel.custName}}</span><span style="{{cap}} color: var(--accent)">● this order</span></div>
+            <div role="img" aria-label="{{sel.histLabel}}" style="display: grid; grid-template-columns: repeat(26, minmax(0, 1fr))">
+              <sc-for list="{{sel.hist}}" as="d" hint-placeholder-count="208"><span style="aspect-ratio: 1; background: radial-gradient(circle closest-side, {{d}} 0 70%, transparent 80%)"></span></sc-for>
+            </div>
+          </div>
+
+          <div style="padding: 8px 12px 0">
+            <sc-for list="{{sel.fields}}" as="f" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; gap: 8px; height: 23px; border-bottom: 1px solid var(--line)">
+                <span style="{{cap}} font-size: 10.5px; color: var(--ink3)">{{f.k}} //</span>
+                <span style="flex: 1"></span>
+                <span style="{{f.style}}">{{f.v}}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; padding: 10px 12px 0">
+            <div><div style="{{cap}} color: var(--ink3)">customer // {{sel.cust}}</div><div style="font-size: 13px; font-weight: 600; margin-top: 2px">{{sel.custName}}</div><div style="{{cap}} font-size: 10.5px; color: var(--ink3)">{{sel.plan}} · since mar 2025 · {{sel.orders}} orders</div></div>
+            <div style="text-align: right"><div style="font-size: 24px; font-weight: 300; letter-spacing: -0.02em; line-height: 1">{{sel.ltv}}</div><div style="{{cap}} font-size: 10.5px; color: var(--ink3)">lifetime</div></div>
+          </div>
+
+          <div style="padding: 12px 12px 0">
+            <div style="{{cap}} color: var(--ink3); margin-bottom: 6px">relations // 3 paths</div>
+            <sc-for list="{{rel}}" as="p" hint-placeholder-count="4">
+              <a href="{{p.href}}" style="{{p.style}}"><span style="{{p.node}}"></span><span style="{{p.nameStyle}}">{{p.table}}</span><span style="flex: 1; height: 1px; background: var(--line)"></span><span style="font-family: var(--mono); font-size: 11px; color: var(--ink3)">{{p.count}}</span></a>
+            </sc-for>
+          </div>
+
+          <div style="padding: 12px 12px 12px">
+            <div style="display: flex; justify-content: space-between"><span style="{{cap}} color: var(--ink3)">total // distribution</span><span style="{{cap}} color: var(--ink3)">median 412</span></div>
+            <div role="img" aria-label="{{stats.label}}" style="display: flex; align-items: flex-end; gap: 1px; height: 64px; margin-top: 6px; border-bottom: 1px solid var(--lineStrong)">
+              <sc-for list="{{stats.bars}}" as="b" hint-placeholder-count="40"><span style="{{b}}"></span></sc-for>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 3px; font-family: var(--mono); font-size: 10.5px; color: var(--ink3)"><span>0</span><span>575</span><span>1,150</span><span>1,725</span><span>2,300</span></div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- STATUS STRIP -->
+      <div style="height: 20px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 4px; white-space: nowrap; overflow: hidden">
+        <span style="{{cap}} font-size: 10.5px; color: var(--ink)">{{statusRows}}</span>
+        <span style="{{cap}} font-size: 10.5px; color: var(--ink3)">row // {{selRow}} · total // {{sel.total}}</span>
+        <span style="flex: 1"></span>
+        <button type="button" role="switch" aria-checked="{{relTime}}" onClick="{{toggleRel}}" title="Relative dates  ⌃⌘R" style="{{relStyle}}">relative_dates</button>
+        <span style="{{cap}} font-size: 10.5px; color: var(--ink3)">writes staged // review before commit</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {view: 'data', sel: 2, status: null, rel: false, brush: false};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--mono:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.3px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const st = this.state;
+    const cap = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80; white-space: nowrap;';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;';
+    const btn = cap + ' font-size: 10.5px; display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border: 1px solid var(--lineStrong); border-radius: 3px; background: transparent; color: var(--ink); cursor: pointer; text-decoration: none;';
+    const btnPrimary = cap + ' font-size: 10.5px; display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border: 1px solid var(--ink); border-radius: 3px; background: var(--ink); color: var(--paper); cursor: pointer; text-decoration: none;';
+
+    const NAVI = {
+      overview: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', tables: 'M3 4h18v16H3zM3 10h18M9 4v16', query: 'M4 17l6-5-6-5M12 19h8',
+      explain: 'M6 3v6M6 9h12M6 9v6M18 9v6M6 15h4M18 15h-4M10 15v6M14 15v6', activity: 'M3 12h4l3-8 4 16 3-8h4',
+    };
+    const navs = [['overview', 'Overview', 'Overview.dc.html', '⌘0'], ['tables', 'Tables', 'Table.dc.html', '⌘T'], ['query', 'Query', 'Query.dc.html', '⌘⏎'], ['explain', 'Explain', 'Query.dc.html', '⌥⌘E'], ['activity', 'Activity', 'Overview.dc.html', '⇧⌘A']].map(([id, label, href, key]) => {
+      const on = id === 'tables';
+      return {t: label, href, icon: NAVI[id], tip: label + '  ' + key, current: on ? 'page' : 'false',
+        style: cap + ' display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px; text-decoration: none;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [['session', 'shop'], ['engine', 'pg 17.2'], ['latency', '4 ms'], ['tx/s', '412'], ['clock', '14:32:09']].map(([k, v], i) => ({k, v, vs: cap + ' color: ' + (i === 3 ? 'var(--accent)' : 'var(--ink)')}));
+
+    const views = [['data', 'Data', '01'], ['structure', 'Structure', '02'], ['relations', 'Relations', '03'], ['stats', 'Stats', '04']].map(([id, label, n], i) => {
+      const on = st.view === id;
+      return {t: label, n, tip: label + '  ⌘' + (i + 1), on: on ? 'true' : 'false',
+        labelStyle: cap + ' font-size: 10.5px; writing-mode: vertical-rl; transform: rotate(180deg);',
+        style: 'display: flex; flex-direction: column; align-items: center; gap: 8px; height: 112px; padding: 8px 0; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px; cursor: pointer;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+        pick: () => this.setState({view: id})};
+    });
+
+    const statusList = ['paid', 'delivered', 'shipped', 'pending', 'refunded'];
+    const counts = {paid: '18.9K', delivered: '13.6K', shipped: '12.0K', pending: '2.2K', refunded: '1.2K'};
+    const mark = {pending: t.amber, refunded: t.alert};
+    const names = ['Grace Hopper', 'Ada Lovelace', 'Linus Pauling', 'Hedy Lamarr', 'Alan Turing', 'Katherine Johnson', 'Claude Shannon', 'Barbara Liskov', 'Edsger Dijkstra', 'Radia Perlman', 'Ken Thompson', 'Frances Allen'];
+    const plans = ['pro', 'free', 'team', 'free', 'pro'];
+
+    let seed = 42;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const now = Date.UTC(2026, 10, 9, 14, 32);
+    const pad = (n) => String(n).padStart(2, '0');
+    const iso = (ms) => { const d = new Date(ms); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + ' ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()); };
+    const ago = (ms) => { const h = Math.round((now - ms) / 3600000); return h < 1 ? 'just now' : h < 24 ? h + ' h ago' : Math.round(h / 24) + ' d ago'; };
+    const money = (v) => v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const weights = ['paid', 'paid', 'paid', 'shipped', 'shipped', 'delivered', 'delivered', 'pending', 'paid', 'refunded'];
+    const all = [];
+    let ts = now - 25 * 60000;
+    for (let i = 0; i < 48; i++) {
+      ts -= Math.round((0.6 + rnd() * 3) * 3600000);
+      const status = i === 2 ? 'pending' : weights[Math.floor(rnd() * weights.length)];
+      const cust = 1 + Math.floor(rnd() * 2400);
+      const items = 1 + Math.floor(rnd() * 6);
+      const total = Math.round((12 + rnd() * 380) * items * 100) / 100;
+      const shipMs = ts + 26 * 3600000;
+      const shipped = (status === 'shipped' || status === 'delivered') && shipMs < now ? shipMs : null;
+      all.push({id: 58431 - i, cust, status, items, total, ts, shipped});
+    }
+    const list = all.filter((r) => (!st.status || r.status === st.status) && (!st.brush || (r.total >= 575 && r.total <= 1150))).slice(0, 22);
+    const selIdx = Math.min(st.sel, Math.max(0, list.length - 1));
+    const cols = '38px 66px 96px 90px 94px 52px 136px minmax(116px, 1fr) 38px';
+
+    // header halftone sparklines: 12 x 3, ink dots
+    const shape = [null, Array(16).fill(.5), [.8,.9,1,.85,.95,.9,1,.8,.9,.95,.85,1,.9,.8,.95,.9], 'cat', [.3,.75,1,.9,.7,.55,.42,.33,.26,.2,.15,.12,.09,.07,.05,.04], [.96,.96,1,1,.98,.98,.97,.97,1,1,.95,.95,0,0,0,0], [.25,.28,.3,.33,.38,.4,.45,.5,.55,.6,.62,.7,.78,.85,.92,1], [.2,.24,.27,.3,.35,.38,.42,.47,.5,.56,.6,.66,.72,.8,.5,.15], null];
+    const sparkTip = ['', 'unique · 48,000', '2,391 distinct · → customers', 'paid 39 · delivered 28 · shipped 25 · pending 5 · refunded 3 %', 'median 412.00 · max 2,298.75 · click to filter 575–1,150', '1–6 · mean 3.5', 'jan 2 → nov 9', '46% null', ''];
+    const catStrip = [t.ink, t.ink, t.ink, t.ink, t.ink2, t.ink2, t.ink2, t.ink3, t.ink3, t.ink3, t.amber, t.alert];
+    const spark = (i) => {
+      const out = [];
+      const sh = shape[i];
+      if (!sh) { for (let k = 0; k < 36; k++) out.push('transparent'); return out; }
+      if (sh === 'cat') { for (let row = 0; row < 3; row++) for (let c = 0; c < 12; c++) out.push(row === 0 ? t.fill12 : catStrip[c]); return out; }
+      for (let row = 0; row < 3; row++) for (let c = 0; c < 12; c++) {
+        const v = sh[Math.floor(c * 16 / 12)];
+        const on = v > 0 && (3 - row) / 3 <= v + 0.15;
+        out.push(on ? (i === 4 && st.brush && c >= 3 && c <= 5 ? t.accent : t.ink) : t.fill12);
+      }
+      return out;
+    };
+    const heads = [['', '', 'r'], ['id', 'int8', 'r'], ['customer_id', '→ customers', 'r'], ['status', 'enum', 'l'], ['total', 'numeric', 'r'], ['items', 'int4', 'r'], ['created_at', 'timestamptz', 'l'], ['shipped_at', 'timestamptz', 'l'], ['', '', 'r']].map(([name, type], i) => ({
+      name: name + (name === 'created_at' ? ' ↓' : ''), sort: name === 'created_at' ? 'descending' : 'none',
+      tip: name ? name + ' · ' + type + ' — ' + sparkTip[i] : 'row number', spark: spark(i),
+      brush: i === 4 ? () => this.setState({brush: !st.brush, sel: 0}) : () => {},
+      brushLabel: i === 4 ? (st.brush ? 'Clear range filter on total' : 'Filter total to 575–1,150') : 'Distribution of ' + (name || 'row number'),
+      sparkStyle: 'display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(3, 4px); width: 100%; max-width: 60px; height: 12px; margin-top: 5px; padding: 0; border: 0; background: ' + (i === 4 && st.brush ? 'var(--fill12)' : 'transparent') + '; cursor: ' + (i === 4 ? 'pointer' : 'default') + ';',
+      nameStyle: cap + ' font-size: 10.5px; color: var(--ink);' + (name === 'id' ? ' text-decoration: underline 1px solid; text-underline-offset: 3px;' : name === 'customer_id' ? ' text-decoration: underline dotted; text-underline-offset: 3px;' : ''),
+      style: 'display: flex; flex-direction: column; justify-content: center; padding: 0 8px; border-right: 1px solid var(--line); overflow: hidden; font-family: var(--ui);',
+    }));
+    const cell = (extra) => 'padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; border-right: 1px solid var(--line);' + extra;
+    const num = 'justify-content: flex-end;';
+    const rows = list.map((r, i) => {
+      const on = i === selIdx;
+      const nn = String(i + 1).padStart(2, '0');
+      const gut = 'display: flex; align-items: center; justify-content: center; font-size: 11px;' + (on ? 'color: var(--ink); font-weight: 700;' : 'color: var(--ink3);');
+      return {
+        on: on ? 'true' : 'false', ri: String(i + 2), nL: (on ? '▸' : '') + nn, nR: nn + (on ? '◂' : ''), id: String(r.id), cust: String(r.cust), status: r.status,
+        total: money(r.total), items: String(r.items),
+        created: st.rel ? ago(r.ts) : iso(r.ts),
+        shipped: r.shipped ? (st.rel ? ago(r.shipped) : iso(r.shipped)) : '····',
+        g: gut + ' border-right: 1px solid var(--line);', gR: gut + ' border-left: 1px solid var(--line);',
+        c1: cell(num), c2: cell(num + 'text-decoration: underline dotted; text-underline-offset: 3px;'),
+        c3: cell(mark[r.status] ? 'color: ' + mark[r.status] + '; font-weight: 600;' : ''),
+        c4: cell(num + (on ? 'background: var(--ink); color: var(--paper); font-weight: 600;' : '')),
+        c5: cell(num), c6: cell(''), c7: cell(r.shipped ? '' : 'color: var(--ink3);'),
+        style: 'display: grid; grid-template-columns: ' + cols + '; height: 24px; cursor: default;' + (on ? 'background: var(--fill12); box-shadow: inset 0 1px 0 var(--ink), inset 0 -1px 0 var(--ink);' : 'box-shadow: inset 0 -1px 0 var(--line);'),
+        pick: () => this.setState({sel: i}),
+      };
+    });
+
+    const chips = statusList.map((s) => {
+      const on = st.status === s;
+      return {
+        name: s, count: ' ' + counts[s], on: on ? 'true' : 'false', tip: "status = '" + s + "'",
+        countStyle: 'font-family: var(--mono); font-weight: 400; letter-spacing: 0; text-transform: none; margin-left: 4px;' + (on ? 'opacity: .7' : 'color: var(--ink3)'),
+        style: cap + ' font-size: 10.5px; display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 3px; cursor: pointer; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + ';' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: ' + (mark[s] || 'var(--ink)') + ';'),
+        pick: () => this.setState({status: on ? null : s, sel: 0}),
+      };
+    });
+
+    const r = list[selIdx] || all[0];
+    const ci = r.cust % names.length;
+    const nOrders = 3 + (r.cust % 19);
+    const kv = (k, v, style) => ({k, v, style: 'font-family: var(--mono); font-size: 12px; white-space: nowrap;' + (style || '')});
+    const hist = [];
+    const heights = [];
+    let s2 = r.cust;
+    for (let c = 0; c < 26; c++) { s2 = (s2 * 48271) % 2147483647; heights.push(c === 25 ? Math.max(3, Math.min(8, Math.round(r.total / 2300 * 8) + 2)) : (s2 % 3 === 0 ? 0 : 1 + (s2 % 7))); }
+    for (let row = 0; row < 8; row++) for (let c = 0; c < 26; c++) {
+      const lvl = 7 - row;
+      hist.push(lvl < heights[c] ? (c === 25 ? t.accent : (lvl > 4 ? t.ink : lvl > 2 ? t.ink2 : t.fill30)) : t.fill12);
+    }
+    const sel = {
+      id: r.id, cust: r.cust, custName: names[ci], plan: plans[ci % plans.length], total: money(r.total),
+      sub: names[ci].toLowerCase().replace(' ', '_') + ' // ' + ago(r.ts) + ' · ' + r.items + ' items',
+      ltv: '$' + money(1200 + (r.cust * 37) % 9000), orders: nOrders,
+      hist, histLabel: names[ci] + ': ' + nOrders + ' orders since March 2025; this order highlighted.',
+      fields: [
+        kv('status', r.status, mark[r.status] ? 'color: ' + mark[r.status] + '; font-weight: 600;' : ''),
+        kv('customer_id', String(r.cust), 'text-decoration: underline dotted; text-underline-offset: 3px;'),
+        kv('total', money(r.total), 'font-weight: 700;'),
+        kv('items', String(r.items)),
+        kv('created_at', iso(r.ts)),
+        kv('shipped_at', r.shipped ? iso(r.shipped) : 'null', r.shipped ? '' : 'color: var(--ink3);'),
+      ],
+    };
+    const rel = [
+      {table: 'customers', count: '1 parent', href: 'Safety.dc.html', on: false},
+      {table: 'orders // this', count: '#' + r.id, href: 'Table.dc.html', on: true},
+      {table: 'order_items', count: r.items + ' children', href: 'Table.dc.html', on: false},
+      {table: 'invoices', count: '1 child', href: 'Table.dc.html', on: false},
+    ].map((p, i) => ({...p,
+      style: 'display: flex; align-items: center; gap: 8px; height: 24px; margin-left: 5px; padding-left: 12px; text-decoration: none; color: var(--ink); border-left: 1px solid var(--lineStrong);',
+      node: 'width: 9px; height: 9px; flex: none; margin-left: -17px; box-sizing: border-box; border: 1px solid var(--ink); background: ' + (p.on ? 'var(--ink)' : 'var(--paper)'),
+      nameStyle: cap + ' font-size: 10.5px; color: var(--ink);'}));
+
+    const conds = [st.status ? "status = '" + st.status + "'" : '', st.brush ? 'total BETWEEN 575 AND 1150' : ''].filter(Boolean);
+    const fstat = conds.length ? ' WHERE ' + conds.join(' AND ') : '';
+    const log = [
+      ['14:32:09.118', 'SELECT * FROM orders' + fstat + ' ORDER BY created_at DESC LIMIT 500', (fstat ? list.length : 500) + ' rows · 3.1 ms', false],
+      ['14:32:09.102', 'SELECT count(*) FROM orders' + fstat, '1 row · 0.9 ms', false],
+      ['14:31:52.440', 'SELECT c.plan, COUNT(*) FROM orders o JOIN customers c ON …', '3 rows · 41 ms', false],
+      ['14:28:33.017', 'SELECT plan, SUM(totl) FROM orders …', 'ERROR 42703', true],
+      ['14:12:07.903', "SELECT * FROM orders WHERE status = 'pending'", '2,214 rows · 8 ms', false],
+      ['14:02:41.250', 'SET search_path TO public', 'ok · 0.2 ms', false],
+    ].map(([at, sql, res, err]) => ({at, sql, res,
+      sqlStyle: 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ' + (err ? 'var(--alert)' : 'var(--ink)'),
+      resStyle: 'text-align: right; white-space: nowrap; color: ' + (err ? 'var(--alert)' : 'var(--ink3)')}));
+    const ctabs = ['log', 'history', 'messages', 'explain'].map((x, i) => ({t: x, on: i === 0 ? 'true' : 'false', style: cap + ' font-size: 10.5px; display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 3px; border: 1px solid ' + (i === 0 ? 'var(--ink)' : 'var(--line)') + ';' + (i === 0 ? 'background: var(--ink); color: var(--paper);' : 'color: var(--ink3);')}));
+
+    // distribution of total: 40 ink bars, selected bin in accent
+    const bins = [];
+    for (let c = 0; c < 40; c++) { const x = c / 40; bins.push(Math.max(0.04, Math.min(1, 1.6 * Math.exp(-Math.pow((x - 0.18) / 0.13, 2)) + 0.35 * Math.exp(-x * 3) + (rnd() - 0.5) * 0.08))); }
+    const mx = Math.max(...bins);
+    const selBin = Math.min(39, Math.floor(r.total / 2300 * 40));
+    const inBrush = (c) => st.brush && c >= 10 && c <= 20;
+    const stats = {label: 'Distribution of total: right-skewed, median 412; the selected row’s bin is highlighted.',
+      bars: bins.map((v, c) => 'flex: 1; height: ' + Math.round(v / mx * 100) + '%; background: ' + (c === selBin ? t.accent : inBrush(c) ? t.ink : (c % 2 ? t.ink2 : t.ink)) + ';' + (inBrush(c) || c === selBin || !st.brush ? '' : 'opacity: .35;'))};
+
+    // ER diagram
+    const B = {
+      customers: {x: 24, y: 28, w: 196, cols: [['PK', 'id', 'int8'], ['', 'name', 'text'], ['', 'email', 'text'], ['', 'plan', 'enum']], rows: '2.4K'},
+      orders: {x: 330, y: 28, w: 214, cols: [['PK', 'id', 'int8'], ['FK', 'customer_id', 'int8'], ['', 'status', 'enum'], ['', 'total', 'numeric'], ['', 'created_at', 'tstz']], rows: '48K', hot: true},
+      order_items: {x: 650, y: 28, w: 214, cols: [['PK', 'id', 'int8'], ['FK', 'order_id', 'int8'], ['FK', 'product_id', 'int8'], ['', 'quantity', 'int4']], rows: '168K'},
+      products: {x: 650, y: 262, w: 214, cols: [['PK', 'id', 'int8'], ['', 'sku', 'text'], ['', 'price', 'numeric']], rows: '240'},
+      invoices: {x: 330, y: 262, w: 214, cols: [['PK', 'id', 'int8'], ['FK', 'order_id', 'int8'], ['', 'amount', 'numeric']], rows: '9.8K'},
+      events: {x: 24, y: 262, w: 196, cols: [['PK', 'id', 'int8'], ['', 'kind', 'text'], ['FK', 'customer_id', 'int8']], rows: '61.5K'},
+    };
+    const HEAD = 28, ROW = 22;
+    const rowY = (b, i) => B[b].y + HEAD + i * ROW + ROW / 2;
+    const seg = (x, y, w, h, hot) => 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; width: ' + Math.max(w, hot ? 2 : 1) + 'px; height: ' + Math.max(h, hot ? 2 : 1) + 'px; background: ' + (hot ? t.ink : t.ink3) + ';';
+    const erLines = [];
+    const elbow = (x1, y1, x2, y2, mid, hot) => {
+      erLines.push(seg(Math.min(x1, mid), y1, Math.abs(mid - x1), 0, hot));
+      erLines.push(seg(mid, Math.min(y1, y2), 0, Math.abs(y2 - y1), hot));
+      erLines.push(seg(Math.min(mid, x2), y2, Math.abs(x2 - mid), 0, hot));
+    };
+    const ordersBottom = B.orders.y + HEAD + 5 * ROW;
+    elbow(220, rowY('customers', 0), 330, rowY('orders', 1), 275, true);
+    elbow(544, rowY('orders', 0), 650, rowY('order_items', 1), 597, true);
+    elbow(864, rowY('order_items', 2), 864, rowY('products', 0), 886, false);
+    erLines.push(seg(437, ordersBottom, 0, B.invoices.y - ordersBottom, true));
+    elbow(24, rowY('events', 2), 24, rowY('customers', 0), 10, false);
+    const mk = (x, y, txt, hot) => ({t: txt, style: 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 1; color: ' + (hot ? t.ink : t.ink3)});
+    const erMarks = [
+      mk(224, rowY('customers', 0) - 13, '1', true), mk(318, rowY('orders', 1) - 13, 'n', true),
+      mk(548, rowY('orders', 0) - 13, '1', true), mk(638, rowY('order_items', 1) - 13, 'n', true),
+      mk(442, ordersBottom + 3, '1', true), mk(442, B.invoices.y - 14, 'n', true),
+      mk(868, rowY('order_items', 2) - 13, 'n', false), mk(868, rowY('products', 0) - 13, '1', false),
+      mk(12, rowY('customers', 0) - 13, '1', false), mk(12, rowY('events', 2) - 13, 'n', false),
+    ];
+    const erBoxes = Object.entries(B).map(([name, b]) => ({
+      name, rows: b.rows, href: name === 'customers' ? 'Safety.dc.html' : 'Table.dc.html',
+      style: 'position: absolute; left: ' + b.x + 'px; top: ' + b.y + 'px; width: ' + b.w + 'px; display: flex; flex-direction: column; background: var(--paper); border: ' + (b.hot ? '2px solid var(--ink)' : '1px solid var(--ink)') + '; border-radius: 3px; overflow: hidden; text-decoration: none; color: var(--ink); font-size: 12px;',
+      head: cap + ' display: flex; justify-content: space-between; align-items: center; height: ' + HEAD + 'px; padding: 0 10px;' + (b.hot ? 'background: var(--ink); color: var(--paper);' : 'border-bottom: 1px solid var(--ink);'),
+      cols: b.cols.map(([k, n, ty]) => ({name: n, type: ty,
+        nameStyle: 'font-family: var(--mono); font-size: 11.5px;' + (k === 'PK' ? 'text-decoration: underline 1px solid; text-underline-offset: 3px; font-weight: 700;' : k === 'FK' ? 'text-decoration: underline dotted; text-underline-offset: 3px;' : '')})),
+    }));
+    const erLabel = 'Entity-relationship diagram: customers 1–n orders; orders 1–n order_items and invoices; products 1–n order_items; customers 1–n events.';
+
+    // stats wall
+    const card = (name, type, big, bigLabel, shapeArr, kv, hue) => {
+      const bars = [];
+      for (let c = 0; c < 24; c++) { const v = shapeArr[Math.floor(c / 1.5)] ?? 0; bars.push('flex: 1; height: ' + Math.round(Math.max(0, v) * 100) + '%; background: ' + (hue ? hue(c) : t.ink) + ';'); }
+      return {name, type, big, bigLabel, bars, kv: kv.map(([k, v, warn]) => ({k, v, style: 'font-family: var(--mono); font-size: 11.5px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (warn ? 'color: var(--amber); font-weight: 700' : '')}))};
+    };
+    const statCards = [
+      card('id', 'bigint · pk', '48,000', 'unique', shape[1].map(() => 1), [['min', '10,432'], ['max', '58,431'], ['gaps', '0']], () => t.fill30),
+      card('customer_id', '→ customers', '2,391', 'distinct', shape[2], [['top', '2207 · 31 orders'], ['orphans', '0'], ['null', '0']]),
+      card('status', 'enum · 5', '39%', 'paid', Array(16).fill(1), [['delivered · shipped', '28 · 25%'], ['pending', '5% · doubled', true], ['refunded', '3%']], (c) => c >= 23 ? t.alert : c >= 22 ? t.amber : c >= 16 ? t.ink3 : c >= 9 ? t.ink2 : t.ink),
+      card('total', 'numeric', '412.00', 'median', shape[4], [['mean', '531.88'], ['p95', '1,640.10'], ['outliers', '37 > 2,000', true]]),
+      card('items', 'int4', '3.5', 'mean', shape[5], [['range', '1–6'], ['line items', '168,214'], ['items > 0', 'holds']]),
+      card('created_at', 'timestamptz', '+8%', 'this week', shape[6], [['first', '2026-01-02'], ['last', '14:07 today'], ['peak', 'oct 14–18']]),
+      card('shipped_at', 'timestamptz', '46%', 'null', shape[7], [['median lag', '26 h'], ['> 3 days', '212 orders', true], ['future', '0']]),
+      card('table', 'orders · 6.1 MB', '48,000', 'rows', Array(16).fill(.6), [['null cells', '6.4%'], ['dead tuples', '0.8%'], ['analyzed', '2 h ago']], () => t.fill30),
+    ];
+
+    return {
+      themeVars, dark, cap, frame, btn, btnPrimary, navs, readouts, views, cols, heads, rows, chips, sel, rel, log, ctabs, stats,
+      isData: st.view === 'data', isStructure: st.view === 'structure', isRelations: st.view === 'relations', isStats: st.view === 'stats',
+      erLines, erMarks, erBoxes, erLabel, statCards,
+      structure: [
+        ['id', 'bigint', 'no', "nextval('orders_id_seq')", 'primary key'],
+        ['customer_id', 'bigint', 'no', '', '→ customers.id'],
+        ['status', 'order_status', 'no', "'pending'", ''],
+        ['total', 'numeric(12,2)', 'no', '0', 'check ≥ 0'],
+        ['items', 'integer', 'no', '1', 'check > 0'],
+        ['created_at', 'timestamptz', 'no', 'now()', 'indexed'],
+        ['shipped_at', 'timestamptz', 'yes', '', ''],
+      ].map(([name, type, nullable, def, keys], i) => ({n: String(i + 1).padStart(2, '0'), name, type, nullable, def, keys,
+        nameStyle: 'font-family: var(--mono); font-size: 12px; font-weight: 700;' + (keys === 'primary key' ? ' text-decoration: underline 1px solid; text-underline-offset: 3px;' : keys.startsWith('→') ? ' text-decoration: underline dotted; text-underline-offset: 3px;' : ''),
+        keyStyle: cap + ' font-size: 10.5px; color: var(--ink2)'})),
+      indexes: [{name: 'orders_pkey', def: 'btree (id)', size: '1.1 MB'}, {name: 'idx_orders_customer', def: 'btree (customer_id)', size: '1.0 MB'}, {name: 'idx_orders_created', def: 'btree (created_at DESC)', size: '1.1 MB'}],
+      filterText: conds.join(' AND '),
+      statusRows: (st.status || st.brush ? list.length + ' shown // filtered' : '500 of 48,000 loaded // page 1 of 96'),
+      selRow: String(selIdx + 1).padStart(2, '0'),
+      relTime: st.rel ? 'true' : 'false',
+      relStyle: cap + ' font-size: 10.5px; display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 3px; cursor: pointer; border: 1px solid ' + (st.rel ? 'var(--ink)' : 'var(--line)') + ';' + (st.rel ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink3);'),
+      toggleRel: () => this.setState({rel: !st.rel}),
+    };
+  }
+}
+</script>
+</body>
+</html>

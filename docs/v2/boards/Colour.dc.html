@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colour — monochrome and one signal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="max-width: 1440px; margin: 0 auto; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+
+  <div style="{{strip}}">
+    <span style="{{navOn}}">COLOUR</span>
+    <span style="{{capSm}}; color: var(--ink3)">HALFTONE // 0.7 // CHAPTER 02</span>
+    <span style="flex: 1"></span>
+    <span style="{{capSm}}; color: var(--ink3)">CONTRAST // <span style="color: var(--ink)">MEASURED, WCAG 2.2</span></span>
+  </div>
+
+  <section style="{{frame}}; padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end">
+    <div style="flex: 1 1 560px; min-width: 0">
+      <div style="{{cap}}; color: var(--ink3)">COLOUR // MONOCHROME + ONE SIGNAL</div>
+      <h1 style="margin: 8px 0 0; font-size: 48px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">Ink, paper, and one signal.</h1>
+      <p style="margin: 10px 0 0; max-width: 680px; font-size: 13px; line-height: 1.5; color: var(--ink2)">Every reference is monochrome: white lines on black, with colour only where something is live or wrong. Inverted, that becomes ink on white paper. Hierarchy comes from weight, opacity and size. Cobalt marks <b style="font-weight: 600; color: var(--accent)">live / now / selected</b>. Amber and red mark attention. Nothing else is coloured.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, auto); gap: 4px">
+      <sc-for list="{{ratio}}" as="r" hint-placeholder-count="3">
+        <div style="border: 1px solid var(--line); border-radius: 3px; padding: 8px 12px; min-width: 110px">
+          <div style="{{capSm}}; color: var(--ink3)">{{r.k}}</div>
+          <div style="{{r.vStyle}}">{{r.v}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px">
+    <sc-for list="{{scales}}" as="s" hint-placeholder-count="2">
+      <section style="{{s.frame}}">
+        <div style="{{s.head}}"><span>{{s.name}}</span><span style="opacity: .6; font-weight: 500">{{s.meta}}</span><span style="flex: 1"></span><span style="{{s.chip}}">{{s.chipT}}</span></div>
+        <div style="padding: 0 12px 10px">
+          <sc-for list="{{s.items}}" as="c" hint-placeholder-count="13">
+            <div style="{{c.row}}">
+              <span style="{{c.sw}}"></span>
+              <span style="{{c.nameStyle}}">{{c.name}}</span>
+              <span style="{{c.hexStyle}}">{{c.hex}}</span>
+              <span style="{{c.useStyle}}">{{c.use}}</span>
+              <span style="{{c.crStyle}}">{{c.cr}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 4px">
+    <section style="{{frame}}">
+      <div style="{{head}}"><span>RULES</span><span style="{{meta}}">// WHERE COLOUR MAY APPEAR</span><span style="flex: 1"></span></div>
+      <div style="padding: 0 12px 8px">
+        <sc-for list="{{rules}}" as="r" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.45">
+            <span style="font-size: 22px; font-weight: 300; line-height: 1; color: var(--ink3)">{{r.n}}</span>
+            <span><span style="{{capSm}}">{{r.t}}</span><br><span style="color: var(--ink2)">{{r.b}}</span></span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="{{frame}}">
+      <div style="{{head}}"><span>BEFORE // AFTER</span><span style="{{meta}}">// V6 COBALT FIELD → V7 INK</span><span style="flex: 1"></span></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 0 12px 12px">
+        <div>
+          <div style="{{capSm}}; color: var(--alert); margin-bottom: 6px">V6 // COLOUR FIELD</div>
+          <div style="border-radius: 3px; background: #3A3AE6; color: #FFFFFF; padding: 12px; height: 168px; box-sizing: border-box; position: relative; overflow: hidden">
+            <div style="{{capSm}}; opacity: .8">ACTIVITY · 24 H</div>
+            <div style="font-size: 40px; font-weight: 300; letter-spacing: -0.03em; margin-top: 18px">412</div>
+            <div aria-hidden="true" style="position: absolute; right: 12px; bottom: 12px; display: flex; align-items: flex-end; gap: 2px; height: 60px; width: 150px"><sc-for list="{{beforeBars}}" as="b" hint-placeholder-count="24"><span style="{{b}}"></span></sc-for></div>
+          </div>
+          <div style="font-size: 12px; color: var(--ink2); margin-top: 6px; line-height: 1.45">A whole pane in cobalt competes with the data inside it, and the selection colour has nowhere left to go.</div>
+        </div>
+        <div>
+          <div style="{{capSm}}; color: var(--accent); margin-bottom: 6px">V7 // INK + SIGNAL</div>
+          <div style="border-radius: 3px; border: 1px solid var(--line); background: var(--paper); padding: 12px; height: 168px; box-sizing: border-box; position: relative; overflow: hidden">
+            <div style="display: flex; align-items: center; gap: 6px"><span style="{{capSm}}">ACTIVITY</span><span style="{{capSm}}; color: var(--ink3)">// 24_H</span><span style="flex: 1"></span><span style="{{chip}}">LIVE</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 14px"><span style="font-size: 40px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">412</span><span style="{{capSm}}; color: var(--ink3)">TX // S</span></div>
+            <div aria-hidden="true" style="position: absolute; right: 12px; bottom: 12px; display: flex; align-items: flex-end; gap: 2px; height: 60px; width: 150px; border-bottom: 1px solid var(--lineStrong)"><sc-for list="{{afterBars}}" as="b" hint-placeholder-count="24"><span style="{{b}}"></span></sc-for></div>
+          </div>
+          <div style="font-size: 12px; color: var(--ink2); margin-top: 6px; line-height: 1.45">Ink bars on paper; only the live bucket is cobalt. The eye goes straight to <i>now</i>.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section style="{{frame}}">
+    <div style="{{head}}"><span>OPACITY LADDER</span><span style="{{meta}}">// HIERARCHY WITHOUT HUE</span><span style="flex: 1"></span></div>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; padding: 0 12px 12px">
+      <sc-for list="{{ladder}}" as="l" hint-placeholder-count="6">
+        <div style="border: 1px solid var(--line); border-radius: 3px; padding: 8px 10px">
+          <div style="{{l.bar}}"></div>
+          <div style="{{capSm}}; margin-top: 8px">{{l.k}}</div>
+          <div style="font-size: 11px; color: var(--ink3); margin-top: 2px">{{l.use}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:13px;-webkit-font-smoothing:antialiased;min-height:100%';
+    const cap = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80';
+    const capSm = 'font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; white-space: nowrap; overflow: hidden; ' + cap;
+    const meta = 'color: var(--ink3); font-weight: 500';
+    const chip = 'display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 2px; border: 1px solid var(--lineStrong); ' + capSm;
+    const strip = 'display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 4px; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; white-space: nowrap';
+    const navOn = 'display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 2px; background: var(--ink); color: var(--paper); ' + capSm;
+
+    const lum = (hex) => { const c = [1, 3, 5].map((i) => parseInt(hex.substr(i, 2), 16) / 255).map((v) => v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+    const cr = (a, b) => { const x = Math.max(lum(a), lum(b)), y = Math.min(lum(a), lum(b)); return ((x + .05) / (y + .05)).toFixed(1) + ':1'; };
+    const ratio = [
+      {k: 'INK ON PAPER', v: cr(L.ink, L.paper), vStyle: 'font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 4px'},
+      {k: 'INK 3 ON PAPER', v: cr(L.ink3, L.paper), vStyle: 'font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 4px'},
+      {k: 'ACCENT ON PAPER', v: cr(L.accent, L.paper), vStyle: 'font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 4px; color: var(--accent)'},
+    ];
+
+    const solid = (v) => v.startsWith('#');
+    const list = [
+      ['BACKDROP', 'backdrop', 'Window, 8 pt dot grid'], ['PAPER', 'paper', 'Frames, grid'], ['SUNKEN', 'sunken', 'Inputs, code'],
+      ['INK', 'ink', 'Text, lines, bars, primary'], ['INK 2', 'ink2', 'Secondary text'], ['INK 3', 'ink3', 'Labels, gutters, meta'],
+      ['LINE', 'line', 'Borders, row rules'], ['FILL 12', 'fill12', 'Selection band, empties'], ['FILL 30', 'fill30', 'Ghost series'],
+      ['ACCENT', 'accent', 'Live · now · selected'], ['AMBER', 'amber', 'Pending · production · warning'], ['ALERT', 'alert', 'Error · destructive'],
+    ];
+    const scale = (name, T, isDark) => {
+      const fr = 'background: ' + T.paper + '; color: ' + T.ink + '; border: 1px solid ' + T.line + '; border-radius: 3px; box-sizing: border-box; min-width: 0';
+      return {
+        name, meta: isDark ? '// TRUE INVERSE' : '// DEFAULT', chipT: isDark ? 'DARK' : 'LIGHT', frame: fr,
+        head: head.replace('padding: 0 12px;', 'padding: 0 12px; color: ' + T.ink + ';'),
+        chip: 'display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 2px; border: 1px solid ' + T.ink + '; color: ' + T.ink + '; ' + capSm,
+        items: list.map(([n, key, use]) => {
+          const v = T[key];
+          const hasCr = solid(v) && ['ink', 'ink2', 'ink3', 'accent', 'amber', 'alert'].includes(key);
+          return {name: n, hex: v.replace('rgba(', '').replace(')', ''), use, cr: hasCr ? cr(v, T.paper) : '',
+            row: 'display: grid; grid-template-columns: 34px 90px 150px minmax(0, 1fr) 54px; gap: 10px; align-items: center; height: 30px; border-top: 1px solid ' + T.line,
+            sw: 'height: 20px; border-radius: 2px; background: ' + v + '; box-shadow: inset 0 0 0 1px rgba(128,128,128,.25)',
+            nameStyle: capSm + '; color: ' + T.ink,
+            hexStyle: 'font-family: var(--code); font-size: 11px; color: ' + T.ink3 + '; white-space: nowrap; overflow: hidden; text-overflow: ellipsis',
+            useStyle: 'font-size: 12px; color: ' + T.ink2 + '; white-space: nowrap; overflow: hidden; text-overflow: ellipsis',
+            crStyle: 'font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; color: ' + (hasCr ? T.ink : T.ink3)};
+        }),
+      };
+    };
+    const scales = [scale('TOKENS // LIGHT', L, false), scale('TOKENS // DARK', D, true)];
+
+    const rules = [
+      ['01', 'MONOCHROME BY DEFAULT', 'Text, frames, bars, curves and halftones are ink. Hierarchy comes from weight, opacity and size.'],
+      ['02', 'ACCENT = LIVE / NOW / SELECTED', 'The live bucket, the now needle, the focused selection, links. Never a fill larger than a row.'],
+      ['03', 'AMBER = ATTENTION', 'Pending orders, production connections, long transactions. Text and marks only.'],
+      ['04', 'ALERT = FAILURE', 'Errors, failed statements, destructive buttons. Always paired with words.'],
+      ['05', 'NO GRADIENTS, NO FIELDS', 'Solid ink or paper. Inversion (ink box, paper text) is the emphasis tool.'],
+      ['06', 'DARK = TRUE INVERSE', 'Same rules with paper and ink swapped; accent lifts to #8A8AFF to hold 4.5:1 or better.'],
+    ].map(([n, tt, b]) => ({n, t: tt, b}));
+
+    let seed = 5;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const vals = Array.from({length: 24}, (_, i) => Math.max(0.15, Math.min(1, 0.35 + 0.4 * Math.sin(i / 3.4) + (rnd() - 0.5) * 0.3)));
+    const beforeBars = vals.map((v) => 'flex: 1; height: ' + Math.round(v * 100) + '%; background: rgba(255,255,255,.75)');
+    const afterBars = vals.map((v, i) => 'flex: 1; height: ' + Math.round(v * 100) + '%; background: ' + (i === 23 ? t.accent : t.ink));
+    const ladder = [['100%', 'Primary text, active fills'], ['78%', 'Secondary text'], ['55%', 'Second series'], ['30%', 'Ghost / typical'], ['14%', 'Lines and rules'], ['8%', 'Selection band']]
+      .map(([k, use]) => ({k: 'INK ' + k, use, bar: 'height: 28px; border-radius: 2px; background: ' + t.ink + '; opacity: ' + (parseInt(k, 10) / 100)}));
+    return {themeVars, cap, capSm, frame, head, meta, chip, strip, navOn, ratio, scales, rules, beforeBars, afterBars, ladder};
+  }
+}
+</script>
+</body>
+</html>

@@ -9,7 +9,10 @@ INSTALL_TO := $(shell [ -w /Applications ] && echo /Applications || echo $(HOME)
 # First valid code-signing identity, preferring Developer ID, then Apple Development.
 SIGN_IDENTITY ?= $(shell security find-identity -v -p codesigning 2>/dev/null | grep -E '"Developer ID Application|"Apple Development' | head -1 | sed -E 's/.*"(.*)"/\1/')
 
-.PHONY: build run install uninstall test check-signing db-up db-down clean
+# DBMan's own store; DBMAN_STORE=<path> points every store-* target (and a DEBUG app) at a scratch file.
+STORE ?= $(or $(DBMAN_STORE),$(HOME)/Library/Application Support/DBMan/dbman.sqlite)
+
+.PHONY: build run install uninstall test check-signing db-up db-down clean store-open store-sql store-reset
 
 build:
 	scripts/bundle.sh debug
@@ -47,6 +50,15 @@ db-up:
 
 db-down:
 	testdb/down.sh
+
+store-open: build
+	DBMAN_STORE="$(STORE)" DBMAN_OPEN=internal dist/DBMan.app/Contents/MacOS/DBMan &
+
+store-sql:
+	sqlite3 "$(STORE)"
+
+store-reset:
+	@[ -f "$(STORE)" ] && cp "$(STORE)" "$(STORE).reset-$$(date +%Y%m%d-%H%M%S)" && rm -f "$(STORE)" "$(STORE)-wal" "$(STORE)-shm" && echo "store reset (backup kept)" || echo "no store at $(STORE)"
 
 clean:
 	rm -rf .build dist

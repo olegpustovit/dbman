@@ -1,0 +1,294 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-09T10:05:00Z"
+  },
+  "title": "DBMan \u2014 inverted FUI SQL workspace \u00b7 v2",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 2250,
+      "title": "00 \u00b7 Proposal \u2014 direction, review log, Laws of UX",
+      "expand": "fill"
+    },
+    "UIKit.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 3000,
+      "title": "01 \u00b7 Halftone 0.7 \u2014 inverted FUI kit",
+      "expand": "fill"
+    },
+    "Connect.dc.html": {
+      "x": 0,
+      "y": 4120,
+      "w": 1440,
+      "h": 900,
+      "title": "02 \u00b7 Connections window",
+      "expand": "fill"
+    },
+    "Overview.dc.html": {
+      "x": 1520,
+      "y": 4120,
+      "w": 1440,
+      "h": 900,
+      "title": "03 \u00b7 Overview \u2014 24 h activity clock",
+      "expand": "fill"
+    },
+    "Table.dc.html": {
+      "x": 3040,
+      "y": 4120,
+      "w": 1440,
+      "h": 900,
+      "title": "04 \u00b7 Table workspace (interactive: rows, Data/Structure/Relations/Stats, status filter)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Query.dc.html": {
+      "x": 0,
+      "y": 5440,
+      "w": 1440,
+      "h": 900,
+      "title": "05 \u00b7 Query \u2014 editor, results, Explain diagram",
+      "expand": "fill"
+    },
+    "Palette.dc.html": {
+      "x": 1520,
+      "y": 5440,
+      "w": 1440,
+      "h": 900,
+      "title": "06 \u00b7 \u2318K palette",
+      "expand": "fill"
+    },
+    "TableDark.dc.html": {
+      "x": 3040,
+      "y": 5440,
+      "w": 1440,
+      "h": 900,
+      "title": "07 \u00b7 Table workspace, dark",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Sidebar.dc.html": {
+      "x": 4560,
+      "y": 5440,
+      "w": 220,
+      "h": 852,
+      "title": "Component \u00b7 Sidebar"
+    },
+    "Safety.dc.html": {
+      "x": 0,
+      "y": 6760,
+      "w": 1440,
+      "h": 900,
+      "title": "08 \u00b7 Safety \u2014 staged writes on PROD, review sheet",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "States.dc.html": {
+      "x": 1520,
+      "y": 6760,
+      "w": 1440,
+      "h": 1600,
+      "title": "09 \u00b7 States \u2014 running, error, failed, empty, lost, delete, first run, unsaved",
+      "expand": "fill"
+    },
+    "Motion.dc.html": {
+      "x": 3040,
+      "y": 6760,
+      "w": 1440,
+      "h": 1000,
+      "title": "10 \u00b7 Motion \u2014 live demos",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Plan.dc.html": {
+      "x": 4560,
+      "y": 6760,
+      "w": 1440,
+      "h": 1500,
+      "title": "11 \u00b7 SwiftUI implementation plan",
+      "expand": "fill"
+    },
+    "Colour.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1260,
+      "title": "01b \u00b7 Colour \u2014 monochrome + one signal",
+      "expand": "fill"
+    },
+    "V2Brief.dc.html": {
+      "x": 0,
+      "y": 8800,
+      "w": 1440,
+      "h": 2900,
+      "title": "12 \u00b7 v2 brief \u2014 agents, MCP, dashboards, schema map, gaps",
+      "expand": "fill"
+    },
+    "Icon.dc.html": {
+      "x": 1520,
+      "y": 8800,
+      "w": 1440,
+      "h": 1500,
+      "title": "13 \u00b7 App icon \u2014 DBMan",
+      "expand": "fill"
+    },
+    "SchemaMap.dc.html": {
+      "x": 1520,
+      "y": 10420,
+      "w": 1440,
+      "h": 900,
+      "title": "16 \u00b7 Schema map \u2014 flexible ER canvas (interactive: layouts, detail, path)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Agents.dc.html": {
+      "x": 3040,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "14 \u00b7 Agents window \u2014 platforms, agentpack, permissions, activity (interactive)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Approvals.dc.html": {
+      "x": 3040,
+      "y": 9820,
+      "w": 1440,
+      "h": 1500,
+      "title": "15 \u00b7 Agent approvals \u2014 credentials, prod guard, layer review",
+      "expand": "fill"
+    },
+    "Dashboard.dc.html": {
+      "x": 4560,
+      "y": 8800,
+      "w": 1440,
+      "h": 900,
+      "title": "17 \u00b7 Dashboard \u2014 configurable grid, library, inspector (interactive: EDIT)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DashGen.dc.html": {
+      "x": 4560,
+      "y": 9820,
+      "w": 1440,
+      "h": 1300,
+      "title": "18 \u00b7 AI-built dashboard \u2014 proposal, review, drift",
+      "expand": "fill"
+    },
+    "Components.dc.html": {
+      "x": 6080,
+      "y": 8800,
+      "w": 1440,
+      "h": 2600,
+      "title": "19 \u00b7 Dashboard component library",
+      "expand": "fill"
+    },
+    "Store.dc.html": {
+      "x": 6080,
+      "y": 11520,
+      "w": 1440,
+      "h": 900,
+      "title": "20 \u00b7 DBMan store \u2014 per-agent overlay layers (interactive)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Plan2.dc.html": {
+      "x": 0,
+      "y": 12800,
+      "w": 1440,
+      "h": 3700,
+      "title": "21 \u00b7 v2 implementation plan \u2014 store, MCP, overlays, dashboards, schema map",
+      "expand": "fill"
+    },
+    "Internal.dc.html": {
+      "x": 1520,
+      "y": 12800,
+      "w": 1440,
+      "h": 1500,
+      "title": "22 \u00b7 DBMan // internal \u2014 the app's own SQLite store, opened in DBMan (interactive)",
+      "expand": "fill",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "UIKit.dc.html",
+    "Colour.dc.html",
+    "Connect.dc.html",
+    "Overview.dc.html",
+    "Table.dc.html",
+    "Query.dc.html",
+    "Palette.dc.html",
+    "TableDark.dc.html",
+    "Sidebar.dc.html",
+    "Safety.dc.html",
+    "States.dc.html",
+    "Motion.dc.html",
+    "Plan.dc.html",
+    "V2Brief.dc.html",
+    "Icon.dc.html",
+    "Agents.dc.html",
+    "Approvals.dc.html",
+    "SchemaMap.dc.html",
+    "Dashboard.dc.html",
+    "DashGen.dc.html",
+    "Components.dc.html",
+    "Store.dc.html",
+    "Plan2.dc.html",
+    "Internal.dc.html"
+  ],
+  "notes": {
+    "t1": {
+      "x": 0,
+      "y": -300,
+      "text": "DBMan \u2014 proposal & UI kit",
+      "kind": "title1",
+      "maxW": 4480
+    },
+    "t2": {
+      "x": 0,
+      "y": 3840,
+      "text": "Flow: connect \u2192 overview \u2192 find a row",
+      "kind": "title1",
+      "maxW": 4480
+    },
+    "t3": {
+      "x": 0,
+      "y": 5160,
+      "text": "Flow: ask a question \u00b7 jump anywhere \u00b7 dark",
+      "kind": "title1",
+      "maxW": 4820
+    },
+    "t4": {
+      "x": 0,
+      "y": 6480,
+      "text": "Safety, states, motion & build plan",
+      "kind": "title1",
+      "maxW": 6000
+    },
+    "t5": {
+      "x": 0,
+      "y": 8520,
+      "text": "v2 \u00b7 Agents & MCP, dashboards you (or an agent) build, the schema map",
+      "kind": "title1",
+      "maxW": 7520
+    },
+    "t6": {
+      "x": 0,
+      "y": 12520,
+      "text": "v2 build \u00b7 DBMan's own store & implementation plan",
+      "kind": "title1",
+      "maxW": 3000
+    }
+  },
+  "designSystems": []
+}

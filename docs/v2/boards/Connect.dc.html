@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Connections — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+  <div role="dialog" aria-label="Connections" style="position: relative; margin: 140px auto 0; width: min(980px, calc(100% - 32px)); height: 620px; display: flex; box-sizing: border-box; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 8px 8px 0 var(--fill12); overflow: hidden">
+
+    <!-- saved connections -->
+    <nav aria-label="Saved connections" style="flex: 0 0 260px; display: flex; flex-direction: column; border-right: 1px solid var(--lineStrong)">
+      <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+        <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span>
+        <span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span>
+        <span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+        <span style="flex: 1"></span>
+        <span style="{{cap}}">SAVED</span><span style="{{capDim}}">// 06</span>
+      </div>
+      <label style="display: flex; align-items: center; gap: 6px; height: 26px; margin: 8px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="text" placeholder="SEARCH" aria-label="Search connections" style="flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 600 11px var(--ui); letter-spacing: .08em">
+      </label>
+      <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 8px">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 6px; height: 24px; margin-top: 6px">
+            <span style="{{g.style}}">{{g.name}}</span><span style="{{capDim}}">// {{g.count}}</span>
+            <span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span>
+          </div>
+          <sc-for list="{{g.items}}" as="c" hint-placeholder-count="2">
+            <a href="Overview.dc.html" title="{{c.tip}}" aria-current="{{c.current}}" style="{{c.style}}">
+              <span style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 13px; font-weight: 600">{{c.name}}</span><span style="flex: 1"></span><span style="{{c.whenStyle}}">{{c.when}}</span></span>
+              <span style="{{c.hostStyle}}">{{c.host}}</span>
+            </a>
+          </sc-for>
+        </sc-for>
+      </div>
+      <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-top: 1px solid var(--line)">
+        <button type="button" aria-label="New connection (⌘N)" title="New connection  ⌘N" style="{{box}}">+</button>
+        <button type="button" aria-label="Remove connection" title="Remove" style="{{box}}">−</button>
+        <span style="flex: 1"></span>
+        <span style="{{capDim}}">IMPORT // ~/.PGPASS</span>
+      </div>
+    </nav>
+
+    <!-- detail -->
+    <main style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+      <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line)">
+        <span style="{{cap}}">CONNECTION</span><span style="{{capDim}}">// SHOP // POSTGRES 17.2 // LOCALHOST</span>
+        <span style="flex: 1"></span><span style="{{capDim}}">LAST_OPENED // 2_MIN_AGO</span>
+      </div>
+
+      <div style="flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 12px">
+        <label style="display: block">
+          <span style="display: flex; gap: 6px; margin-bottom: 5px"><span style="{{cap}}">CONNECTION_URL</span><span style="{{capDim}}">// PARSED_INTO_6_FIELDS</span></span>
+          <span style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px; box-sizing: border-box; border: 1.5px solid var(--accent); border-radius: 3px">
+            <input type="text" aria-label="Connection URL" value="postgres://app@localhost:5432/shop?sslmode=prefer" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--code); font-size: 12px; color: var(--ink)">
+            <span style="{{cap}}">✓ 6/6</span>
+          </span>
+          <span style="display: block; font-size: 11px; color: var(--ink3); margin-top: 4px">Also accepts DSNs, psql commands and file paths. Drop a .sqlite file anywhere in this window.</span>
+        </label>
+
+        <div role="radiogroup" aria-label="Engine" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{engines}}" as="e" hint-placeholder-count="3">
+            <button type="button" role="radio" aria-checked="{{e.on}}" style="{{e.style}}">
+              <span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="{{e.bar}}"></span><span style="font-size: 13px; font-weight: 600; letter-spacing: .08em">{{e.t}}</span></span>
+              <span style="{{e.sub}}">{{e.d}}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 82px minmax(0, 1fr) 70px minmax(0, 0.6fr); gap: 6px 10px; align-items: center">
+          <sc-for list="{{fields}}" as="f" hint-placeholder-count="6">
+            <span style="{{capDim}}; text-align: right">{{f.k}}</span>
+            <input type="{{f.type}}" aria-label="{{f.label}}" value="{{f.v}}" style="{{field}}">
+          </sc-for>
+          <span style="{{capDim}}; text-align: right">SSL</span>
+          <span role="radiogroup" aria-label="SSL mode" style="display: inline-flex; gap: 3px">
+            <sc-for list="{{ssl}}" as="s" hint-placeholder-count="4"><span role="radio" aria-checked="{{s.on}}" style="{{s.style}}">{{s.t}}</span></sc-for>
+          </span>
+          <span style="{{capDim}}; text-align: right">KEYCHAIN</span>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px"><input type="checkbox" checked="checked" aria-label="Save password in Keychain" style="accent-color: var(--ink); margin: 0"> stored</label>
+          <span style="{{capDim}}; text-align: right">SSH</span>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink2)"><input type="checkbox" aria-label="Connect over SSH tunnel" style="accent-color: var(--ink); margin: 0"> tunnel through bastion</label>
+          <span style="{{capDim}}; text-align: right">TAG</span>
+          <span role="radiogroup" aria-label="Environment tag" style="display: inline-flex; gap: 3px">
+            <sc-for list="{{tags}}" as="s" hint-placeholder-count="3"><span role="radio" aria-checked="{{s.on}}" style="{{s.style}}">{{s.t}}</span></sc-for>
+          </span>
+          <span style="{{capDim}}; text-align: right">SAFETY</span>
+          <span style="grid-column: span 3; display: flex; gap: 16px; font-size: 12px">
+            <label style="display: flex; align-items: center; gap: 6px"><input type="checkbox" aria-label="Open read-only" style="accent-color: var(--ink); margin: 0"> open read-only</label>
+            <label style="display: flex; align-items: center; gap: 6px"><input type="checkbox" checked="checked" aria-label="Stage writes until commit" style="accent-color: var(--ink); margin: 0"> stage writes until I commit</label>
+          </span>
+        </div>
+
+        <section aria-label="Last session" style="border: 1px solid var(--line); border-radius: 3px">
+          <div style="display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">LAST_SESSION</span><span style="{{capDim}}">// REOPENS 4 TABS</span></div>
+          <div style="display: flex; gap: 18px; padding: 10px">
+            <div style="flex: 0 0 150px">
+              <div style="font-size: 34px; font-weight: 300; letter-spacing: -1.1px; line-height: 1">290,198</div>
+              <div style="{{capDim}}; margin-top: 4px">ROWS // 6 TABLES</div>
+              <div style="font-size: 20px; font-weight: 300; margin-top: 8px">182 <span style="{{capDim}}">MB</span></div>
+            </div>
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px">
+              <sc-for list="{{meters}}" as="m" hint-placeholder-count="6">
+                <div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 60px; gap: 8px; align-items: center">
+                  <span style="font-size: 12px">{{m.n}}</span>
+                  <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 1px; height: 8px"><sc-for list="{{m.seg}}" as="s" hint-placeholder-count="30"><span style="background: {{s}}"></span></sc-for></span>
+                  <span style="font-size: 11px; color: var(--ink3); text-align: right; font-variant-numeric: tabular-nums">{{m.v}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid var(--lineStrong)">
+        <button type="button" title="Test connection  ⌥⌘⏎" style="{{boxL}}">TEST</button>
+        <span style="{{cap}}">REACHED // 4 MS // PG 17.2 // TLS 1.3</span>
+        <span style="flex: 1"></span>
+        <button type="button" title="Open SQLite file  ⌘O" style="{{boxL}}">OPEN_SQLITE_FILE</button>
+        <a href="Overview.dc.html" title="Connect  ⏎" style="{{boxPrimary}}">CONNECT // ⏎</a>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    const mk = (name, host, when, env, on) => ({name, host, when, current: on ? 'page' : 'false', tip: name + ' — ' + host,
+      style: 'display: block; padding: 6px 8px; margin-bottom: 3px; border-radius: 3px; text-decoration: none;' + (on ? 'background: var(--ink); color: var(--paper);' : 'color: var(--ink); border: 1px solid transparent;'),
+      hostStyle: 'display: block; font-size: 11px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (on ? 'opacity: .7' : 'color: var(--ink3)'),
+      whenStyle: CAPS + (on ? 'opacity: .7' : env === 'prod' ? 'color: var(--amber)' : 'color: var(--ink3)')});
+    const groups = [
+      {name: 'PRODUCTION', count: '02', style: CAPS + 'color: var(--amber)', items: [mk('analytics', 'analyst@prod-db.internal · Postgres 17', 'READ_ONLY', 'prod'), mk('billing', 'svc@billing-db.internal · Postgres 16', 'READ_ONLY', 'prod')]},
+      {name: 'STAGING', count: '01', style: CAPS + 'color: var(--ink)', items: [mk('crm', 'crm@staging.crm.internal:3306 · MySQL 8', 'OCT_28', 'stg')]},
+      {name: 'LOCAL', count: '03', style: CAPS + 'color: var(--ink)', items: [mk('shop', 'app@localhost:5432 · Postgres 17', '2_MIN', 'local', true), mk('notes.sqlite', '~/Developer/notes · SQLite', 'NOV_03', 'local'), mk('Chinook.db', '~/Downloads · SQLite', 'SEP_09', 'local')]},
+    ];
+    const engines = [['POSTGRES SYSTEMS', 'PORT 5432 // TLS // PG 12–17', true], ['MYSQL SYSTEMS', 'PORT 3306 // MYSQL 8 // MARIADB', false], ['SQLITE FILES', 'LOCAL FILE // READ-WRITE', false]].map(([n, d, on]) => ({t: n, d, on: on ? 'true' : 'false',
+      style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 6px; height: 62px; padding: 10px 12px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; cursor: pointer; font-family: var(--ui); text-align: left;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+      bar: 'width: 3px; height: 14px; background: ' + (on ? 'var(--paper)' : 'var(--ink)'),
+      sub: CAPS + 'font-size: 10px;' + (on ? 'opacity: .7' : 'color: var(--ink3)')}));
+    const fields = [['HOST', 'localhost', 'Host', 'text'], ['PORT', '5432', 'Port', 'text'], ['DATABASE', 'shop', 'Database', 'text'], ['SCHEMA', 'public', 'Schema', 'text'], ['USER', 'app', 'User', 'text'], ['PASSWORD', '••••••••••', 'Password', 'password']].map(([k, v, label, type]) => ({k, v, label, type}));
+    const seg = (on, warn) => 'display: inline-flex; align-items: center; height: 22px; padding: 0 8px; box-sizing: border-box; border: 1px solid ' + (warn ? 'var(--amber)' : 'var(--lineStrong)') + '; border-radius: 2px;' + CAPS + 'font-size: 10.5px;' + (on ? 'background: var(--ink); color: var(--paper);' : 'color: ' + (warn ? 'var(--amber)' : 'var(--ink)') + ';');
+    const ssl = ['DISABLE', 'PREFER', 'REQUIRE', 'VERIFY'].map((x) => ({t: x, on: x === 'PREFER' ? 'true' : 'false', style: seg(x === 'PREFER')}));
+    const tags = ['LOCAL', 'STAGING', 'PRODUCTION'].map((x) => ({t: x, on: x === 'LOCAL' ? 'true' : 'false', style: seg(x === 'LOCAL', x === 'PRODUCTION')}));
+    const tables = [['order_items', 168214], ['events', 61532], ['orders', 48000], ['invoices', 9812], ['customers', 2400], ['products', 240]];
+    const meters = tables.map(([n, v]) => {
+      const k = Math.max(1, Math.round(Math.sqrt(v / 168214) * 30));
+      return {n, v: v >= 1000 ? (v / 1000).toFixed(1).replace('.0', '') + 'K' : String(v), seg: Array.from({length: 30}, (_, i) => i < k ? t.ink : t.fill12)};
+    });
+    return {themeVars, cap, capDim, box, boxL, boxPrimary, field, groups, engines, fields, ssl, tags, meters};
+  }
+}
+</script>
+</body>
+</html>

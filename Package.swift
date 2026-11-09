@@ -10,6 +10,7 @@ let package = Package(
         .executable(name: "DBMan", targets: ["DBMan"]),
         .library(name: "Halftone", targets: ["Halftone"]),
         .library(name: "DBCore", targets: ["DBCore"]),
+        .library(name: "DBStore", targets: ["DBStore"]),
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
@@ -28,7 +29,15 @@ let package = Package(
             swiftSettings: v5,
             linkerSettings: [.linkedLibrary("sqlite3")]
         ),
-        .executableTarget(name: "DBMan", dependencies: ["Halftone", "DBCore"], swiftSettings: v5),
+        // DBMan's own SQLite store (settings, connections, layers…). Only sqlite3; migrations are embedded in code.
+        .target(
+            name: "DBStore",
+            resources: [.embedInCode("Migrations/0001_init.sql")],
+            swiftSettings: v5,
+            linkerSettings: [.linkedLibrary("sqlite3")]
+        ),
+        .executableTarget(name: "DBMan", dependencies: ["Halftone", "DBCore", "DBStore"], swiftSettings: v5),
         .testTarget(name: "DBCoreTests", dependencies: ["DBCore"], swiftSettings: v5),
+        .testTarget(name: "DBStoreTests", dependencies: ["DBStore"], resources: [.copy("Fixtures")], swiftSettings: v5),
     ]
 )

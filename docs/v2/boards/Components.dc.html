@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0} @keyframes c19pulse{0%,100%{opacity:.45}50%{opacity:1}} @keyframes c19sweep{from{transform:translateX(-60px) skewX(-18deg)}to{transform:translateX(240px) skewX(-18deg)}}</style>
+</helmet>
+<div style="{{themeVars}}">
+  <svg width="0" height="0" aria-hidden="true" style="position: absolute">
+    <defs>
+      <pattern id="c19-dense" width="3" height="3" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1.05" style="fill: var(--ink)"></circle></pattern>
+      <pattern id="c19-sparse" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".75" style="fill: var(--ink)"></circle></pattern>
+      <pattern id="c19-acc" width="3" height="3" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1.1" style="fill: var(--accent)"></circle></pattern>
+    </defs>
+  </svg>
+  <div style="height: 2600px; padding: 16px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px">
+
+    <!-- MASTHEAD -->
+    <header style="{{frame}} height: 124px; flex: none; padding: 14px 18px; display: flex; gap: 24px; align-items: flex-end">
+      <div style="flex: 1; min-width: 0">
+        <div style="{{capDim}}">BOARD 19 // DASHBOARDS // COMPONENT LIBRARY // HALFTONE 0.7</div>
+        <h1 style="margin: 8px 0 0; font-size: 44px; font-weight: 300; letter-spacing: -0.01em; line-height: 1">19 COMPONENTS <span style="color: var(--ink3)">//</span> ONE SPEC</h1>
+        <p style="margin: 9px 0 0; max-width: 820px; font-size: 13px; line-height: 1.45; color: var(--ink2)">Agents compose dashboards only from this catalog, via <code style="font-family: var(--code); font-size: 12px; color: var(--ink)">dashboard.components</code>. Each component declares the encodings it requires; a widget missing one fails validation and arrives in the proposal in alert state. No raw HTML, no new colours, no other chart types.</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 4px">
+        <sc-for list="{{heroStats}}" as="s" hint-placeholder-count="4">
+          <div style="border: 1px solid var(--line); border-radius: 3px; padding: 7px 12px; min-width: 96px">
+            <div style="{{capDim}}">{{s.k}}</div>
+            <div style="{{readout}} font-size: 36px; margin-top: 4px">{{s.v}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </header>
+
+    <!-- 01 SPECIMENS -->
+    <div style="{{frame}} height: 30px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; white-space: nowrap; overflow: hidden">
+      <span style="{{cap}}">01 // SPECIMENS</span><span style="{{capDim}}">RENDERED AT MIN SIZE · SHOP · REAL DATA SHAPES</span><span style="flex: 1"></span>
+      <span style="{{chip}}">INK // DATA</span><span style="{{chipAcc}}">COBALT // ONE HIGHLIGHT</span><span style="{{chipAmber}}">AMBER</span><span style="{{chipAlert}}">ALERT</span><span style="{{capSmDim}}">THRESHOLDS ONLY</span>
+      <span style="{{chipOff}}"><svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" style="fill: url(#c19-dense)"></rect></svg> DOTS // SECONDARY FILLS</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 262px; gap: 6px; flex: none">
+      <article aria-label="{{k01.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k01.id}}</span><span style="{{capDim}}">// {{k01.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k01.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k01.title}}</span><span style="{{capDim}}">{{k01.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Revenue last 30 days 1.42 million dollars, up 12.4 percent versus previous period." style="position: relative; height: 145px">
+            <div style="{{readout}} font-size: 56px; margin-top: 4px">$1.42M</div>
+            <div style="display: flex; gap: 8px; align-items: baseline; margin-top: 8px"><span style="{{cap}}">▲ 12.4%</span><span style="{{capDim}}">VS PREV 30 D // $1.26M</span></div>
+            <div style="height: 1px; background: var(--line); margin: 11px 0 8px"></div>
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr); gap: 12px">
+              <div><div style="{{readout}} font-size: 22px">3,936</div><div style="{{capSmDim}}; margin-top: 3px">ORDERS</div></div>
+              <span style="background: var(--line)"></span>
+              <div><div style="{{readout}} font-size: 22px">$361</div><div style="{{capSmDim}}; margin-top: 3px">AVG ORDER VALUE</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k01.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k01.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k02.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k02.id}}</span><span style="{{capDim}}">// {{k02.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k02.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k02.title}}</span><span style="{{capDim}}">{{k02.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Orders today 86 so far, up 9 percent versus the same hour last Monday." style="position: relative; height: 145px">
+            <div style="display: flex; align-items: flex-end; gap: 12px">
+              <div style="{{readout}} font-size: 50px">86</div>
+              <div style="padding-bottom: 5px"><div style="{{cap}}">▲ 9%</div><div style="{{capSmDim}}; margin-top: 2px">VS SAME HOUR LAST MON // 79</div></div>
+              <span style="flex: 1"></span>
+              <div style="padding-bottom: 5px; text-align: right"><div style="{{capSmAcc}}">NOW // 14:32</div><div style="{{capSmDim}}; margin-top: 2px">PEAK 13:00 // 12/H</div></div>
+            </div>
+            <svg width="316" height="62" viewBox="0 0 316 62" aria-hidden="true" style="display: block; margin-top: 10px; overflow: visible">
+              <path d="{{spark.area}}" style="fill: url(#c19-sparse)"></path>
+              <path d="{{spark.ghost}}" fill="none" style="stroke: var(--ink3)" stroke-width="1" stroke-dasharray="2 3"></path>
+              <path d="{{spark.base}}" style="stroke: var(--lineStrong)"></path>
+              <path d="{{spark.now}}" fill="none" style="stroke: var(--ink)" stroke-width="1.6"></path>
+              <path d="{{spark.dot}}" style="fill: var(--accent)"></path>
+            </svg>
+            <div style="display: flex; justify-content: space-between; margin-top: 4px; {{capSmDim}}"><span>00</span><span>06</span><span>12</span><span>18</span><span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--ink3)" stroke-opacity="1" stroke-width="2" stroke-dasharray="3 2"></path></svg></span> LAST MON</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k02.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k02.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k03.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k03.id}}</span><span style="{{capDim}}">// {{k03.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k03.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k03.title}}</span><span style="{{capDim}}">{{k03.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Line chart of daily orders by status over 30 days; pending spikes to 58 on October 31." style="position: relative; height: 145px">
+            <svg width="316" height="124" viewBox="0 0 316 124" aria-hidden="true" style="display: block">
+              <path d="M26 71.3 H314 M26 38.7 H314 M26 6 H314" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path><path d="M26 104.5 H314" style="stroke: var(--lineStrong)"></path><text x="22" y="107" style="{{svgLblR}}">0</text><text x="22" y="74.3" style="{{svgLblR}}">30</text><text x="22" y="41.7" style="{{svgLblR}}">60</text><text x="22" y="9" style="{{svgLblR}}">90</text>
+              <path d="{{lineC.deliv}}" fill="none" style="stroke: var(--ink)" stroke-opacity=".45" stroke-width="1.5"></path>
+              <path d="{{lineC.shipd}}" fill="none" style="stroke: var(--ink)" stroke-width="1.5"></path>
+              <path d="{{lineC.pend}}" fill="none" style="stroke: var(--accent)" stroke-width="2"></path>
+              <path d="{{lineC.ends}}" style="fill: var(--ink)"></path>
+              <path d="{{lineC.peak}}" style="fill: var(--accent); stroke: var(--paper)" stroke-width="1.5"></path>
+              <text x="231" y="38" style="{{svgLbl}} fill: var(--ink)">58 PENDING // CARD TIMEOUTS</text>
+              <text x="26" y="118" style="{{svgLbl}}">OCT 11</text><text x="125.3" y="118" style="{{svgLblM}}">OCT 21</text><text x="224.6" y="118" style="{{svgLblM}}">OCT 31</text><text x="314" y="118" style="{{svgLblR}}">NOV 09</text>
+            </svg>
+            <div style="display: flex; gap: 12px; margin-top: 4px; {{capSmDim}}"><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--accent)" stroke-opacity="1" stroke-width="2"></path></svg><span style="color: var(--ink)">PENDING {{lineC.lPend}}</span></span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--ink)" stroke-opacity="1" stroke-width="2"></path></svg>SHIPPED {{lineC.lShipd}}</span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--ink)" stroke-opacity="0.45" stroke-width="2"></path></svg>DELIVERED {{lineC.lDeliv}}</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k03.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k03.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k04.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k04.id}}</span><span style="{{capDim}}">// {{k04.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k04.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k04.title}}</span><span style="{{capDim}}">{{k04.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Stacked area of weekly revenue by channel, web, app and marketplace, over 12 weeks; marketplace growing." style="position: relative; height: 145px">
+            <svg width="316" height="124" viewBox="0 0 316 124" aria-hidden="true" style="display: block">
+              <path d="{{area.web}}" style="fill: url(#c19-dense)"></path>
+              <path d="{{area.app}}" style="fill: url(#c19-sparse)"></path>
+              <path d="{{area.mkt}}" style="fill: url(#c19-acc)"></path>
+              <path d="M26 71.3 H314 M26 38.7 H314 M26 6 H314" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path><path d="M26 104.5 H314" style="stroke: var(--lineStrong)"></path><text x="22" y="107" style="{{svgLblR}}">0</text><text x="22" y="74.3" style="{{svgLblR}}">150</text><text x="22" y="41.7" style="{{svgLblR}}">300</text><text x="22" y="9" style="{{svgLblR}}">450</text>
+              <path d="{{area.e1}}" fill="none" style="stroke: var(--ink)" stroke-width="1"></path>
+              <path d="{{area.e2}}" fill="none" style="stroke: var(--ink)" stroke-width="1"></path>
+              <path d="{{area.e3}}" fill="none" style="stroke: var(--accent)" stroke-width="1.5"></path>
+              <text x="26" y="118" style="{{svgLbl}}">W34</text><text x="130.7" y="118" style="{{svgLblM}}">W38</text><text x="235.5" y="118" style="{{svgLblM}}">W42</text><text x="314" y="118" style="{{svgLblR}}">W45</text>
+            </svg>
+            <div style="display: flex; gap: 12px; margin-top: 4px; {{capSmDim}}"><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" style="fill: url(#c19-acc)"></rect></svg><span style="color: var(--ink)">MARKETPLACE {{area.lm}}</span></span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" style="fill: url(#c19-sparse)"></rect></svg>APP {{area.la}}</span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" style="fill: url(#c19-dense)"></rect></svg>WEB {{area.lw}}</span><span style="flex: 1"></span><span style="color: var(--ink)">{{area.tot}}</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k04.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k04.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k05.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k05.id}}</span><span style="{{capDim}}">// {{k05.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k05.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k05.title}}</span><span style="{{capDim}}">{{k05.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Bar chart of daily orders over 14 days, average 131; today 86 so far." style="position: relative; height: 145px">
+            <svg width="316" height="124" viewBox="0 0 316 124" aria-hidden="true" style="display: block">
+              <path d="M26 71.3 H314 M26 38.7 H314 M26 6 H314" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path><path d="M26 104.5 H314" style="stroke: var(--lineStrong)"></path><text x="22" y="107" style="{{svgLblR}}">0</text><text x="22" y="74.3" style="{{svgLblR}}">60</text><text x="22" y="41.7" style="{{svgLblR}}">120</text><text x="22" y="9" style="{{svgLblR}}">180</text>
+              <path d="{{bars.ink}}" style="fill: var(--ink)"></path>
+              <path d="{{bars.acc}}" style="fill: var(--accent)"></path>
+              <path d="{{bars.avg}}" fill="none" style="stroke: var(--ink3)" stroke-dasharray="3 2"></path>
+              <text x="36.3" y="118" style="{{svgLblM}}">OCT 27</text><text x="159.7" y="118" style="{{svgLblM}}">NOV 02</text><text x="314" y="118" style="{{svgLblR}}">NOV 09</text>
+            </svg>
+            <div style="display: flex; gap: 12px; margin-top: 4px; {{capSmDim}}"><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--ink3)" stroke-opacity="1" stroke-width="2" stroke-dasharray="3 2"></path></svg>AVG 131 / DAY</span><span style="display: inline-flex; align-items: center; gap: 5px">OCT 31 // 92</span><span style="flex: 1"></span><span style="color: var(--accent)">TODAY 86 // PARTIAL</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k05.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k05.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k06.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k06.id}}</span><span style="{{capDim}}">// {{k06.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k06.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k06.title}}</span><span style="{{capDim}}">{{k06.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Stacked bars of weekly orders by stage over 9 weeks; open orders peaked at 268 in week 43." style="position: relative; height: 145px">
+            <svg width="316" height="124" viewBox="0 0 316 124" aria-hidden="true" style="display: block">
+              <path d="M26 71.3 H314 M26 38.7 H314 M26 6 H314" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path><path d="M26 104.5 H314" style="stroke: var(--lineStrong)"></path><text x="22" y="107" style="{{svgLblR}}">0</text><text x="22" y="74.3" style="{{svgLblR}}">400</text><text x="22" y="41.7" style="{{svgLblR}}">800</text><text x="22" y="9" style="{{svgLblR}}">1.2K</text>
+              <path d="{{stacked.a}}" style="fill: var(--ink)"></path>
+              <path d="{{stacked.b}}" style="fill: url(#c19-dense)"></path>
+              <path d="{{stacked.c}}" style="fill: url(#c19-acc)"></path>
+              <text x="42" y="118" style="{{svgLblM}}">W38</text><text x="170" y="118" style="{{svgLblM}}">W42</text><text x="250" y="118" style="{{svgLblM}}">W45</text><text x="314" y="118" style="{{svgLblR}}">W46</text>
+            </svg>
+            <div style="display: flex; gap: 12px; margin-top: 4px; {{capSmDim}}"><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" style="fill: url(#c19-acc)"></rect></svg><span style="color: var(--ink)">OPEN</span></span><span style="display: inline-flex; align-items: center; gap: 5px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; background: var(--ink)"></span>DELIVERED</span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="10" height="10" aria-hidden="true"><rect width="10" height="10" style="fill: url(#c19-dense)"></rect></svg>SHIPPED</span><span style="flex: 1"></span><span>W43 // OPEN 268</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k06.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k06.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k07.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k07.id}}</span><span style="{{capDim}}">// {{k07.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k07.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k07.title}}</span><span style="{{capDim}}">{{k07.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Top six products by revenue over 30 days, led by Linen duvet set at 48.2 thousand dollars." style="position: relative; height: 145px">
+            <sc-for list="{{hbars}}" as="b" hint-placeholder-count="6">
+              <div style="display: grid; grid-template-columns: 18px 118px minmax(0, 1fr) 46px; gap: 6px; align-items: center; height: 21px; border-bottom: 1px solid var(--line)">
+                <span style="{{capSmDim}}">{{b.rank}}</span>
+                <span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.n}}</span>
+                <span style="display: block"><span style="{{b.bar}}"></span></span>
+                <span style="{{mono}} text-align: right">{{b.v}}</span>
+              </div>
+            </sc-for>
+            <div style="display: flex; margin-top: 6px; {{capSmDim}}"><span>TOP 6 OF 240 PRODUCTS</span><span style="flex: 1"></span><span>= 14.8% OF REVENUE</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k07.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k07.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k08.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k08.id}}</span><span style="{{capDim}}">// {{k08.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k08.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k08.title}}</span><span style="{{capDim}}">{{k08.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Histogram of order totals in 50 dollar bins, right-skewed, median 240 dollars, 95th percentile 824 dollars." style="position: relative; height: 145px">
+            <svg width="316" height="124" viewBox="0 0 316 124" aria-hidden="true" style="display: block">
+              <path d="M4 38.7 H312 M4 71.3 H312" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path>
+              <path d="{{histo.ink}}" style="fill: var(--ink)"></path>
+              <path d="M4 104.5 H312" style="stroke: var(--lineStrong)"></path>
+              <path d="{{histo.med}}" style="stroke: var(--accent)" stroke-width="1.5"></path>
+              <path d="{{histo.p95}}" style="stroke: var(--ink)" stroke-dasharray="3 2"></path>
+              <text x="4" y="118" style="{{svgLbl}}">$0</text><text x="77.3" y="118" style="{{svgLblM}}">$250</text><text x="150.7" y="118" style="{{svgLblM}}">$500</text><text x="224" y="118" style="{{svgLblM}}">$750</text><text x="312" y="118" style="{{svgLblR}}">$1K+</text>
+            </svg>
+            <div style="display: flex; gap: 12px; margin-top: 4px; {{capSmDim}}"><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--accent)" stroke-opacity="1" stroke-width="2"></path></svg><span style="color: var(--ink)">MEDIAN $240</span></span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--ink)" stroke-opacity="1" stroke-width="2" stroke-dasharray="3 2"></path></svg>P95 $824</span><span style="flex: 1"></span><span>PEAK BIN {{histo.peak}}</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k08.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k08.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k09.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k09.id}}</span><span style="{{capDim}}">// {{k09.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k09.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k09.title}}</span><span style="{{capDim}}">{{k09.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Heatmap of orders by weekday and hour; evenings busiest, peak highlighted." style="position: relative; height: 145px">
+            <div style="display: grid; grid-template-columns: 28px repeat(4, 72px); height: 13px; {{capSmDim}}"><span></span><span>00</span><span>06</span><span>12</span><span>18</span></div>
+            <sc-for list="{{hourWeek}}" as="r" hint-placeholder-count="7">
+              <div style="display: grid; grid-template-columns: 28px repeat(24, 12px); height: 12px; align-items: center">
+                <span style="{{capSmDim}}; font-size: 9px">{{r.n}}</span>
+                <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="24"><span style="{{c}}"></span></sc-for>
+              </div>
+            </sc-for>
+            <div style="display: flex; align-items: center; gap: 4px; margin-top: 10px; {{capSmDim}}"><span>LESS</span><sc-for list="{{hwLegend}}" as="d" hint-placeholder-count="4"><span style="{{d}}"></span></sc-for><span>MORE</span><span style="flex: 1"></span><span style="color: var(--accent)">PEAK // {{hwPeak}}</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k09.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k09.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k10.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k10.id}}</span><span style="{{capDim}}">// {{k10.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k10.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k10.title}}</span><span style="{{capDim}}">{{k10.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Calendar heatmap of daily orders over 26 weeks; sale spike July 13 to 15, dip on October 31." style="position: relative; height: 145px">
+            <div style="position: relative; height: 13px; margin-left: 28px"><sc-for list="{{calMonths}}" as="m" hint-placeholder-count="6"><span style="{{m.s}}">{{m.t}}</span></sc-for></div>
+            <sc-for list="{{calRows}}" as="r" hint-placeholder-count="7">
+              <div style="display: grid; grid-template-columns: 28px repeat(26, 11px); height: 11px; align-items: center">
+                <span style="{{capSmDim}}; font-size: 9px">{{r.n}}</span>
+                <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="26"><span style="{{c}}"></span></sc-for>
+              </div>
+            </sc-for>
+            <div style="display: flex; align-items: center; gap: 4px; margin-top: 10px; {{capSmDim}}"><span>LESS</span><sc-for list="{{calLegend}}" as="d" hint-placeholder-count="5"><span style="{{d}}"></span></sc-for><span>MORE</span><span style="flex: 1"></span><span>JUL 13–15 // SALE · OCT 31 // INCIDENT</span></div>
+            <div style="display: flex; margin-top: 6px; {{capSmDim}}"><span>MAY 18 → NOV 09</span><span style="flex: 1"></span><span style="color: var(--accent)">TODAY // 86</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k10.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k10.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k11.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k11.id}}</span><span style="{{capDim}}">// {{k11.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k11.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k11.title}}</span><span style="{{capDim}}">{{k11.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Scatter of customers, orders versus average order value; weak negative trend; customer 1182 highlighted." style="position: relative; height: 145px">
+            <svg width="316" height="128" viewBox="0 0 316 128" aria-hidden="true" style="display: block">
+              <path d="{{scatter.grid}}" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path>
+              <path d="{{scatter.axis}}" fill="none" style="stroke: var(--lineStrong)"></path>
+              <path d="{{scatter.trend}}" fill="none" style="stroke: var(--ink3)" stroke-dasharray="4 3"></path>
+              <path d="{{scatter.pts}}" style="fill: var(--ink)" fill-opacity=".72"></path>
+              <path d="{{scatter.hiRing}}" fill="none" style="stroke: var(--accent)"></path>
+              <path d="{{scatter.hi}}" style="fill: var(--accent)"></path>
+              <text x="288" y="62" style="{{svgLblR}} fill: var(--ink)">#1182 // 38 ORDERS · $412</text>
+              <text x="26" y="9" style="{{svgLblR}}">1.2K</text><text x="26" y="62" style="{{svgLblR}}">600</text><text x="26" y="112" style="{{svgLblR}}">0</text>
+              <text x="30" y="124" style="{{svgLbl}}">0</text><text x="100.5" y="124" style="{{svgLblM}}">10</text><text x="171" y="124" style="{{svgLblM}}">20</text><text x="241.5" y="124" style="{{svgLblM}}">30</text><text x="312" y="124" style="{{svgLblR}}">40</text>
+            </svg>
+            <div style="display: flex; margin-top: 3px; {{capSmDim}}"><span>X // ORDERS PER CUSTOMER</span><span style="flex: 1"></span><span>Y // AOV $ · 96 SAMPLED</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k11.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k11.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k12.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k12.id}}</span><span style="{{capDim}}">// {{k12.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k12.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k12.title}}</span><span style="{{capDim}}">{{k12.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Checkout funnel over 7 days from 24,810 sessions to 2,486 paid; largest drop at add to cart." style="position: relative; height: 145px">
+            <sc-for list="{{funnel}}" as="s" hint-placeholder-count="5">
+              <div style="display: grid; grid-template-columns: 86px minmax(0, 1fr) 50px 44px; gap: 6px; align-items: center; height: 23px; border-bottom: 1px solid var(--line)">
+                <span style="{{capSm}}">{{s.n}}</span>
+                <span style="display: flex; justify-content: center"><span style="{{s.bar}}"></span></span>
+                <span style="{{mono}} font-size: 10.5px; text-align: right">{{s.v}}</span>
+                <span style="{{s.pctStyle}}">{{s.pct}}</span>
+              </div>
+            </sc-for>
+            <div style="display: flex; margin-top: 8px; {{capSmDim}}"><span>OVERALL // <span style="color: var(--ink)">{{funConv}}</span></span><span style="flex: 1"></span><span>LARGEST DROP // <span style="color: var(--ink)">{{funWorst}}</span></span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k12.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k12.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k13.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k13.id}}</span><span style="{{capDim}}">// {{k13.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k13.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k13.title}}</span><span style="{{capDim}}">{{k13.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Three segmented meters: connections 7 of 100, cache hit 99.2 percent, disk 122 of 200 gigabytes with warning at 80 percent." style="position: relative; height: 145px">
+            <sc-for list="{{meters}}" as="m" hint-placeholder-count="3">
+              <div style="margin-bottom: 11px">
+                <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px"><span style="{{capSmDim}}">{{m.k}} //</span><span style="{{capSm}}">{{m.v}}</span><span style="flex: 1"></span><span style="{{capSmAmber}}">{{m.note}}</span></div>
+                <div style="display: flex; gap: 2px; height: 12px"><sc-for list="{{m.seg}}" as="s" hint-placeholder-count="30"><span style="{{s}}"></span></sc-for></div>
+              </div>
+            </sc-for>
+            <div style="display: flex; {{capSmDim}}"><span>3 OF 3 WITHIN LIMITS</span><span style="flex: 1"></span><span>pg_stat_database · 5 S</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k13.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k13.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k14.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k14.id}}</span><span style="{{capDim}}">// {{k14.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k14.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k14.title}}</span><span style="{{capDim}}">{{k14.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Halftone distribution of weekly orders across 40 weeks; one dot is about 140 orders; sale week 29 tallest." style="position: relative; height: 145px">
+            <div style="display: flex; align-items: baseline; gap: 8px"><span style="{{readout}} font-size: 28px">{{htLast}}</span><span style="{{capSmDim}}">ORDERS // W45 · LAST FULL WEEK</span></div>
+            <div style="display: grid; grid-template-columns: repeat(40, minmax(0, 1fr)); margin-top: 8px">
+              <sc-for list="{{halftone}}" as="d" hint-placeholder-count="400"><span style="{{d}}"></span></sc-for>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 6px; {{capSmDim}}"><span>W06</span><span>W29 // SALE</span><span>NOW // <span style="color: var(--accent)">W45</span></span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k14.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k14.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k15.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k15.id}}</span><span style="{{capDim}}">// {{k15.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k15.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k15.title}}</span><span style="{{capDim}}">{{k15.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Table of the six latest orders with id, customer, status, total and time." style="position: relative; height: 145px">
+            <div style="{{tHead}}"><sc-for list="{{tHeads}}" as="h" hint-placeholder-count="5"><span style="{{h.s}}">{{h.v}}</span></sc-for></div>
+            <sc-for list="{{table}}" as="r" hint-placeholder-count="6">
+              <div style="{{r.s}}"><sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5"><span style="{{c.s}}">{{c.v}}</span></sc-for></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k15.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k15.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k16.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k16.id}}</span><span style="{{capDim}}">// {{k16.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k16.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k16.title}}</span><span style="{{capDim}}">{{k16.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Live feed of the five newest order, refund and customer events." style="position: relative; height: 145px">
+            <sc-for list="{{feed}}" as="e" hint-placeholder-count="5">
+              <div style="{{e.s}}">
+                <span style="{{monoDim}} font-size: 10px; grid-row: span 2; align-self: start; padding-top: 2px">{{e.at}}</span>
+                <span style="{{e.ts}}">{{e.t}}</span>
+                <span style="font-size: 11px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{e.b}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k16.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k16.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k17.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k17.id}}</span><span style="{{capDim}}">// {{k17.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k17.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k17.title}}</span><span style="{{capDim}}">{{k17.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Radar of the Home category on five scores, Q4 versus Q3; stock improved most." style="position: relative; height: 145px">
+            <svg width="316" height="128" viewBox="0 0 316 128" aria-hidden="true" style="display: block">
+              <path d="{{radar.ring1}}" fill="none" style="stroke: var(--ink)" stroke-opacity=".25"></path>
+              <path d="{{radar.ring2}}" fill="none" style="stroke: var(--ink)" stroke-opacity=".18" stroke-dasharray="2 3"></path>
+              <path d="{{radar.spokes}}" fill="none" style="stroke: var(--ink)" stroke-opacity=".18"></path>
+              <path d="{{radar.prev}}" fill="none" style="stroke: var(--ink)" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="3 2"></path>
+              <path d="{{radar.now}}" style="fill: url(#c19-sparse); stroke: var(--ink)" stroke-width="1.6" stroke-linejoin="round"></path>
+              <path d="{{radar.dots}}" style="fill: var(--ink)"></path>
+              <path d="{{radar.hi}}" style="fill: var(--accent); stroke: var(--paper)" stroke-width="1.5"></path>
+              <text x="158" y="11" style="{{svgLblM}}">REVENUE</text>
+              <text x="212" y="51" style="{{svgLbl}}">MARGIN</text>
+              <text x="193" y="122" style="{{svgLbl}} fill: var(--accent)">STOCK +34</text>
+              <text x="123" y="122" style="{{svgLblR}}">RATING</text>
+              <text x="104" y="51" style="{{svgLblR}}">LOW RETURNS</text>
+            </svg>
+            <div style="display: flex; gap: 12px; margin-top: 2px; {{capSmDim}}"><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--ink)" stroke-opacity="1" stroke-width="2"></path></svg><span style="color: var(--ink)">Q4 TO DATE</span></span><span style="display: inline-flex; align-items: center; gap: 5px"><svg width="14" height="6" aria-hidden="true"><path d="M0 3 H14" style="stroke: var(--ink)" stroke-opacity="0.5" stroke-width="2" stroke-dasharray="3 2"></path></svg>Q3</span><span style="flex: 1"></span><span>SCORES 0–1 · 5 AXES</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k17.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k17.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k18.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k18.id}}</span><span style="{{capDim}}">// {{k18.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k18.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k18.title}}</span><span style="{{capDim}}">{{k18.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Markdown note explaining the October 31 revenue dip." style="position: relative; height: 145px">
+            <div style="font-size: 14px; font-weight: 600; line-height: 1.25">Why revenue dipped on Oct 31</div>
+            <p style="margin: 5px 0 0; font-size: 12px; line-height: 1.45; color: var(--ink2)">Card-provider timeouts from 09:40 held <b style="color: var(--ink); font-weight: 600">2,214</b> orders in <code style="font-family: var(--code); font-size: 11px; color: var(--ink)">pending</code>. Revenue recovered by Nov 2; no orders were lost.</p>
+            <ul style="margin: 6px 0 0; padding-left: 14px; font-size: 12px; line-height: 1.5; color: var(--ink2)"><li>Revenue excludes refunds (412)</li><li>Times are Europe/Berlin</li></ul>
+            <div style="position: absolute; left: 0; right: 0; bottom: 2px; display: flex; {{capSmDim}}"><span>EDITED BY CLAUDE-CODE // 2 H AGO</span><span style="flex: 1"></span><span>MD · 312 CHARS</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k18.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k18.good}}</div>
+        </div>
+      </article>
+      <article aria-label="{{k19.aria}}" style="{{card}}">
+        <div style="{{cardHead}}"><span style="{{cap}}; font-family: var(--code); text-transform: none; letter-spacing: 0; font-size: 11.5px">{{k19.id}}</span><span style="{{capDim}}">// {{k19.n}}</span><span style="flex: 1"></span><span style="{{chipOff}}">MIN <b style="color: var(--ink); font-weight: 600">{{k19.size}}</b></span></div>
+        <div style="{{wbody}}">
+          <div style="{{wHead}}"><span style="{{cap}}">{{k19.title}}</span><span style="{{capDim}}">{{k19.sub}}</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+          <div role="img" aria-label="Mini ER diagram: orders with customers, order_items, invoices and order_coupons, one hop." style="position: relative; height: 145px">
+            <svg width="316" height="126" viewBox="0 0 316 126" aria-hidden="true" style="position: absolute; left: 0; top: 0">
+              <path d="M96 24 H101 V58 H110 M110 76 H105 V108 H96 M206 58 H211 V24 H220 M206 76 H215 V108 H220" fill="none" style="stroke: var(--ink)"></path>
+              <path d="M99 20 V28 M104 58 L110 54 M104 58 L110 62 M107 72 V80 M102 108 L96 104 M102 108 L96 112 M209 54 V62 M214 24 L220 20 M214 24 L220 28 M209 72 V80 M214 108 L220 104 M214 108 L220 112" fill="none" style="stroke: var(--ink)"></path>
+            </svg>
+            <div style="position: absolute; left: 0; top: 6px; width: 96px; height: 36px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper); padding: 3px 6px"><div style="font-size: 12px; font-weight: 600">customers</div><div style="{{monoDim}} font-size: 10px">2,400 · id</div></div>
+            <div style="position: absolute; left: 110px; top: 48px; width: 96px; height: 36px; box-sizing: border-box; border: 1.5px solid var(--accent); border-radius: 3px; background: var(--paper); padding: 3px 6px"><div style="font-size: 12px; font-weight: 600">orders</div><div style="{{monoDim}} font-size: 10px">48,000 · FOCUS</div></div>
+            <div style="position: absolute; left: 220px; top: 6px; width: 96px; height: 36px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper); padding: 3px 6px"><div style="font-size: 12px; font-weight: 600">order_items</div><div style="{{monoDim}} font-size: 10px">168,214 · order_id</div></div>
+            <div style="position: absolute; left: 220px; top: 90px; width: 96px; height: 36px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper); padding: 3px 6px"><div style="font-size: 12px; font-weight: 600">invoices</div><div style="{{monoDim}} font-size: 10px">9,812 · order_id</div></div>
+            <div style="position: absolute; left: 0; top: 90px; width: 96px; height: 36px; box-sizing: border-box; border: 1px dashed var(--lineStrong); border-radius: 3px; background: var(--paper); padding: 3px 6px"><div style="font-size: 12px; font-weight: 600">order_coupons</div><div style="{{monoDim}} font-size: 10px">JUNCTION</div></div>
+            <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; {{capSmDim}}"><span>+2 HOPS // products · refunds · coupons</span><span style="flex: 1"></span><span>OPEN IN SCHEMA MAP ⌘4</span></div>
+          </div>
+        </div>
+        <div style="{{cardFoot}}">
+          <div style="{{needsRow}}"><span style="{{capDim}}">NEEDS //</span><sc-for list="{{k19.enc}}" as="e" hint-placeholder-count="3"><span style="{{e.s}}">{{e.t}}</span></sc-for></div>
+          <div style="{{goodRow}}"><span style="{{capDim}}">GOOD FOR //</span> {{k19.good}}</div>
+        </div>
+      </article>
+      <article aria-label="How to read a card" style="{{card}}; background: var(--sunken)">
+        <div style="{{cardHead}}; background: var(--ink); color: var(--paper)"><span style="{{capSm}}; color: var(--paper); font-size: 11px">KEY</span><span style="{{capSm}}; color: var(--paper); opacity: .6; font-size: 11px">// HOW TO READ A CARD</span></div>
+        <div style="padding: 9px 12px; display: flex; flex-direction: column; gap: 3px">
+          <div style="display: grid; grid-template-columns: 112px minmax(0, 1fr); row-gap: 2px; align-items: baseline">
+            <span style="{{mono}} font-size: 10.5px">x:time</span><span style="font-size: 11.5px; color: var(--ink2)">required channel : column kind</span>
+            <span style="{{mono}} font-size: 10.5px; color: var(--ink3)">series?</span><span style="font-size: 11.5px; color: var(--ink2)">optional channel</span>
+            <span style="{{mono}} font-size: 10.5px">y:number+</span><span style="font-size: 11.5px; color: var(--ink2)">one or more columns</span>
+            <span style="{{mono}} font-size: 10.5px">x:time|category</span><span style="font-size: 11.5px; color: var(--ink2)">either kind</span>
+            <span style="{{capSm}}">MIN 4×3</span><span style="font-size: 11.5px; color: var(--ink2)">columns × rows on the 12-col grid</span>
+          </div>
+          <div style="height: 1px; background: var(--line); margin: 6px 0 4px"></div>
+          <div style="{{capSmDim}}; margin-bottom: 2px">PICK BY JOB</div>
+          <sc-for list="{{jobs}}" as="j" hint-placeholder-count="7">
+            <div style="display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 6px; align-items: baseline; line-height: 14px"><span style="{{capSm}}">{{j.k}}</span><span style="{{mono}} font-size: 10.5px; color: var(--ink2)">{{j.v}}</span></div>
+          </sc-for>
+        </div>
+      </article>
+    </div>
+
+    <!-- 02 STATES -->
+    <section aria-label="States" style="{{frame}} height: 330px; flex: none; display: flex; flex-direction: column">
+      <div style="{{head}}"><span style="{{cap}}">02 // STATES</span><span style="{{capDim}}">SAME WIDGET · REVENUE // 30 D · line · EVERY COMPONENT SHIPS ALL SIX</span><span style="flex: 1"></span><span style="{{chipOff}}">G10 · G15</span></div>
+      <div style="flex: 1; min-height: 0; padding: 10px 12px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px">
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; gap: 6px; align-items: baseline"><span style="{{capDim}}">01 //</span><span style="{{cap}}">LOADING</span></div>
+          <div style="{{frame}} height: 190px; display: flex; flex-direction: column; overflow: hidden; ">
+            <div style="display: flex; align-items: center; gap: 6px; height: 26px; flex: none; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">REVENUE</span><span style="{{capDim}}">// 30 D</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+            <div style="flex: 1; min-height: 0; padding: 8px 10px 0; position: relative; overflow: hidden">
+              <div style="width: 96px; height: 28px; background: var(--fill12); border-radius: 2px; animation: c19pulse 1.4s ease-in-out infinite"></div>
+              <div style="width: 64px; height: 9px; margin-top: 6px; background: var(--fill12); border-radius: 2px; animation: c19pulse 1.4s ease-in-out .2s infinite"></div>
+              <div aria-hidden="true" style="display: flex; align-items: flex-end; gap: 3px; height: 56px; margin-top: 10px; border-bottom: 1px solid var(--line)"><sc-for list="{{states.skel}}" as="s" hint-placeholder-count="18"><span style="{{s}}"></span></sc-for></div>
+              <div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 0; width: 36px; background: var(--paper); opacity: .55; transform: skewX(-18deg); animation: c19sweep 1.4s linear infinite"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; flex: none; padding: 0 10px; border-top: 1px solid var(--line)"><span style="{{capSmDim}}">QUERYING… 0.6 S</span><span style="flex: 1"></span><span style="{{capSmDim}}">CANCEL ⌘.</span></div>
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2)">Skeleton only after 400 ms (Doherty). Shape mirrors the component; shimmer sweeps every 1.4 s.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; gap: 6px; align-items: baseline"><span style="{{capDim}}">02 //</span><span style="{{cap}}">EMPTY</span></div>
+          <div style="{{frame}} height: 190px; display: flex; flex-direction: column; overflow: hidden; ">
+            <div style="display: flex; align-items: center; gap: 6px; height: 26px; flex: none; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">REVENUE</span><span style="{{capDim}}">// 30 D</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+            <div style="flex: 1; min-height: 0; padding: 8px 10px 0; position: relative; overflow: hidden">
+              <div style="{{readout}} font-size: 30px; color: var(--ink3)">—</div>
+              <div style="position: relative; height: 64px; margin-top: 6px; border-bottom: 1px solid var(--lineStrong); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+                <span style="{{cap}}">NO ROWS FOR RANGE</span>
+                <span style="{{monoDim}} font-size: 10.5px">:range = 24h · :status = refunded</span>
+              </div>
+              <div style="display: flex; gap: 4px; margin-top: 7px"><button type="button" style="{{box}}">WIDEN TO 30 D</button><button type="button" style="{{box}}; border-color: var(--line); color: var(--ink3)">CLEAR :status</button></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; flex: none; padding: 0 10px; border-top: 1px solid var(--line)"><span style="{{monoDim}} font-size: 10px">0 ROWS · 12 MS · COST 88</span></div>
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2)">Query ran, zero rows. Name the filter that emptied it and offer one-click widening.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; gap: 6px; align-items: baseline"><span style="{{capDim}}">03 //</span><span style="{{cap}}">ERROR</span></div>
+          <div style="{{frame}} height: 190px; display: flex; flex-direction: column; overflow: hidden; border-color: var(--alert);">
+            <div style="display: flex; align-items: center; gap: 6px; height: 26px; flex: none; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">REVENUE</span><span style="{{capDim}}">// 30 D</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+            <div style="flex: 1; min-height: 0; padding: 8px 10px 0; position: relative; overflow: hidden">
+              <div style="display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true" style="stroke: var(--alert)"><path d="M12 3l9 16H3z"></path><path d="M12 9v4M12 16v.5"></path></svg><span style="{{capAlert}}">SCHEMA DRIFT</span></div>
+              <div style="{{mono}} color: var(--alert); margin-top: 6px">column "total" not found</div>
+              <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2); margin-top: 4px">orders.total was renamed to <span style="font-family: var(--code); font-size: 10.5px; color: var(--ink)">amount_total</span> by migration 0042.</div>
+              <div style="display: flex; gap: 4px; margin-top: 9px"><button type="button" style="{{boxPrimary}}; height: 22px; padding: 0 8px; font-size: 10px">ASK AGENT TO FIX</button><button type="button" style="{{box}}">EDIT SQL</button></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; flex: none; padding: 0 10px; border-top: 1px solid var(--line)"><span style="{{monoDim}} font-size: 10px">42703 · FAILED 09:14:02</span></div>
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2)">Names the column. ASK AGENT TO FIX sends dashboard.get + the error; the fix returns as a proposal.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; gap: 6px; align-items: baseline"><span style="{{capDim}}">04 //</span><span style="{{cap}}">STALE</span></div>
+          <div style="{{frame}} height: 190px; display: flex; flex-direction: column; overflow: hidden; ">
+            <div style="display: flex; align-items: center; gap: 6px; height: 26px; flex: none; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">REVENUE</span><span style="{{capDim}}">// 30 D</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+            <div style="flex: 1; min-height: 0; padding: 8px 10px 0; position: relative; overflow: hidden">
+              <span style="{{chipAmber}}">LAST REFRESH 6 MIN AGO</span>
+              <div style="display: flex; align-items: baseline; gap: 6px; margin-top: 6px; opacity: .55"><span style="{{readout}} font-size: 30px">$47.3K</span><span style="{{capSm}}">{{revDelta}}</span></div>
+              <div style="opacity: .45"><svg width="196" height="64" viewBox="0 0 196 64" aria-hidden="true" style="display: block; margin-top: 8px; overflow: visible"><path d="{{states.grid}}" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path><path d="{{states.base}}" style="stroke: var(--lineStrong)"></path><path d="{{states.line}}" fill="none" style="stroke: var(--ink)" stroke-width="1.5"></path></svg></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; flex: none; padding: 0 10px; border-top: 1px solid var(--line)"><span style="{{capSmAmber}}">AUTO 1 M · 6 MISSED · TIMEOUT 5 S</span><span style="flex: 1"></span><span style="{{capSm}}">RETRY</span></div>
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2)">Last good result stays, dimmed; amber stamp after 2 missed refreshes. Never blank a chart.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; gap: 6px; align-items: baseline"><span style="{{capDim}}">05 //</span><span style="{{cap}}">THRESHOLD</span></div>
+          <div style="{{frame}} height: 190px; display: flex; flex-direction: column; overflow: hidden; ">
+            <div style="display: flex; align-items: center; gap: 6px; height: 26px; flex: none; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">REVENUE</span><span style="{{capDim}}">// 30 D</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+            <div style="flex: 1; min-height: 0; padding: 8px 10px 0; position: relative; overflow: hidden">
+              <div style="display: flex; align-items: baseline; gap: 6px"><span style="{{readout}} font-size: 30px; color: var(--alert)">$36.8K</span><span style="{{capSm}}; color: var(--alert)">▼ BELOW FLOOR</span></div>
+              <svg width="196" height="64" viewBox="0 0 196 64" aria-hidden="true" style="display: block; margin-top: 8px; overflow: visible"><path d="{{states.grid}}" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path><path d="{{states.base}}" style="stroke: var(--lineStrong)"></path><path d="{{states.floor}}" fill="none" style="stroke: var(--amber)" stroke-width="1.2" stroke-dasharray="4 3"></path><path d="{{states.brkLine}}" fill="none" style="stroke: var(--ink)" stroke-width="1.5"></path><path d="{{states.brkTail}}" fill="none" style="stroke: var(--alert)" stroke-width="2"></path><path d="{{states.brkOct}}" style="fill: var(--alert)"></path><path d="{{states.brkDots}}" style="fill: var(--alert); stroke: var(--paper)" stroke-width="1.2"></path><text x="2" y="38" style="{{svgLbl}} fill: var(--amber)">FLOOR $40K</text></svg>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; flex: none; padding: 0 10px; border-top: 1px solid var(--line)"><span style="{{capSmDim}}">THRESHOLD // &lt; 40000 · ALERT · 2 DAYS</span></div>
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2)">Threshold crossed: amber rule, alert marks and value, ▼ glyph plus words. Notifies once per crossing.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; gap: 6px; align-items: baseline"><span style="{{capDim}}">06 //</span><span style="{{cap}}">VIEW AS TABLE</span></div>
+          <div style="{{frame}} height: 190px; display: flex; flex-direction: column; overflow: hidden; ">
+            <div style="display: flex; align-items: center; gap: 6px; height: 26px; flex: none; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">REVENUE</span><span style="{{capDim}}">// 30 D</span><span style="flex: 1"></span><span aria-hidden="true" style="{{menuDots}}">⋯</span></div>
+            <div style="flex: 1; min-height: 0; padding: 8px 10px 0; position: relative; overflow: hidden">
+              <div role="radiogroup" aria-label="Representation" style="display: flex; gap: 3px"><span role="radio" aria-checked="false" style="{{chipOff}}">CHART</span><span role="radio" aria-checked="true" style="{{chipOn}}">TABLE</span></div>
+              <div role="table" aria-label="Revenue by day" style="margin-top: 6px">
+                <sc-for list="{{tblRows}}" as="r" hint-placeholder-count="5">
+                  <div role="row" style="display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; height: 16px; line-height: 16px; border-bottom: 1px solid var(--line); {{mono}} font-size: 10.5px"><span role="cell" style="color: var(--ink3)">{{r.d}}</span><span role="cell" style="text-align: right">{{r.v}}</span><span role="cell" style="text-align: right; color: var(--ink2)">{{r.dl}}</span></div>
+                </sc-for>
+              </div>
+              <div style="font-size: 11px; color: var(--ink2); margin-top: 6px; font-style: italic">“Revenue, 30 days, up 12 %”</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; flex: none; padding: 0 10px; border-top: 1px solid var(--line)"><span style="{{capSmDim}}">⌥⌘T // VOICEOVER SUMMARY</span></div>
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2)">Every widget has a table one keystroke away (G15). VoiceOver reads the summary first.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 ANATOMY -->
+    <section aria-label="Anatomy" style="{{frame}} flex: 1; min-height: 0; display: flex; flex-direction: column">
+      <div style="{{head}}"><span style="{{cap}}">03 // ANATOMY</span><span style="{{capDim}}">WIDGET FRAME · kpi.spark · w1 · SHOWN AT 7×4</span><span style="flex: 1"></span><span style="{{capDim}}">SCHEMA // dbman://schema/dashboard/1</span></div>
+      <div style="flex: 1; min-height: 0; padding: 12px; display: grid; grid-template-columns: 840px minmax(0, 1fr); gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 10px; min-width: 0">
+          <div style="position: relative; height: 410px; border: 1px solid var(--line); border-radius: 3px; background-color: var(--sunken); background-image: radial-gradient(circle, var(--dots) 1px, transparent 1.2px); background-size: 8px 8px; overflow: hidden">
+            <div style="position: absolute; left: 150px; top: 46px; width: 560px; height: 304px; box-sizing: border-box; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 8px 8px 0 var(--fill12)">
+              <div style="position: absolute; left: 0; right: 0; top: 0; height: 36px; border-bottom: 1px solid var(--line)">
+                <span style="position: absolute; left: 14px; top: 11px; display: flex; gap: 6px"><span style="{{cap}}">REVENUE</span><span style="{{capDim}}">// 30 D</span></span>
+                <span style="position: absolute; left: 130px; top: 9px; width: 92px; {{chip}} justify-content: space-between">RANGE // 30 D <span aria-hidden="true">▾</span></span>
+                <span style="position: absolute; left: 228px; top: 9px; width: 100px; {{chip}} justify-content: space-between">STATUS // PAID <span aria-hidden="true">▾</span></span>
+                <span style="position: absolute; left: 522px; top: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 2px; {{menuDots}}">⋯</span>
+              </div>
+              <div style="position: absolute; left: 14px; top: 44px; {{readout}} font-size: 60px">$1.42M</div>
+              <div style="position: absolute; left: 260px; top: 54px; display: flex; gap: 22px">
+                <div><div style="{{readout}} font-size: 24px">3,936</div><div style="{{capSmDim}}; margin-top: 3px">ORDERS</div></div>
+                <div><div style="{{readout}} font-size: 24px">$361</div><div style="{{capSmDim}}; margin-top: 3px">AOV</div></div>
+              </div>
+              <div style="position: absolute; left: 14px; top: 110px; display: flex; gap: 8px; align-items: baseline"><span style="{{cap}}">▲ 12.4%</span><span style="{{capDim}}">VS PREVIOUS PERIOD // $1.26M</span></div>
+              <svg width="532" height="108" viewBox="0 0 532 108" aria-hidden="true" style="position: absolute; left: 14px; top: 136px; overflow: visible">
+                <path d="{{anatomy.area}}" style="fill: url(#c19-sparse)"></path>
+                <path d="{{anatomy.grid}}" fill="none" style="stroke: var(--line)" stroke-dasharray="2 3"></path>
+                <path d="{{anatomy.base}}" style="stroke: var(--lineStrong)"></path>
+                <path d="{{anatomy.ghost}}" fill="none" style="stroke: var(--ink3)" stroke-dasharray="3 3"></path>
+                <path d="{{anatomy.line}}" fill="none" style="stroke: var(--ink)" stroke-width="1.8"></path>
+                <path d="{{anatomy.end}}" style="fill: var(--accent); stroke: var(--paper)" stroke-width="1.5"></path>
+              </svg>
+              <div style="position: absolute; left: 14px; right: 14px; top: 246px; display: flex; justify-content: space-between; {{capSmDim}}"><span>OCT 11</span><span>OCT 21</span><span>OCT 31</span><span style="color: var(--accent)">NOV 09</span></div>
+              <div style="position: absolute; left: 0; right: 0; top: 266px; bottom: 0; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-top: 1px solid var(--line)">
+                <span style="{{monoDim}} font-size: 10.5px">QUERY 42 MS · COST 1,204 · 3,936 ROWS · 14:32:07 · AUTO 1 M</span><span style="flex: 1"></span><span style="{{capSmDim}}">kpi.spark // w1</span>
+              </div>
+              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" style="position: absolute; left: 544px; top: 290px"><path d="M9 1 L1 9 M9 5 L5 9" fill="none" style="stroke: var(--ink)"></path></svg>
+            </div>
+            <sc-for list="{{callouts}}" as="c" hint-placeholder-count="8"><span aria-hidden="true" style="{{c.lead}}"></span><span style="{{c.tag}}">{{c.n}}</span></sc-for>
+            <span style="position: absolute; left: 12px; bottom: 10px; {{capSmDim}}">EDIT MODE ⌘E // 8 PT GRID</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px">
+            <sc-for list="{{anatomyNotes}}" as="a" hint-placeholder-count="8">
+              <div style="display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); box-sizing: border-box">
+                <span style="{{tagInline}}">{{a.n}}</span>
+                <div><div style="{{cap}}">{{a.k}}</div><div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2); margin-top: 2px">{{a.b}}</div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-radius: 3px; overflow: hidden">
+          <div style="display: flex; align-items: center; gap: 8px; height: 30px; flex: none; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--sunken)"><span style="{{cap}}">JSON SCHEMA</span><span style="{{capDim}}">// EXCERPT · WHAT AGENTS READ</span><span style="flex: 1"></span><span style="{{chipAcc}}">NEEDS = REQUIRED ENCODINGS</span></div>
+          <div style="flex: 1; min-height: 0; padding: 8px 0; font-family: var(--code); font-size: 10.5px; line-height: 16px; overflow: hidden">
+            <sc-for list="{{jsonLines}}" as="l" hint-placeholder-count="32">
+              <div style="display: grid; grid-template-columns: 30px minmax(0, 1fr); white-space: pre"><span style="color: var(--ink3); text-align: right; padding-right: 10px; opacity: .7">{{l.n}}</span><span><sc-for list="{{l.toks}}" as="tk" hint-placeholder-count="6"><span style="{{tk.s}}">{{tk.t}}</span></sc-for></span></div>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; height: 28px; flex: none; padding: 0 12px; border-top: 1px solid var(--line)"><span style="{{capSmDim}}">UNKNOWN TYPE OR MISSING ENCODING → VALIDATION_ERROR, WIDGET SHOWN IN ALERT IN THE PROPOSAL</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":2600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:2600px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    // ---------- board-level styles ----------
+    const CAPSM = 'font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const capSm = CAPSM + ' color: var(--ink); white-space: nowrap';
+    const capSmDim = CAPSM + ' color: var(--ink3); white-space: nowrap';
+    const capAcc = CAPS + ' color: var(--accent); white-space: nowrap';
+    const capSmAcc = CAPSM + ' color: var(--accent); white-space: nowrap';
+    const capSmAmber = CAPSM + ' color: var(--amber); white-space: nowrap';
+    const capAlert = CAPS + ' color: var(--alert); white-space: nowrap';
+    const mono = 'font-family: var(--code); font-size: 11px; font-variant-numeric: tabular-nums;';
+    const monoDim = mono + ' color: var(--ink3);';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0;';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 34px; flex: none; padding: 0 12px; white-space: nowrap; overflow: hidden; border-bottom: 1px solid var(--line); box-sizing: border-box;';
+    const chipB = 'display: inline-flex; align-items: center; gap: 5px; height: 18px; padding: 0 6px; border-radius: 2px; box-sizing: border-box; white-space: nowrap;' + CAPSM;
+    const chip = chipB + ' border: 1px solid var(--lineStrong); color: var(--ink);';
+    const chipOff = chipB + ' border: 1px solid var(--line); color: var(--ink3);';
+    const chipOn = chipB + ' border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper);';
+    const chipAmber = chipB + ' border: 1px solid var(--amber); color: var(--amber);';
+    const chipAlert = chipB + ' border: 1px solid var(--alert); color: var(--alert);';
+    const chipAcc = chipB + ' border: 1px solid var(--accent); color: var(--accent);';
+    const card = frame + ' display: flex; flex-direction: column; height: 262px; overflow: hidden;';
+    const cardHead = 'display: flex; align-items: center; gap: 6px; height: 26px; flex: none; padding: 0 8px 0 12px; background: var(--sunken); border-bottom: 1px solid var(--line); box-sizing: border-box;';
+    const wbody = 'height: 178px; flex: none; padding: 7px 12px 0; box-sizing: border-box; position: relative; overflow: hidden;';
+    const wHead = 'display: flex; align-items: center; gap: 6px; height: 20px; margin-bottom: 6px; white-space: nowrap; overflow: hidden;';
+    const cardFoot = 'flex: 1; min-height: 0; padding: 7px 12px 0; border-top: 1px solid var(--line); box-sizing: border-box; display: flex; flex-direction: column; gap: 4px;';
+    const needsRow = 'display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden;';
+    const goodRow = 'font-size: 11.5px; line-height: 15px; color: var(--ink2);';
+    const menuDots = 'font-size: 13px; line-height: 1; color: var(--ink3); letter-spacing: 1px;';
+    const readout = 'font-weight: 300; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums;';
+    const svgLbl = 'font: 600 9px var(--ui); letter-spacing: .06em; fill: var(--ink3);';
+    const svgLblR = svgLbl + ' text-anchor: end;';
+    const svgLblM = svgLbl + ' text-anchor: middle;';
+
+    // ---------- helpers ----------
+    let seed = 19;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const gauss = () => { const u = Math.max(1e-6, rnd()), v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    const f = (n) => (Math.round(n * 10) / 10).toString();
+    const pt = (p) => f(p[0]) + ' ' + f(p[1]);
+    const poly = (ps) => ps.map((p, i) => (i ? 'L' : 'M') + pt(p)).join(' ');
+    const smooth = (ps) => {
+      let d = 'M' + pt(ps[0]);
+      for (let i = 0; i < ps.length - 1; i++) {
+        const p0 = ps[i - 1] || ps[i], p1 = ps[i], p2 = ps[i + 1], p3 = ps[i + 2] || p2;
+        d += ' C' + pt([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]) + ' ' + pt([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]) + ' ' + pt(p2);
+      }
+      return d;
+    };
+    const dots = (ps, r) => ps.map((p) => 'M' + f(p[0] - r) + ' ' + f(p[1]) + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + -2 * r + ' 0').join(' ');
+    const rect = (x, y, w, h) => 'M' + f(x) + ' ' + f(y) + ' h' + f(w) + ' v' + f(h) + ' h' + f(-w) + ' Z';
+    const comma = (n) => Math.round(n).toLocaleString('en-US');
+    // shared time-chart frame: plot x 26..314, y 6 (max) .. 104 (zero)
+    const PX0 = 26, PX1 = 314, PY0 = 6, PY1 = 104;
+    const sx = (i, n) => PX0 + i * (PX1 - PX0) / (n - 1);
+    const sy = (v, max) => PY1 - v / max * (PY1 - PY0);
+    const halfDot = (col, size) => 'aspect-ratio: 1; background: radial-gradient(circle closest-side, ' + col + ' 0 ' + size + '%, transparent ' + (size + 8) + '%)';
+
+    // ---------- card meta ----------
+    const encTok = (s) => s.split(' ').map((x) => ({t: x, s: mono + ' font-size: 10.5px; color: ' + (x.endsWith('?') ? 'var(--ink3)' : 'var(--ink)') + ';'}));
+    const meta = [
+      ['kpi', 'REVENUE', '// 30 D', '2×2', 'value:number compare? unit?', 'One headline number and its change against the previous period.'],
+      ['kpi.spark', 'ORDERS', '// TODAY', '3×2', 'value:number x:time y:number', 'A live count where the shape of the day matters as much as the total.'],
+      ['line', 'ORDERS BY STATUS', '// DAILY · 30 D', '4×3', 'x:time y:number+ series?', 'Trends over time, up to 4 series, one highlighted in cobalt.'],
+      ['area.stacked', 'REVENUE BY CHANNEL', '// WEEKLY · $K', '4×3', 'x:time y:number series', 'Part-to-whole over time when the total also matters.'],
+      ['bars', 'ORDERS', '// DAILY · 14 D', '3×3', 'x:time|category y:number', 'Discrete periods or categories compared at a glance.'],
+      ['bars.stacked', 'ORDERS BY STAGE', '// WEEKLY', '4×3', 'x:time|category y:number series', 'Composition per period, at most 4 segments.'],
+      ['bars.horizontal', 'TOP PRODUCTS', '// REVENUE · 30 D', '3×3', 'label:text value:number limit≤20?', 'Top-N rankings with long labels that need to stay readable.'],
+      ['histogram', 'ORDER TOTAL', '// 3,936 ORDERS · 30 D', '4×3', 'value:number bins? marks?', 'The shape of one numeric column: skew, outliers, median.'],
+      ['heatmap.hour_week', 'ORDERS BY HOUR', '// DOW × HOUR · 90 D', '6×3', 't:time value:number', 'When things happen: staffing, batch windows, campaign timing.'],
+      ['heatmap.calendar', 'DAILY ORDERS', '// 26 WEEKS', '6×2', 'day:date value:number', 'Daily rhythm and one-off anomalies across months.'],
+      ['scatter', 'CUSTOMERS', '// ORDERS × AOV · 2,400', '4×4', 'x:number y:number size? label?', 'The relationship between two measures, and its outliers.'],
+      ['funnel', 'CHECKOUT', '// EVENTS · 7 D', '3×3', 'step:text value:number order:int', 'Ordered conversion steps and where people drop out.'],
+      ['meter', 'DATABASE', '// SHOP · PG 17.2', '3×2', 'value:number max:number thresholds?', 'Capacity against a known limit, read in one glance.'],
+      ['halftone.distribution', 'ORDERS_2026', '// 1 DOT ≈ 140', '4×2', 'x:time y:number dot:number?', 'Volume over a long range, drawn as the v1 instrument.'],
+      ['table', 'LATEST ORDERS', '// 6 OF 48,000', '4×3', 'columns:any+ sort? limit≤500?', 'Exact values and drill-down. The fallback for every chart.'],
+      ['status.feed', 'ORDERS · REFUNDS', '// POLL 5 S', '3×4', 'ts:time title:text status? body?', 'The newest rows as they land, newest on top.'],
+      ['radar', 'CATEGORY // HOME', '// Q4 VS Q3', '3×3', 'axis:text value:number series?', 'One entity profiled across 3–8 normalised scores.'],
+      ['text', 'NOTE', '// MARKDOWN', '2×1', 'markdown:text', 'Context, definitions and the why behind a dashboard. No query.'],
+      ['er.mini', 'orders', '// 1 HOP · FOCUS', '4×3', 'table:name hops:1|2', 'Where a widget’s data lives, right next to its numbers.'],
+    ];
+    const K = {};
+    meta.forEach(([id, title, sub, size, enc, good], i) => {
+      K['k' + String(i + 1).padStart(2, '0')] = {id, n: String(i + 1).padStart(2, '0'), title, sub, size, enc: encTok(enc), good, aria: 'Component ' + id + ', minimum ' + size};
+    });
+
+    const heroStats = [{k: 'TYPES', v: '19'}, {k: 'STATES', v: '6'}, {k: 'ENCODING KINDS', v: '7'}, {k: 'GRID', v: '12'}];
+    const jobs = [['NUMBER', 'kpi · kpi.spark · meter'], ['OVER TIME', 'line · area.stacked · bars · bars.stacked'], ['LONG RANGE', 'halftone.distribution · heatmap.calendar'], ['WHEN', 'heatmap.hour_week'],
+      ['RANK · FLOW', 'bars.horizontal · funnel'], ['SHAPE', 'histogram · scatter · radar'], ['ROWS', 'table · status.feed'], ['CONTEXT', 'text · er.mini']].map(([k, v]) => ({k, v}));
+
+    // ---------- 02 kpi.spark ----------
+    const hourly = [1, 1, 0, 1, 1, 2, 4, 6, 8, 9, 9, 10, 11, 12, 11];
+    const lastWk = [1, 0, 1, 1, 1, 2, 3, 6, 7, 8, 9, 9, 10, 10, 11, 10, 10, 9, 10, 11, 10, 8, 5, 3];
+    const spx = (h) => 2 + h * 312 / 23, spy = (v) => 58 - v / 14 * 52;
+    const sparkNow = hourly.map((v, h) => [spx(h), spy(v)]);
+    const spark = {
+      now: smooth(sparkNow), ghost: smooth(lastWk.map((v, h) => [spx(h), spy(v)])),
+      area: smooth(sparkNow) + ' L' + f(spx(14)) + ' 58 L2 58 Z',
+      dot: dots([sparkNow[14]], 3.5), base: 'M2 58.5 H314',
+    };
+
+    // ---------- 03 line ----------
+    const lineN = 30;
+    const deliv = [], shipd = [], pend = [];
+    for (let i = 0; i < lineN; i++) {
+      const wk = Math.sin(i / 7 * 2 * Math.PI);
+      deliv.push(68 + 5 * wk + (rnd() - 0.5) * 8 - (i === 20 ? 22 : i === 21 ? 12 : 0));
+      shipd.push(31 + 3 * Math.cos(i / 3.5) + (rnd() - 0.5) * 6 - (i === 20 ? 10 : 0));
+      pend.push(i === 20 ? 58 : i === 21 ? 31 : i === 22 ? 14 : 7 + (rnd() - 0.5) * 4);
+    }
+    const lp = (arr) => smooth(arr.map((v, i) => [sx(i, lineN), sy(v, 90)]));
+    const lineC = {deliv: lp(deliv), shipd: lp(shipd), pend: lp(pend), peak: dots([[sx(20, lineN), sy(58, 90)]], 3.5),
+      ends: dots([[sx(29, lineN), sy(deliv[29], 90)], [sx(29, lineN), sy(shipd[29], 90)]], 2.5),
+      lDeliv: Math.round(deliv[29]), lShipd: Math.round(shipd[29]), lPend: Math.round(pend[29])};
+
+    // ---------- 04 area.stacked ----------
+    const aN = 12, web = [], app = [], mkt = [];
+    for (let i = 0; i < aN; i++) {
+      web.push(182 + 8 * Math.sin(i / 2) + (rnd() - 0.5) * 12);
+      app.push(104 + i * 1.8 + (rnd() - 0.5) * 10);
+      mkt.push(34 + i * 2.4 + (rnd() - 0.5) * 6);
+    }
+    const ax = (i) => sx(i, aN), ay = (v) => sy(v, 450);
+    const s1 = web.map((v, i) => [ax(i), ay(v)]);
+    const s2 = web.map((v, i) => [ax(i), ay(v + app[i])]);
+    const s3 = web.map((v, i) => [ax(i), ay(v + app[i] + mkt[i])]);
+    const back = (ps) => ps.slice().reverse().map((p) => 'L' + pt(p)).join(' ');
+    const area = {
+      web: poly(s1) + ' L' + PX1 + ' ' + PY1 + ' L' + PX0 + ' ' + PY1 + ' Z',
+      app: poly(s2) + ' ' + back(s1) + ' Z',
+      mkt: poly(s3) + ' ' + back(s2) + ' Z',
+      e1: poly(s1), e2: poly(s2), e3: poly(s3),
+      tot: '$' + Math.round(web[11] + app[11] + mkt[11]) + 'K', lw: Math.round(web[11]), la: Math.round(app[11]), lm: Math.round(mkt[11]),
+    };
+
+    // ---------- 05 bars ----------
+    const daily = [124, 131, 129, 140, 92, 118, 136, 128, 133, 141, 152, 127, 122, 86];
+    const bw = (PX1 - PX0) / 14;
+    let barsInk = '', barsAcc = '';
+    daily.forEach((v, i) => { const r = rect(PX0 + i * bw + 2, sy(v, 180), bw - 4, PY1 - sy(v, 180)); if (i === 13) barsAcc += r; else barsInk += r; });
+    const bars = {ink: barsInk, acc: barsAcc, avg: 'M' + PX0 + ' ' + f(sy(131, 180)) + ' H' + PX1};
+
+    // ---------- 06 bars.stacked ----------
+    const wk = [[472, 226, 188], [488, 231, 179], [455, 219, 201], [503, 240, 172], [512, 236, 190], [470, 214, 268], [497, 238, 181], [508, 229, 176], [40, 26, 20]];
+    const sbw = (PX1 - PX0) / 9;
+    let stA = '', stB = '', stC = '';
+    wk.forEach(([a, b, c], i) => {
+      const x = PX0 + i * sbw + 4, w = sbw - 8;
+      const ya = sy(a, 1200), yb = sy(a + b, 1200), yc = sy(a + b + c, 1200);
+      stA += rect(x, ya, w, PY1 - ya);
+      stB += rect(x, yb, w, ya - yb - 2);
+      stC += rect(x, yc, w, yb - yc - 2);
+    });
+    const stacked = {a: stA, b: stB, c: stC};
+
+    // ---------- 07 bars.horizontal ----------
+    const topP = [['Linen duvet set', 48.2], ['Merino throw', 41.7], ['Oak side table', 36.9], ['Ceramic pour-over', 31.4], ['Wool runner 80×250', 27.8], ['Brass desk lamp', 24.1]];
+    const hbars = topP.map(([n, v], i) => ({n, v: '$' + v.toFixed(1) + 'K', rank: String(i + 1).padStart(2, '0'),
+      bar: 'display: block; height: 10px; width: ' + f(v / 48.2 * 100) + '%; background: ' + (i === 0 ? 'var(--accent)' : 'var(--ink)') + ';'}));
+
+    // ---------- 08 histogram ----------
+    const erf = (x) => { const s = Math.sign(x); x = Math.abs(x); const tt = 1 / (1 + 0.3275911 * x); const y = 1 - (((((1.061405429 * tt - 1.453152027) * tt) + 1.421413741) * tt - 0.284496736) * tt + 0.254829592) * tt * Math.exp(-x * x); return s * y; };
+    const mu = Math.log(240), sg = 0.75, N = 3936;
+    const cdf = (v) => v <= 0 ? 0 : 0.5 * (1 + erf((Math.log(v) - mu) / (sg * Math.SQRT2)));
+    const bins = [];
+    for (let b = 0; b < 20; b++) bins.push(N * (cdf((b + 1) * 50) - cdf(b * 50)));
+    bins.push(N * (1 - cdf(1000)));
+    const hMax = Math.max(...bins);
+    const hw = 308 / 21;
+    let hInk = '';
+    bins.forEach((c, i) => { const h = c / hMax * 92; hInk += rect(4 + i * hw + 1, PY1 - h, hw - 2, h); });
+    const hxv = (v) => 4 + v / 50 * hw;
+    const histo = {ink: hInk, med: 'M' + f(hxv(240)) + ' 4 V' + PY1, p95: 'M' + f(hxv(824)) + ' 4 V' + PY1, peak: comma(hMax)};
+
+    // ---------- 09 heatmap.hour_week ----------
+    const diurnal = [3, 2, 1, 1, 1, 2, 4, 7, 10, 12, 13, 14, 16, 15, 13, 12, 12, 13, 15, 18, 21, 22, 17, 9];
+    const dayF = [1.0, 0.96, 1.0, 1.04, 0.92, 0.84, 1.12];
+    const hw2 = [];
+    for (let d = 0; d < 7; d++) for (let h = 0; h < 24; h++) hw2.push(diurnal[h] * dayF[d] * (0.9 + 0.2 * rnd()));
+    const hwMax = Math.max(...hw2), hwArg = hw2.indexOf(hwMax);
+    const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    const hourWeek = dayNames.map((n, d) => ({n, cells: Array.from({length: 24}, (_, h) => {
+      const i = d * 24 + h, v = hw2[i];
+      return halfDot(i === hwArg ? t.accent : t.ink, Math.round(14 + 72 * Math.sqrt(v / hwMax)));
+    })}));
+    const hwPeak = dayNames[Math.floor(hwArg / 24)] + ' ' + String(hwArg % 24).padStart(2, '0') + ':00';
+    const hwLegend = [0.1, 0.3, 0.55, 1].map((q) => 'width: 9px; height: 9px; display: inline-block; ' + halfDot(t.ink, Math.round(14 + 72 * Math.sqrt(q))));
+
+    // ---------- 10 heatmap.calendar ----------
+    const DAY = 86400000, today = Date.UTC(2026, 10, 9), cStart = today - 25 * 7 * DAY;
+    const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const calDow = [1.0, 0.97, 1.0, 1.03, 0.94, 0.86, 1.1];
+    const calCells = [];
+    const calV = [];
+    for (let r = 0; r < 7; r++) for (let c = 0; c < 26; c++) {
+      const day = cStart + (c * 7 + r) * DAY, dt = new Date(day);
+      if (day > today) { calV.push(null); continue; }
+      let v = 131 * calDow[r] * (0.86 + 0.28 * rnd());
+      const m = dt.getUTCMonth(), dd = dt.getUTCDate();
+      if (m === 6 && dd >= 13 && dd <= 15) v *= 1.9;
+      if (m === 9 && dd === 31) v *= 0.62;
+      if (day === today) v = 86;
+      calV.push(v);
+    }
+    const calMax = Math.max(...calV.filter((v) => v !== null));
+    const calLvl = (v) => [28, 44, 60, 76, 90][Math.min(4, Math.floor(v / calMax * 5 - 0.0001))];
+    for (let i = 0; i < calV.length; i++) {
+      const v = calV[i], r = Math.floor(i / 26), c = i % 26;
+      const day = cStart + (c * 7 + r) * DAY;
+      calCells.push(v === null ? 'aspect-ratio: 1; box-sizing: border-box; border: 1px dotted var(--line); border-radius: 1px; transform: scale(.55)' : halfDot(day === today ? t.accent : t.ink, calLvl(v)));
+    }
+    const calMonths = [];
+    for (let c = 0; c < 26; c++) { const dt = new Date(cStart + c * 7 * DAY); if (dt.getUTCDate() <= 7) calMonths.push({t: MON[dt.getUTCMonth()], s: 'position: absolute; left: ' + (c * 11) + 'px; top: 0;' + CAPSM + ' color: var(--ink3)'}); }
+    const calRows = ['M', '', 'W', '', 'F', '', 'S'].map((n, r) => ({n, cells: calCells.slice(r * 26, r * 26 + 26)}));
+    const calLegend = [28, 44, 60, 76, 90].map((s) => 'width: 9px; height: 9px; display: inline-block; ' + halfDot(t.ink, s));
+
+    // ---------- 11 scatter ----------
+    const scx = (n) => 30 + n / 40 * 282, scy = (v) => 112 - v / 1200 * 106;
+    const scPts = [];
+    for (let i = 0; i < 96; i++) {
+      const n = Math.min(39, 1 + Math.floor(Math.exp(rnd() * 3.4)));
+      const aov = Math.max(40, Math.min(1150, 361 * Math.exp(gauss() * 0.45) * (1.1 - n / 80)));
+      scPts.push([scx(n + (rnd() - 0.5) * 0.7), scy(aov)]);
+    }
+    const scatter = {pts: dots(scPts, 2.2), hi: dots([[scx(38), scy(412)]], 4.5), hiRing: dots([[scx(38), scy(412)]], 7.5),
+      grid: [300, 600, 900, 1200].map((v) => 'M30 ' + f(scy(v)) + ' H312').join(' '), axis: 'M30 112.5 H312 M29.5 6 V112.5',
+      trend: 'M' + f(scx(1)) + ' ' + f(scy(395)) + ' L' + f(scx(39)) + ' ' + f(scy(205))};
+
+    // ---------- 12 funnel ----------
+    const fun = [['SESSIONS', 24810], ['PRODUCT_VIEW', 18240], ['ADD_TO_CART', 6912], ['CHECKOUT', 3018], ['PAID', 2486]];
+    let worst = 1, worstR = 1;
+    fun.forEach(([, v], i) => { if (i) { const r = v / fun[i - 1][1]; if (r < worstR) { worstR = r; worst = i; } } });
+    const funnel = fun.map(([n, v], i) => ({n, v: comma(v),
+      pct: i === 0 ? '100%' : (v / fun[i - 1][1] * 100).toFixed(1) + '%',
+      pctStyle: mono + ' font-size: 10.5px; text-align: right; color: ' + (i === worst ? 'var(--ink)' : 'var(--ink3)') + ';' + (i === worst ? ' font-weight: 700;' : ''),
+      bar: 'height: 14px; width: ' + f(v / 24810 * 100) + '%; background: ' + (i === fun.length - 1 ? 'var(--accent)' : 'var(--ink)') + ';'}));
+    const funConv = (2486 / 24810 * 100).toFixed(1) + '%';
+    const funWorst = fun[worst][0] + ' −' + Math.round((1 - worstR) * 100) + '%';
+
+    // ---------- 13 meter ----------
+    const segs = (on, col, mark) => Array.from({length: 30}, (_, i) => 'flex: 1; border-radius: 1px; background: ' + (i < on ? col : t.fill12) + ';' + (i === mark ? ' box-shadow: 2px 0 0 var(--amber);' : ''));
+    const meters = [
+      {k: 'CONNECTIONS', v: '7 OF 100', seg: segs(2, t.ink, -1), note: ''},
+      {k: 'CACHE_HIT', v: '99.2%', seg: segs(29, t.ink, -1), note: ''},
+      {k: 'DISK', v: '122 OF 200 GB', seg: segs(18, t.ink, 23), note: 'WARN AT 80%'},
+    ];
+
+    // ---------- 14 halftone.distribution ----------
+    const weekly = [];
+    for (let c = 0; c < 40; c++) weekly.push(c === 23 ? 1320 : c === 24 ? 1080 : 760 + c * 6 + 70 * Math.sin(c / 3.2) + (rnd() - 0.5) * 90);
+    const halftone = [];
+    for (let r = 0; r < 10; r++) for (let c = 0; c < 40; c++) {
+      const lvl = 9 - r, hgt = Math.max(1, Math.round(weekly[c] / 140)), on = lvl < hgt;
+      halftone.push(halfDot(on ? (c === 39 ? t.accent : t.ink) : t.fill12, on ? 55 + lvl * 3 : 34));
+    }
+    const htLast = comma(weekly[39]);
+
+    // ---------- 15 table ----------
+    const trows = [
+      ['58433', '811', 'paid', '212.40', '14:32'], ['58432', '2390', 'pending', '96.00', '14:31'], ['58431', '1182', 'paid', '412.00', '14:07'],
+      ['58430', '2207', 'shipped', '1,177.20', '12:51'], ['58429', '944', 'pending', '88.40', '11:23'], ['58428', '1610', 'delivered', '2,040.00', '09:48'],
+    ];
+    const tCols = '50px 46px minmax(0, 1fr) 72px 44px';
+    const tHead = 'display: grid; grid-template-columns: ' + tCols + '; height: 20px; align-items: center; border-bottom: 1px solid var(--lineStrong);' + CAPSM + ' color: var(--ink3);';
+    const tCell = 'padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+    const table = trows.map((r, i) => ({cells: r.map((v, j) => ({v, s: tCell + (j === 0 || j === 3 ? ' text-align: right;' : '') + (j === 1 ? ' text-decoration: underline dotted; text-underline-offset: 3px; text-align: right;' : '') + (j === 2 && v === 'pending' ? ' color: var(--amber); font-weight: 600;' : '') + (j === 4 ? ' color: var(--ink3);' : '')})),
+      s: 'display: grid; grid-template-columns: ' + tCols + '; height: 20px; line-height: 20px; border-bottom: 1px solid var(--line);' + mono + (i === 0 ? ' background: var(--fill12);' : '')}));
+    const tHeads = [['ID', 1], ['CUST', 1], ['STATUS', 0], ['TOTAL', 1], ['AT', 0]].map(([v, r]) => ({v, s: tCell + (r ? ' text-align: right;' : '')}));
+
+    // ---------- 16 status.feed ----------
+    const feed = [
+      ['14:32:07', 'ORDER #58433 // PAID', 'customer 811 · $212.40 · card', 'new'],
+      ['14:31:52', 'ORDER #58432 // PENDING', 'customer 2390 · $96.00 · awaiting payment', 'amber'],
+      ['14:30:11', 'REFUND #412 // ISSUED', 'invoice 9812 · $640.75 · damaged in transit', ''],
+      ['14:29:40', 'ORDER #58430 // SHIPPED', 'customer 2207 · 3 items · UPS', ''],
+      ['14:28:03', 'CUSTOMER #2400 // SIGNED UP', 'via app · first order pending', ''],
+    ].map(([at, tt, b, k]) => ({at, t: tt, b,
+      s: 'display: grid; grid-template-columns: 52px minmax(0, 1fr); column-gap: 8px; height: 28px; align-content: center; border-bottom: 1px solid var(--line); box-shadow: inset ' + (k === 'new' ? '2px 0 0 var(--accent)' : '0 0 0 transparent') + '; padding-left: ' + (k === 'new' ? '6px' : '0') + ';',
+      ts: CAPSM + ' white-space: nowrap; overflow: hidden; color: ' + (k === 'amber' ? 'var(--amber)' : 'var(--ink)') + ';'}));
+
+    // ---------- 17 radar ----------
+    const rc = [158, 68], rR = 50, angs = [-90, -18, 54, 126, 198].map((a) => a * Math.PI / 180);
+    const rp = (k, q) => [rc[0] + Math.cos(angs[k]) * rR * q, rc[1] + Math.sin(angs[k]) * rR * q];
+    const thisQ = [0.82, 0.64, 0.86, 0.88, 0.55], lastQ = [0.70, 0.68, 0.52, 0.80, 0.62];
+    const ring = (q) => poly([0, 1, 2, 3, 4].map((k) => rp(k, q))) + ' Z';
+    const radar = {
+      ring1: ring(1), ring2: ring(0.5), spokes: [0, 1, 2, 3, 4].map((k) => 'M' + pt(rc) + ' L' + pt(rp(k, 1))).join(' '),
+      now: poly(thisQ.map((q, k) => rp(k, q))) + ' Z', prev: poly(lastQ.map((q, k) => rp(k, q))) + ' Z',
+      dots: dots([0, 1, 3, 4].map((k) => rp(k, thisQ[k])), 2.5), hi: dots([rp(2, thisQ[2])], 4),
+    };
+
+    // ---------- STATES (revenue, daily, 30 d, $K) ----------
+    const rev = [];
+    for (let i = 0; i < 30; i++) rev.push(i === 20 ? 33.9 : 47.6 + 3.2 * Math.sin(i / 7 * 2 * Math.PI + 1) + (rnd() - 0.5) * 3.4);
+    rev[29] = 47.3;
+    const stx = (i) => 2 + i * 192 / 29, sty = (v) => 4 + (60 - v) / 30 * 56;
+    const stPts = rev.map((v, i) => [stx(i), sty(v)]);
+    const brk = rev.slice(); brk[28] = 37.2; brk[29] = 36.8;
+    const brkPts = brk.map((v, i) => [stx(i), sty(v)]);
+    const states = {
+      line: smooth(stPts), end: dots([stPts[29]], 3), base: 'M2 60.5 H194', grid: 'M2 22.7 H194 M2 41.3 H194',
+      brkLine: smooth(brkPts.slice(0, 28)), brkTail: smooth(brkPts.slice(27)), brkDots: dots([brkPts[28], brkPts[29]], 3), brkOct: dots([brkPts[20]], 2.5),
+      floor: 'M2 ' + f(sty(40)) + ' H194',
+      skel: Array.from({length: 18}, (_, i) => 'flex: 1; background: var(--fill12); border-radius: 1px; height: ' + (30 + Math.round(30 * Math.abs(Math.sin(i * 1.7)))) + '%; animation: c19pulse 1.4s ease-in-out ' + (i * 0.05).toFixed(2) + 's infinite;'),
+    };
+    const dates = ['NOV 09', 'NOV 08', 'NOV 07', 'NOV 06', 'NOV 05'];
+    const tblRows = dates.map((d, k) => { const i = 29 - k, v = rev[i], p = rev[i - 1], dp = (v - p) / p * 100;
+      return {d, v: '$' + v.toFixed(1) + 'K', dl: (dp >= 0 ? '▲ ' : '▼ ') + Math.abs(dp).toFixed(1) + '%'}; });
+
+    // ---------- ANATOMY ----------
+    const anX = (i) => 4 + i * 524 / 29, anY = (v) => 6 + (60 - v) / 30 * 96;
+    const anPts = rev.map((v, i) => [anX(i), anY(v)]);
+    const prevRev = rev.map((v, i) => (i === 20 ? 44 : v) * 0.89 + 2 * Math.sin(i));
+    const anatomy = {line: smooth(anPts), ghost: smooth(prevRev.map((v, i) => [anX(i), anY(v)])), end: dots([anPts[29]], 4),
+      area: smooth(anPts) + ' L528 102 L4 102 Z', base: 'M4 102.5 H528', grid: 'M4 38 H528 M4 70 H528'};
+    const tagS = 'position: absolute; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; background: var(--ink); color: var(--paper); border-radius: 2px; font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums;';
+    const vline = (x, y1, y2) => 'position: absolute; left: ' + x + 'px; top: ' + y1 + 'px; width: 1px; height: ' + (y2 - y1) + 'px; background: var(--ink);';
+    const hline = (y, x1, x2) => 'position: absolute; top: ' + y + 'px; left: ' + x1 + 'px; height: 1px; width: ' + (x2 - x1) + 'px; background: var(--ink);';
+    // widget box at left 150, top 46, 560×304 inside an 860×420 stage
+    const WX = 150, WY = 46;
+    const callouts = [
+      {n: '1', tag: tagS + 'left: ' + (WX + 54 - 9) + 'px; top: 6px;', lead: vline(WX + 54, 24, WY + 12)},
+      {n: '2', tag: tagS + 'left: ' + (WX + 176 - 9) + 'px; top: 6px;', lead: vline(WX + 176, 24, WY + 9)},
+      {n: '3', tag: tagS + 'left: ' + (WX + 534 - 9) + 'px; top: 6px;', lead: vline(WX + 534, 24, WY + 8)},
+      {n: '4', tag: tagS + 'left: 70px; top: ' + (WY + 74 - 9) + 'px;', lead: hline(WY + 74, 88, WX + 14)},
+      {n: '5', tag: tagS + 'left: 70px; top: ' + (WY + 117 - 9) + 'px;', lead: hline(WY + 117, 88, WX + 14)},
+      {n: '6', tag: tagS + 'left: ' + (WX + 560 + 40) + 'px; top: ' + (WY + 188 - 9) + 'px;', lead: hline(WY + 188, WX + 546, WX + 560 + 40)},
+      {n: '7', tag: tagS + 'left: ' + (WX + 150 - 9) + 'px; top: ' + (WY + 304 + 22) + 'px;', lead: vline(WX + 150, WY + 290, WY + 304 + 22)},
+      {n: '8', tag: tagS + 'left: ' + (WX + 551 - 9) + 'px; top: ' + (WY + 304 + 22) + 'px;', lead: vline(WX + 551, WY + 300, WY + 304 + 22)},
+    ];
+    const anatomyNotes = [
+      ['TITLE', 'Caps, ≤ 32 characters. The // meta is derived from the bound range, never typed twice.'],
+      ['VARIABLE CHIPS', 'Dashboard variables this query binds (:range, :status). Click to override for this widget only.'],
+      ['⋯ MENU', 'VIEW AS TABLE ⌥⌘T · EDIT SQL · DUPLICATE · ASK AGENT · REMOVE. Every item is also in the menu bar.'],
+      ['VALUE', 'Huge, light, tabular. format.unit + compact decide “$1.42M”; full value in the tooltip.'],
+      ['COMPARE', 'compare: previous_period. ▲ / ▼ glyph and sign, never colour alone.'],
+      ['PLOT', 'Ink line, one cobalt highlight, previous period dashed. Hover = crosshair + tooltip.'],
+      ['FOOTNOTE', 'Query time · EXPLAIN cost · rows read · refreshed at · interval. Mono, always visible.'],
+      ['RESIZE', 'Edit mode ⌘E only. Snaps to the 8 pt grid; never below the catalog minSize.'],
+    ].map(([k, b], i) => ({n: String(i + 1), k, b}));
+    const tagInline = 'flex: none; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; background: var(--ink); color: var(--paper); border-radius: 2px; font-size: 10.5px; font-weight: 700;';
+
+    // ---------- JSON schema excerpt ----------
+    const json = [
+      '// dashboard.components → catalog + JSON Schema (excerpt)',
+      '{',
+      '  "$id": "dbman://schema/dashboard/1",',
+      '  "widget": {',
+      '    "required": ["id", "type", "x", "y", "w", "h", "query", "encoding"],',
+      '    "properties": {',
+      '      "type":       { "enum": ["kpi", "kpi.spark", "line", "…19 ids"] },',
+      '      "x":          { "type": "integer", "minimum": 0, "maximum": 11 },',
+      '      "w":          { "type": "integer", "minimum": 1, "maximum": 12 },',
+      '      "query":      { "type": "string", "statement": "SELECT",',
+      '                      "params": [":range", ":status"] },',
+      '      "encoding":   { "$ref": "#/catalog/{type}/needs" },',
+      '      "format":     { "unit": "USD", "compact": true },',
+      '      "compare":    { "enum": ["previous_period", "none"] },',
+      '      "thresholds": [{ "op": "<", "value": 40000, "level": "alert" }]',
+      '    }',
+      '  },',
+      '  "catalog": {',
+      '    "line": {',
+      '      "minSize": [4, 3],',
+      '      "needs": { "x": "time", "y": "number+", "series": "category?" },',
+      '      "states": ["loading", "empty", "error", "stale", "threshold"],',
+      '      "a11y": { "table": true, "summary": "{title}, {range}, {trend}" }',
+      '    },',
+      '    "kpi":  { "minSize": [2, 2], "needs": { "value": "number" } },',
+      '    "text": { "minSize": [2, 1], "needs": { "markdown": "text" },',
+      '              "query": null }',
+      '  },',
+      '  "rejects": ["html", "script", "style", "unknown type",',
+      '              "missing encoding", "non-SELECT query"]',
+      '}',
+    ];
+    const tokS = {k: 'color: var(--ink); font-weight: 600;', a: 'color: var(--accent); font-weight: 600;', s: 'color: var(--ink2);', n: 'color: var(--ink);', p: 'color: var(--ink3);', c: 'color: var(--ink3); font-style: italic;'};
+    const jsonLines = json.map((line, i) => {
+      const toks = [];
+      const re = /\/\/.*$|"[^"]*"|-?\d+|true|false|null|[^"\/\d]+|./g;
+      let m;
+      while ((m = re.exec(line))) {
+        const s = m[0];
+        let k = 'p';
+        if (s.startsWith('//')) k = 'c';
+        else if (s[0] === '"') k = /^\s*:/.test(line.slice(re.lastIndex)) ? ((s === '"needs"' || s === '"encoding"') ? 'a' : 'k') : 's';
+        else if (/^-?\d+$|^(true|false|null)$/.test(s)) k = 'n';
+        toks.push({t: s, s: tokS[k]});
+      }
+      return {n: String(i + 1).padStart(2, '0'), toks};
+    });
+
+    const revDelta = tblRows[0].dl;
+    return {themeVars, revDelta, heroStats, jobs, cap, capDim, box, boxL, boxPrimary, field, capSm, capSmDim, capAcc, capSmAcc, capSmAmber, capAlert, mono, monoDim, frame, head,
+      chip, chipOff, chipOn, chipAmber, chipAlert, chipAcc, card, cardHead, wbody, wHead, cardFoot, needsRow, goodRow, menuDots, readout, svgLbl, svgLblR, svgLblM,
+      ...K, spark, lineC, area, bars, stacked, hbars, histo, hourWeek, hwPeak, hwLegend, calRows, calMonths, calLegend, scatter, funnel, funConv, funWorst,
+      meters, halftone, htLast, table, tHead, tHeads, feed, radar, states, tblRows, anatomy, callouts, anatomyNotes, tagInline, jsonLines};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>States — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="max-width: 1440px; margin: 0 auto; padding: 16px 20px 32px; box-sizing: border-box">
+
+  <header style="display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px solid var(--lineStrong)">
+    <div style="font-size: 56px; font-weight: 300; letter-spacing: -2px; line-height: .9">08</div>
+    <div>
+      <div style="{{cap}}">STATES // WHEN THINGS GO WRONG</div>
+      <div style="font-size: 12px; color: var(--ink2); margin-top: 4px">Running, failing, empty, disconnected, destructive, first run and unsaved: each tied to the law it serves.</div>
+    </div>
+    <span style="flex: 1"></span>
+    <span style="{{capDim}}">DBMAN // HALFTONE V7 // INVERTED_FUI</span>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px">
+
+    <!-- 1 running -->
+    <section aria-label="Query running" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">01 // QUERY_RUNNING</span><span style="{{capDim}}">// DOHERTY_THRESHOLD</span><span style="flex: 1"></span><span style="{{capDim}}">AFTER 400 MS</span></div>
+      <div style="padding: 12px">
+        <div style="display: flex; align-items: center; gap: 12px; height: 34px; padding: 0 10px; border: 1px solid var(--lineStrong); border-radius: 3px">
+          <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(3, 5px); gap: 2px"><sc-for list="{{spin}}" as="s" hint-placeholder-count="9"><span style="{{s}}"></span></sc-for></span>
+          <span style="{{cap}}">RUNNING</span><span style="{{capDim}}">// STREAMING ROWS</span>
+          <span style="flex: 1"></span>
+          <button type="button" title="Cancel  ⌘." style="{{box}}">CANCEL // ⌘.</button>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 18px; margin: 12px 0 10px">
+          <div><div style="{{big}}">12,480</div><div style="{{capDim}}">ROWS SO FAR</div></div>
+          <div><div style="{{mid}}">1.4 S</div><div style="{{capDim}}">ELAPSED</div></div>
+        </div>
+        <div style="font-family: var(--code); font-size: 12px; border-top: 1px solid var(--lineStrong)">
+          <sc-for list="{{skel}}" as="r" hint-placeholder-count="7"><div style="{{r.style}}"><span style="color: var(--ink3)">{{r.n}}</span><span>{{r.a}}</span><span>{{r.b}}</span><span style="text-align: right">{{r.c}}</span></div></sc-for>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 error -->
+    <section aria-label="Query error" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">02 // QUERY_ERROR</span><span style="{{capDim}}">// PEAK–END</span><span style="flex: 1"></span><span style="{{capAlert}}">ERROR 42703</span></div>
+      <div style="padding: 12px">
+        <div style="display: flex; border: 1px solid var(--line); border-radius: 3px; font-family: var(--code); font-size: 12.5px; line-height: 22px">
+          <div aria-hidden="true" style="width: 34px; padding: 6px 8px 6px 0; box-sizing: border-box; text-align: right; color: var(--ink3); font-size: 11px; border-right: 1px solid var(--line)">1<br>2<br>3</div>
+          <div style="padding: 6px 10px; white-space: pre"><b>SELECT</b> plan, <b>SUM</b>(<span style="text-decoration: underline wavy var(--alert); text-underline-offset: 3px">totl</span>)
+<b>FROM</b> orders
+<b>GROUP BY</b> plan;</div>
+        </div>
+        <div style="margin-top: 10px; border: 1.5px solid var(--alert); border-radius: 3px; padding: 10px 12px">
+          <div style="{{capAlert}}">COLUMN "totl" DOES NOT EXIST // LINE 1 // COL 20</div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px">
+            <span style="font-size: 13px">Did you mean <span style="font-family: var(--code); font-weight: 600">total</span>?</span>
+            <span style="flex: 1"></span>
+            <button type="button" style="{{box}}">IGNORE</button>
+            <button type="button" title="Replace  ⏎" style="{{boxPrimary}}">REPLACE // ⏎</button>
+          </div>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: var(--ink2); line-height: 1.5">The run still ends on a clear summary: what failed, where, and a one-key fix. Nothing modal, nothing lost.</div>
+      </div>
+    </section>
+
+    <!-- 3 connect failed -->
+    <section aria-label="Connect failed" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">03 // CONNECT_FAILED</span><span style="{{capDim}}">// GOAL_GRADIENT</span><span style="flex: 1"></span><span style="{{capAlert}}">AUTH REJECTED</span></div>
+      <div style="padding: 12px">
+        <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px; border: 1.5px solid var(--alert); border-radius: 3px; font-family: var(--code); font-size: 12px">postgres://analyst@prod-db.internal:5432/analytics<span style="flex: 1"></span><span style="{{capDim}}">POSTGRES 17</span></div>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; margin-top: 8px">
+          <sc-for list="{{parts}}" as="p" hint-placeholder-count="5"><span style="{{p.style}}">{{p.t}}</span></sc-for>
+        </div>
+        <div style="{{capAlert}}; margin-top: 8px">PASSWORD AUTHENTICATION FAILED FOR USER "ANALYST"</div>
+        <div style="display: grid; grid-template-columns: 76px minmax(0, 1fr) 50px minmax(0, 0.5fr); gap: 6px 10px; align-items: center; margin-top: 10px">
+          <span style="{{capDim}}; text-align: right">HOST</span><input type="text" aria-label="Host" value="prod-db.internal" style="{{field}}">
+          <span style="{{capDim}}; text-align: right">PORT</span><input type="text" aria-label="Port" value="5432" style="{{field}}">
+          <span style="{{capDim}}; text-align: right">USER</span><input type="text" aria-label="User" value="analyst" style="{{field}}">
+          <span style="{{capDim}}; text-align: right">SSL</span><span style="{{seg}}">REQUIRE</span>
+          <span style="{{capDim}}; text-align: right">PASSWORD</span><input type="password" aria-label="Password" value="" style="{{fieldErr}}">
+          <span style="{{capDim}}; text-align: right">SSH</span><label style="display: flex; align-items: center; gap: 6px; font-size: 12px"><input type="checkbox" aria-label="SSH tunnel" style="accent-color: var(--ink); margin: 0"> tunnel</label>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px"><label style="display: flex; align-items: center; gap: 6px; font-size: 12px"><input type="checkbox" checked="checked" aria-label="Save to Keychain" style="accent-color: var(--ink); margin: 0"> save to Keychain</label><span style="flex: 1"></span><button type="button" style="{{box}}">TEST // ⌥⌘⏎</button><button type="button" style="{{boxPrimary}}">RETRY // ⏎</button></div>
+      </div>
+    </section>
+
+    <!-- 4 no results -->
+    <section aria-label="No results" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">04 // NO_RESULTS</span><span style="{{capDim}}">// TESLER</span><span style="flex: 1"></span><span style="{{capDim}}">ORDERS</span></div>
+      <div style="padding: 12px">
+        <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px"><span style="{{capDim}}">WHERE</span><span style="font-family: var(--code); font-size: 12px">status = 'refunded' AND total &gt; 5000</span></div>
+        <div style="display: flex; align-items: flex-end; gap: 14px; margin: 26px 0 8px">
+          <div style="font-size: 72px; font-weight: 300; letter-spacing: -3px; line-height: .85">0</div>
+          <div><div style="{{cap}}">ROWS MATCH</div><div style="font-size: 12px; color: var(--ink2); margin-top: 4px">The largest refunded order is 1,984.10.</div></div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 14px">
+          <button type="button" style="{{box}}">CLEAR_FILTER</button>
+          <button type="button" style="{{boxPrimary}}">TRY total &gt; 1500 // 41 ROWS</button>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--ink2); line-height: 1.5">The app does the arithmetic: it says why nothing matched and offers the nearest filter that returns rows.</div>
+      </div>
+    </section>
+
+    <!-- 5 connection lost -->
+    <section aria-label="Connection lost" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">05 // CONNECTION_LOST</span><span style="{{capDim}}">// VISIBILITY_OF_STATUS</span><span style="flex: 1"></span><span style="{{capAmber}}">RECONNECTING</span></div>
+      <div style="padding: 12px">
+        <div role="status" style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 10px; border: 1.5px solid var(--amber); border-radius: 3px">
+          <span style="{{capAmber}}">CONNECTION_LOST // RETRY IN 3 S // SHOWING DATA FROM 14:32</span>
+          <span style="flex: 1"></span>
+          <button type="button" title="Retry now  ⌘R" style="{{boxAmber}}">RETRY // ⌘R</button>
+        </div>
+        <div style="margin-top: 10px; opacity: .42; font-family: var(--code); font-size: 12px; border-top: 1px solid var(--lineStrong)" aria-label="Stale rows, read-only until reconnected">
+          <sc-for list="{{stale}}" as="r" hint-placeholder-count="7"><div style="{{r.style}}"><span style="color: var(--ink3)">{{r.n}}</span><span>{{r.a}}</span><span>{{r.b}}</span><span style="text-align: right">{{r.c}}</span></div></sc-for>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: var(--ink2)">Rows stay readable but go grey and read-only; staged writes are kept and replay after reconnect.</div>
+      </div>
+    </section>
+
+    <!-- 6 delete -->
+    <section aria-label="Delete rows" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">06 // DELETE_ROWS</span><span style="{{capDim}}">// ERROR_PREVENTION</span><span style="flex: 1"></span><span style="{{capAlert}}">DESTRUCTIVE</span></div>
+      <div style="padding: 12px">
+        <div style="border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 6px 6px 0 var(--fill12)">
+          <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">DELETE 3 ROWS</span><span style="{{capDim}}">// ORDERS</span></div>
+          <div style="padding: 10px; font-family: var(--code); font-size: 12px">
+            <sc-for list="{{doomed}}" as="d" hint-placeholder-count="3"><div style="display: grid; grid-template-columns: 60px 80px minmax(0, 1fr) 80px; height: 22px; align-items: center; border-bottom: 1px dashed var(--line)"><span style="color: var(--alert)">− {{d.id}}</span><span>{{d.cust}}</span><span style="{{d.st}}">{{d.status}}</span><span style="text-align: right">{{d.total}}</span></div></sc-for>
+            <div style="font-family: var(--ui); margin-top: 8px; {{capAlert}}">ALSO REMOVES 9 ORDER_ITEMS // 1 INVOICE (ON DELETE CASCADE)</div>
+            <div style="font-family: var(--ui); font-size: 12px; color: var(--ink2); margin-top: 4px">Nothing is written until you commit. ⌘Z unstages.</div>
+          </div>
+          <div style="display: flex; gap: 8px; padding: 0 10px 10px"><span style="flex: 1"></span><button type="button" style="{{box}}">CANCEL // ESC</button><button type="button" style="{{boxAlert}}">STAGE_DELETE_3_ROWS</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 first run -->
+    <section aria-label="First run" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">07 // FIRST_RUN</span><span style="{{capDim}}">// HICKS_LAW</span><span style="flex: 1"></span><span style="{{capDim}}">NO_CONNECTIONS_YET</span></div>
+      <div style="padding: 12px">
+        <div style="font-size: 30px; font-weight: 300; letter-spacing: -1px; line-height: 1.05">Open a database.</div>
+        <div style="font-size: 12px; color: var(--ink2); margin-top: 6px">Paste a URL or pick an engine. One field fills everything else.</div>
+        <div style="display: flex; align-items: center; height: 30px; margin-top: 12px; padding: 0 8px; border: 1.5px solid var(--accent); border-radius: 3px; font-family: var(--code); font-size: 12px; color: var(--ink3)">postgres://user@host:5432/db</div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 8px">
+          <sc-for list="{{tiles}}" as="ti" hint-placeholder-count="3"><button type="button" style="{{ti.style}}"><span style="font-size: 12px; font-weight: 700; letter-spacing: .08em">{{ti.t}}</span><span style="{{ti.sub}}">{{ti.d}}</span></button></sc-for>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 10px"><button type="button" style="{{box}}">TRY_SAMPLE_DATABASE</button><span style="flex: 1"></span><span style="{{capDim}}">OR DROP A .SQLITE FILE</span></div>
+      </div>
+    </section>
+
+    <!-- 8 unsaved -->
+    <section aria-label="Unsaved query" style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">08 // UNSAVED_QUERY</span><span style="{{capDim}}">// ZEIGARNIK</span><span style="flex: 1"></span><span style="{{capDim}}">⌘W ON AN EDITED TAB</span></div>
+      <div style="padding: 24px 12px; display: flex; justify-content: center">
+        <div role="alertdialog" aria-labelledby="unsaved-title" style="width: 300px; padding: 18px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 6px; background: var(--paper); box-shadow: 8px 8px 0 var(--fill12); text-align: center">
+          <div aria-hidden="true" style="width: 44px; height: 44px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: var(--ink); color: var(--paper); border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: .12em">DB</div>
+          <div id="unsaved-title" style="font-size: 13px; font-weight: 600; margin-top: 12px">Save changes to “Query 1”?</div>
+          <div style="font-size: 12px; color: var(--ink2); margin-top: 6px; line-height: 1.45">Your edits will be lost if you don’t save them. Results stay in History.</div>
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 14px">
+            <button type="button" style="{{boxPrimary}}; justify-content: center">SAVE // ⌘S</button>
+            <button type="button" style="{{box}}; justify-content: center; height: 26px">CANCEL</button>
+            <button type="button" style="{{box}}; justify-content: center; height: 26px">DON’T_SAVE // ⌘⌫</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;min-height:100%;width:100%';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const capAlert = CAPS + ' color: var(--alert); white-space: nowrap';
+    const capAmber = CAPS + ' color: var(--amber); white-space: nowrap';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; overflow: hidden; min-width: 0; min-height: 360px';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-bottom: 1px solid var(--line)';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 2px; cursor: pointer; font-size: 10.5px; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; box-sizing: border-box;';
+    const box = boxBase + 'border: 1px solid var(--lineStrong); background: transparent; color: var(--ink)';
+    const boxPrimary = boxBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const boxAlert = boxBase + 'border: 1px solid var(--alert); background: transparent; color: var(--alert)';
+    const boxAmber = boxBase + 'height: 20px; border: 1px solid var(--amber); background: transparent; color: var(--amber)';
+    const big = 'font-size: 40px; font-weight: 300; letter-spacing: -1.4px; line-height: 1';
+    const mid = 'font-size: 24px; font-weight: 300; letter-spacing: -0.6px; line-height: 1';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+    const fieldErr = field + '; border: 1.5px solid var(--alert)';
+    const seg = 'display: inline-flex; align-items: center; height: 22px; padding: 0 8px; background: var(--ink); color: var(--paper); border-radius: 2px; ' + CAPS + 'font-size: 10.5px; width: max-content';
+
+    const spin = [1, .8, .6, .35, .2, .2, .35, .6, .8].map((o) => 'width: 5px; height: 5px; background: var(--ink); opacity: ' + o);
+    const trow = (n, a, b, c, ghost) => ({n, a, b, c, style: 'display: grid; grid-template-columns: 34px 90px minmax(0, 1fr) 90px; height: 24px; align-items: center; gap: 8px; border-bottom: 1px dashed var(--line);' + (ghost ? 'color: transparent;' : '')});
+    const skel = [
+      trow('01', '58431', 'paid', '412.00'), trow('02', '58430', 'shipped', '1,177.20'), trow('03', '58429', 'pending', '88.40'), trow('04', '58428', 'paid', '2,040.00'),
+      trow('05', '', '', '', true), trow('06', '', '', '', true), trow('07', '', '', '', true),
+    ].map((r, i) => i >= 4 ? {...r, style: r.style + 'background: repeating-linear-gradient(90deg, var(--fill12) 0 60px, transparent 60px 70px) 42px 7px / calc(100% - 50px) 10px no-repeat;'} : r);
+    const stale = [trow('01', '58431', 'paid', '412.00'), trow('02', '58430', 'shipped', '1,177.20'), trow('03', '58429', 'pending', '88.40'), trow('04', '58428', 'paid', '2,040.00'), trow('05', '58427', 'delivered', '96.10'), trow('06', '58426', 'paid', '340.00'), trow('07', '58425', 'refunded', '62.30')];
+    const partStyle = (ok) => 'display: inline-flex; align-items: center; justify-content: center; height: 24px; border-radius: 2px; ' + CAPS + 'font-size: 10.5px;' + (ok ? 'border: 1px solid var(--lineStrong); color: var(--ink);' : 'border: 1.5px solid var(--alert); color: var(--alert);');
+    const parts = [['✓ ENGINE', true], ['✓ HOST', true], ['✓ DATABASE', true], ['✓ USER', true], ['✕ PASSWORD', false]].map(([x, ok]) => ({t: x, style: partStyle(ok)}));
+    const doomed = [['58429', '1182', 'pending', '88.40'], ['58428', '2207', 'paid', '2,040.00'], ['58427', '911', 'refunded', '96.10']].map(([id, cust, status, total]) => ({id, cust, status, total, st: status === 'pending' ? 'color: var(--amber)' : status === 'refunded' ? 'color: var(--alert)' : ''}));
+    const tiles = [['POSTGRES', 'SYSTEMS // 5432', true], ['MYSQL', 'SYSTEMS // 3306', false], ['SQLITE', 'FILES // LOCAL', false]].map(([n, d, on]) => ({t: n, d,
+      style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 4px; height: 56px; padding: 9px 10px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; cursor: pointer; font-family: var(--ui); text-align: left;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+      sub: CAPS + 'font-size: 10px;' + (on ? 'opacity: .7' : 'color: var(--ink3)')}));
+    return {themeVars, cap, capDim, capAlert, capAmber, frame, head, box, boxPrimary, boxAlert, boxAmber, big, mid, field, fieldErr, seg, spin, skel, stale, parts, doomed, tiles};
+  }
+}
+</script>
+</body>
+</html>

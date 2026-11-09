@@ -1,5 +1,6 @@
 import AppKit
 import DBCore
+import DBStore
 import Foundation
 import Observation
 import SwiftUI
@@ -9,35 +10,65 @@ import SwiftUI
 final class AppModel {
     static let shared = AppModel()
 
-    var profiles: [ConnectionProfile] = []
+    /// All connections from the store, the internal one last.
+    private(set) var profiles: [ConnectionProfile] = []
+    /// App-wide settings, backed by the store's `settings` table (Settings window, table pages, dates).
+    var pageSize = 500 { didSet { if pageSize != oldValue && !reloading { save("page_size", String(pageSize)) } } }
+    var relativeDates = false { didSet { if relativeDates != oldValue && !reloading { save("relative_dates", String(relativeDates)) } } }
     /// Open workspaces keyed by profile id (one window each).
     var workspaces: [UUID: WorkspaceModel] = [:]
     /// Set by the UI layer so model code can open windows.
     var openWindow: ((UUID) -> Void)?
 
-    private let storeURL: URL = {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("DBMan", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("connections.json")
-    }()
+    let store: Store
+    private var reloading = false
 
-    init() { load() }
-
-    func load() {
-        if let data = try? Data(contentsOf: storeURL), let list = try? JSONDecoder().decode([ConnectionProfile].self, from: data) {
-            profiles = list
+    init() {
+        let url = Store.defaultURL
+        do {
+            // v1 data (connections.json, UserDefaults) is imported only into the real store, never into a DBMAN_STORE scratch file.
+            store = try Store.open(at: url, v1Dir: url == Store.productionURL ? url.deletingLastPathComponent() : nil,
+                                   defaults: url == Store.productionURL ? .standard : nil)
+        } catch {
+            fatalError("DBMan store unavailable: \(error.localizedDescription)") // shortcut: no degraded mode, upgrade when a "run without store" fallback is wanted
         }
-    }
-    func save() {
-        if let data = try? JSONEncoder().encode(profiles) { try? data.write(to: storeURL, options: .atomic) }
+        reload()
+        store.onChange = { [weak self] in Task { @MainActor in self?.reload() } } // own writes and external edits (sqlite3 CLI)
+        let s = store
+        Task.detached { try? s.backupIfNeeded() }
     }
 
-    func upsert(_ p: ConnectionProfile) {
-        if let i = profiles.firstIndex(where: { $0.id == p.id }) { profiles[i] = p } else { profiles.append(p) }
-        save()
+    func reload() {
+        reloading = true; defer { reloading = false }
+        profiles = ((try? store.connections()) ?? []).map(Self.profile)
+        pageSize = store.setting("page_size").flatMap(Int.init) ?? 500
+        relativeDates = store.setting("relative_dates") == "true"
     }
-    func remove(_ id: UUID) { profiles.removeAll { $0.id == id }; save() }
+
+    private func save(_ key: String, _ json: String) { write { try store.setSetting(key, json: json) } }
+    private func write(_ body: () throws -> Void) {
+        do { try body() } catch { NSLog("DBMan store: %@", error.localizedDescription) }
+        reload()
+    }
+
+    func upsert(_ p: ConnectionProfile) { write { try store.upsert(Self.row(p)) } }
+    func remove(_ id: UUID) { write { try store.remove(id.uuidString) } }
     func profile(_ id: UUID) -> ConnectionProfile? { profiles.first { $0.id == id } }
+
+    private static func profile(_ r: ConnectionRow) -> ConnectionProfile {
+        let internalStore = r.id == Store.internalID
+        return ConnectionProfile(
+            id: internalStore ? ConnectionProfile.internalID : UUID(uuidString: r.id) ?? UUID(), name: r.name, engine: Engine(rawValue: r.engine) ?? .sqlite,
+            host: r.host, port: r.port, database: r.database, user: r.user, filePath: r.filePath, sslMode: SSLMode(rawValue: r.sslMode) ?? .prefer,
+            environment: EnvironmentTag(rawValue: r.env) ?? .local, openReadOnly: r.readOnly && !internalStore, // internal: locked via .system, unlockable
+            stageWrites: r.stageWrites, lastOpened: r.lastOpened, sslRootCert: r.sslRootCert)
+    }
+    private static func row(_ p: ConnectionProfile) -> ConnectionRow {
+        var r = ConnectionRow(id: p.id.uuidString, name: p.name, engine: p.engine.rawValue)
+        r.host = p.host; r.port = p.port; r.database = p.database; r.user = p.user; r.sslMode = p.sslMode.rawValue; r.sslRootCert = p.sslRootCert
+        r.env = p.environment.rawValue; r.filePath = p.filePath; r.readOnly = p.openReadOnly; r.stageWrites = p.stageWrites; r.lastOpened = p.lastOpened
+        return r
+    }
 
     /// Returns (creating if needed) the workspace for a profile.
     func workspace(for id: UUID) -> WorkspaceModel? {
@@ -49,8 +80,8 @@ final class AppModel {
     }
 
     func markOpened(_ id: UUID) {
-        guard let i = profiles.firstIndex(where: { $0.id == id }) else { return }
-        profiles[i].lastOpened = Date(); save()
+        guard var p = profile(id), p.environment != .system else { return }
+        p.lastOpened = Date(); upsert(p)
     }
 
     /// Opens a SQLite file: creates (or reuses) a profile and opens its window.

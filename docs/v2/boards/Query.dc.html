@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Query — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: center; gap: 4px">
+    <span style="{{logo}}">DBMAN</span>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <a href="{{n.href}}" title="{{n.tip}}" aria-current="{{n.current}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>{{n.t}}</a>
+    </sc-for>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; height: 30px; padding: 0 12px; overflow: hidden; white-space: nowrap; border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="5"><span style="{{cap}}"><span style="color: var(--ink3)">{{r.k}}</span> {{r.v}}</span></sc-for>
+    </div>
+    <label style="display: flex; align-items: center; gap: 6px; width: 190px; height: 30px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" aria-label="Jump to table, column or query" placeholder="JUMP_TO" style="flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 600 11px var(--ui); letter-spacing: .08em">
+      <span style="{{capDim}}">⌘K</span>
+    </label>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+    <div style="flex: 0 0 220px; height: 852px">
+      <dc-import name="Sidebar" active="query" conn="shop" dark="{{dark}}" hint-size="220px,852px"></dc-import>
+    </div>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+      <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+        <!-- NUMBER RAIL -->
+        <nav aria-label="Result views" style="flex: 0 0 28px; display: flex; flex-direction: column; gap: 4px">
+          <sc-for list="{{rail}}" as="v" hint-placeholder-count="4">
+            <button type="button" title="{{v.tip}}" aria-pressed="{{v.on}}" onClick="{{v.pick}}" style="{{v.style}}"><span>{{v.n}}</span><span style="{{v.labelStyle}}">{{v.t}}</span></button>
+          </sc-for>
+        </nav>
+
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+          <!-- EDITOR -->
+          <section aria-label="SQL editor" style="{{frame}}; height: 330px; flex: none">
+            <div style="{{head}}">
+              <span style="{{cap}}">EDITOR</span><span style="{{capDim}}">// QUERY_1 // EDITED // SHOP.PUBLIC</span>
+              <span style="flex: 1"></span>
+              <button type="button" title="Format  ⌥⌘F" style="{{box}}">FORMAT</button>
+              <button type="button" title="Explain  ⌥⌘E" style="{{box}}">EXPLAIN</button>
+              <button type="button" title="Run statement  ⌘⏎" style="{{boxPrimary}}"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4l14 8-14 8z"></path></svg>RUN // ⌘⏎</button>
+            </div>
+            <div role="tablist" aria-label="Open queries" style="display: flex; gap: 4px; height: 26px; align-items: center; padding: 0 10px; flex: none; border-bottom: 1px solid var(--line)">
+              <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="3"><span role="tab" aria-selected="{{tb.on}}" tabindex="{{tb.ti}}" title="{{tb.tip}}" style="{{tb.style}}">{{tb.t}}</span></sc-for>
+              <button type="button" aria-label="New query tab (⌘T)" title="New tab  ⌘T" style="{{box}}">+</button>
+            </div>
+            <div style="flex: 1; min-height: 0; position: relative; display: flex">
+              <div aria-hidden="true" style="flex: none; width: 44px; padding: 10px 0; box-sizing: border-box; border-right: 1px solid var(--line); font-family: var(--code); font-size: 11px; line-height: 21px; color: var(--ink3); text-align: right">
+                <sc-for list="{{lines}}" as="l" hint-placeholder-count="12"><div style="{{l.gutter}}">{{l.mark}}{{l.n}}</div></sc-for>
+              </div>
+              <div role="textbox" aria-multiline="true" aria-label="SQL" style="flex: 1; min-width: 0; padding: 10px 12px; overflow: auto; font-family: var(--code); font-size: 12.5px; line-height: 21px; white-space: pre">
+                <sc-for list="{{lines}}" as="l" hint-placeholder-count="12"><div style="{{l.bg}}"><sc-for list="{{l.toks}}" as="k" hint-placeholder-count="6"><span style="{{k.s}}">{{k.t}}</span></sc-for></div></sc-for>
+              </div>
+              <!-- completion popover, label aligned under "st" -->
+              <div role="listbox" aria-label="Completions" style="position: absolute; left: 86px; top: 220px; width: 300px; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 4px 4px 0 var(--fill12); font-family: var(--code); font-size: 12px; overflow: hidden">
+                <div role="option" aria-selected="true" style="display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 8px; background: var(--ink); color: var(--paper)"><span style="width: 18px; font-family: var(--ui); font-size: 10px; font-weight: 700; letter-spacing: .06em">COL</span><span style="flex: 1">status</span><span style="opacity: .65">order_status</span></div>
+                <div role="option" aria-selected="false" style="display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 8px"><span style="width: 18px; font-family: var(--ui); font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--ink3)">COL</span><span style="flex: 1">shipped_at</span><span style="color: var(--ink3)">timestamptz</span></div>
+                <div role="presentation" style="display: flex; justify-content: space-between; height: 22px; align-items: center; padding: 0 8px; border-top: 1px solid var(--line); font-family: var(--ui); font-size: 10.5px; font-weight: 600; letter-spacing: .08em; color: var(--ink3)"><span>ORDERS // 2_OF_7</span><span>⇥ ACCEPT</span></div>
+              </div>
+            </div>
+          </section>
+
+          <div style="flex: 1; min-height: 0; display: flex; gap: 4px">
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+              <!-- RESULT -->
+              <section aria-label="Result" style="{{frame}}; flex: 1; min-height: 0">
+                <div style="{{head}}"><span style="{{cap}}">RESULT_1</span><span style="{{capDim}}">// 3 ROWS // 4 COLS</span><span style="flex: 1"></span><button type="button" title="Export  ⇧⌘E" style="{{box}}">EXPORT</button><button type="button" title="Copy as JSON  ⌥⌘C" style="{{box}}">COPY</button></div>
+                <div style="display: flex; align-items: flex-end; gap: 18px; padding: 10px 12px 8px; flex: none">
+                  <div><div style="{{big}}">3 <span style="font-size: 22px">ROWS</span></div><div style="{{capDim}}">RETURNED // 41 MS</div></div>
+                  <div><div style="{{mid}}">$7.40M</div><div style="{{capDim}}">REVENUE // 90_DAYS</div></div>
+                  <div><div style="{{mid}}">13,903</div><div style="{{capDim}}">ORDERS</div></div>
+                  <span style="flex: 1"></span>
+                  <div style="{{capDim}}; text-align: right">HASH_JOIN<br>12% FASTER THAN LAST RUN</div>
+                </div>
+                <div style="flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--lineStrong)">
+                  <div role="grid" aria-label="Result rows" aria-rowcount="4" style="font-family: var(--code); font-size: 12px">
+                    <div role="row" style="display: grid; grid-template-columns: {{rcols}}; height: 24px; align-items: center; border-bottom: 1px solid var(--line)">
+                      <sc-for list="{{rhead}}" as="h" hint-placeholder-count="7"><span role="columnheader" style="{{h.style}}">{{h.t}}</span></sc-for>
+                    </div>
+                    <sc-for list="{{result}}" as="r" hint-placeholder-count="3">
+                      <div role="row" aria-selected="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">
+                        <span role="gridcell" style="{{r.g}}">{{r.n}}</span>
+                        <span role="gridcell" style="padding: 0 8px">{{r.plan}}</span>
+                        <span role="gridcell" style="{{r.num}}">{{r.c}}</span>
+                        <span role="gridcell" style="{{r.num}}">{{r.o}}</span>
+                        <span role="gridcell" style="{{r.focus}}">{{r.rev}}</span>
+                        <span role="gridcell" style="{{r.num}}">{{r.avg}}</span>
+                        <span role="gridcell" style="{{r.g2}}">{{r.n}}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </section>
+              <!-- CHART -->
+              <section aria-label="Chart" style="{{frame}}; height: 150px; flex: none">
+                <div style="{{head}}"><span style="{{cap}}">CHART</span><span style="{{capDim}}">// REVENUE_BY_PLAN // AUTO</span><span style="flex: 1"></span><span style="{{capDim}}">⌃⌘4 FULL</span></div>
+                <div style="padding: 8px 12px; display: flex; flex-direction: column; gap: 8px">
+                  <sc-for list="{{bars}}" as="b" hint-placeholder-count="3">
+                    <div style="display: grid; grid-template-columns: 50px minmax(0, 1fr) 90px; gap: 10px; align-items: center">
+                      <span style="{{cap}}">{{b.plan}}</span>
+                      <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(40, minmax(0, 1fr)); gap: 1px; height: 18px"><sc-for list="{{b.seg}}" as="s" hint-placeholder-count="40"><span style="background: {{s}}"></span></sc-for></span>
+                      <span style="font-size: 12px; text-align: right; font-variant-numeric: tabular-nums">{{b.v}} <span style="color: var(--ink3)">{{b.share}}</span></span>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+            </div>
+
+            <!-- PLAN -->
+            <section aria-label="Explain plan" style="{{frame}}; flex: 0 0 560px">
+              <div style="{{head}}"><span style="{{cap}}">PLAN</span><span style="{{capDim}}">// 6_NODES // 41.2 MS // EXPLAIN ANALYZE</span><span style="flex: 1"></span><button type="button" title="Copy plan JSON" style="{{box}}">JSON</button></div>
+              <div role="img" aria-label="{{planLabel}}" style="position: relative; height: 420px; margin: 12px 12px 0">
+                <sc-for list="{{wires}}" as="w" hint-placeholder-count="8"><span aria-hidden="true" style="{{w}}"></span></sc-for>
+                <sc-for list="{{nodes}}" as="p" hint-placeholder-count="6">
+                  <div style="{{p.style}}">
+                    <div style="display: flex; align-items: baseline; gap: 6px">
+                      <span style="{{p.titleStyle}}">{{p.op}}</span>
+                      <span style="flex: 1"></span>
+                      <span style="font-size: 20px; font-weight: 300; letter-spacing: -0.5px; line-height: 1">{{p.ms}}</span><span style="{{p.dim}}">MS</span>
+                    </div>
+                    <div style="{{p.sub}}">{{p.detail}}</div>
+                    <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 1px; height: 6px; margin-top: 5px"><sc-for list="{{p.seg}}" as="s" hint-placeholder-count="20"><span style="background: {{s}}"></span></sc-for></div>
+                    <sc-if value="{{p.hot}}" hint-placeholder-val="{{false}}"><div style="margin-top: 5px; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: var(--amber)">HOTSPOT // 52%</div></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="margin: 0 12px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.45; color: var(--ink2)"><span style="{{cap}}">WHY</span> Index scan on <span style="font-family: var(--code); font-size: 11.5px">idx_orders_created</span> reads 13.9K rows to keep 13.9K: the filter is not selective. Try a covering index on <span style="font-family: var(--code); font-size: 11.5px">(created_at, customer_id)</span> or run <span style="font-family: var(--code); font-size: 11.5px">ANALYZE orders</span>.</div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS STRIP -->
+      <div style="height: 20px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden; white-space: nowrap">
+        <span style="{{capDim}}">LN 9 // COL 11</span><span style="{{capDim}}">RUNS // STATEMENT_UNDER_CURSOR</span><span style="{{capDim}}">TX // WRITES_STAGED</span><span style="flex: 1"></span><span style="{{capDim}}">UTF8</span><span style="{{cap}}">SHOP // PG 17.2</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {view: 0, sel: 0};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const st = this.state;
+
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; min-width: 0';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; flex: none; border-bottom: 1px solid var(--line)';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-size: 10.5px; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap;';
+    const box = boxBase + 'background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'background: var(--ink); color: var(--paper);';
+    const big = 'font-size: 44px; font-weight: 300; letter-spacing: -1.4px; line-height: 1';
+    const mid = 'font-size: 26px; font-weight: 300; letter-spacing: -0.8px; line-height: 1';
+    const logo = 'display: inline-flex; align-items: center; height: 30px; padding: 0 10px; box-sizing: border-box; background: var(--ink); color: var(--paper); border-radius: 3px; font-size: 12px; font-weight: 700; letter-spacing: .14em';
+
+    const navDef = [['OVERVIEW', 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', 'Overview.dc.html', '⌘0'], ['TABLES', 'M3 4h18v16H3zM3 10h18M9 4v16', 'Table.dc.html', '⌘1'], ['QUERY', 'M4 17l6-5-6-5M12 19h8', 'Query.dc.html', '⌘2'], ['EXPLAIN', 'M12 3v6M6 9h12M6 9v6M18 9v6M3 15h6v6H3zM15 15h6v6h-6z', 'Query.dc.html', '⌥⌘E'], ['ACTIVITY', 'M3 12h4l3-8 4 16 3-8h4', 'Overview.dc.html', '⌘3']];
+    const nav = navDef.map(([n, icon, href, key]) => {
+      const on = n === 'QUERY';
+      return {t: n, icon, href, tip: n + '  ' + key, current: on ? 'page' : 'false',
+        style: 'display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; text-decoration: none;' + CAPS + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [{k: 'SESSION //', v: 'SHOP'}, {k: 'ENGINE //', v: 'PG 17.2'}, {k: 'LAT //', v: '4 MS'}, {k: 'LOAD //', v: '412 TX/S'}, {k: 'TIME //', v: '14:32:09'}];
+
+    const rail = [['01', 'RESULT'], ['02', 'MESSAGES'], ['03', 'PLAN'], ['04', 'CHART']].map(([n, label], i) => {
+      const on = st.view === i;
+      return {n, t: label, on: on ? 'true' : 'false', tip: label + '  ⌃⌘' + (i + 1),
+        style: 'display: flex; flex-direction: column; align-items: center; gap: 6px; width: 28px; padding: 6px 0 8px; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px; cursor: pointer; font: 700 11px var(--ui); letter-spacing: .04em;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+        labelStyle: 'writing-mode: vertical-rl; transform: rotate(180deg); font-size: 9.5px; font-weight: 600; letter-spacing: .1em',
+        pick: () => this.setState({view: i})};
+    });
+
+    const tabs = [['QUERY_1 •', true, 'Query 1, edited'], ['REVENUE_BY_PLAN', false, 'Revenue by plan'], ['ORDERS', false, 'orders']].map(([n, on, tip]) => ({t: n, on: on ? 'true' : 'false', ti: on ? '0' : '-1', tip,
+      style: 'display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 2px; font-size: 10.5px; font-weight: 600; letter-spacing: .08em;' + (on ? 'background: var(--ink); color: var(--paper);' : 'border: 1px solid var(--line); color: var(--ink2);')}));
+
+    const sql = [
+      '-- revenue by customer plan, last 90 days',
+      'SELECT c.plan,',
+      '       COUNT(DISTINCT o.customer_id) AS customers,',
+      '       COUNT(*)                      AS orders,',
+      '       ROUND(SUM(o.total), 2)        AS revenue',
+      'FROM orders o',
+      'JOIN customers c ON c.id = o.customer_id',
+      "WHERE o.created_at > now() - interval '90 days'",
+      '  AND o.st',
+      'GROUP BY c.plan',
+      'ORDER BY revenue DESC;',
+      '',
+    ];
+    const KW = new Set(['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE', 'AND', 'GROUP', 'BY', 'ORDER', 'DESC', 'AS', 'DISTINCT', 'interval']);
+    const FN = new Set(['COUNT', 'ROUND', 'SUM', 'now']);
+    const lines = sql.map((line, i) => {
+      const toks = [];
+      if (line.startsWith('--')) toks.push({t: line, s: 'color: var(--ink3); font-style: italic'});
+      else {
+        const re = /('[^']*'|\b\d+(?:\.\d+)?\b|\b[A-Za-z_]+\b|\s+|.)/g;
+        let m;
+        while ((m = re.exec(line))) {
+          const w = m[0];
+          let s = 'color: var(--ink)';
+          if (w.startsWith("'")) s = 'color: var(--ink2); font-style: italic';
+          else if (/^\d/.test(w)) s = 'color: var(--ink2)';
+          else if (KW.has(w)) s = 'color: var(--ink); font-weight: 700';
+          else if (FN.has(w)) s = 'color: var(--ink); text-decoration: underline 1px var(--fill30); text-underline-offset: 3px';
+          else if (/^[(),.;*=<>-]$/.test(w)) s = 'color: var(--ink3)';
+          toks.push({t: w, s});
+        }
+        if (i === 8) toks.push({t: '▏', s: 'color: var(--accent); font-weight: 700; margin-left: -1px'});
+      }
+      if (!toks.length) toks.push({t: ' ', s: ''});
+      return {n: String(i + 1), toks, mark: i === 1 ? '▶ ' : '',
+        gutter: 'padding-right: 8px;' + (i === 8 ? 'color: var(--ink); font-weight: 600;' : '') + (i === 1 ? 'color: var(--ink);' : '') + (i >= 1 && i <= 10 ? 'box-shadow: inset -2px 0 0 var(--ink);' : ''),
+        bg: i === 8 ? 'background: var(--fill12); margin: 0 -12px; padding: 0 12px' : ''};
+    });
+
+    const rcols = '34px 64px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr) 34px';
+    const rhead = ['#', 'PLAN', 'CUSTOMERS', 'ORDERS', 'REVENUE ↓', 'AVG_ORDER', '#'].map((x, i) => ({t: x,
+      style: CAPS + 'color: var(--ink3); padding: 0 8px;' + (i >= 2 && i <= 5 ? 'text-align: right;' : '') + (i === 4 ? 'color: var(--ink);' : '')}));
+    const raw = [['team', '290', '4,180', '2,440,512.40', '583.86'], ['pro', '870', '6,410', '3,512,733.10', '548.01'], ['free', '943', '3,313', '1,447,091.55', '436.79']];
+    const num = 'padding: 0 8px; text-align: right; font-variant-numeric: tabular-nums';
+    const result = raw.map(([plan, c, o, rev, avg], i) => {
+      const on = i === st.sel;
+      return {n: String(i + 1).padStart(2, '0'), plan, c, o, rev, avg, on: on ? 'true' : 'false', num,
+        g: 'padding: 0 8px; color: var(--ink3); font-size: 11px',
+        g2: 'padding: 0 8px; color: var(--ink3); font-size: 11px; text-align: right',
+        focus: num + (on ? '; background: var(--ink); color: var(--paper); font-weight: 600; align-self: stretch; display: flex; align-items: center; justify-content: flex-end' : ''),
+        style: 'display: grid; grid-template-columns: ' + rcols + '; height: 28px; align-items: center; cursor: pointer;' + (on ? 'background: var(--fill12); box-shadow: inset 0 1px 0 var(--lineStrong), inset 0 -1px 0 var(--lineStrong);' : 'border-bottom: 1px dashed var(--line);'),
+        pick: () => this.setState({sel: i})};
+    });
+    const totals = [2440512, 3512733, 1447091];
+    const sum = totals.reduce((a, b) => a + b, 0);
+    const shares = totals.map((v) => Math.round(v / sum * 100));
+    shares[2] = 100 - shares[0] - shares[1];
+    const maxT = Math.max(...totals);
+    const bars = [1, 0, 2].map((i) => ({plan: raw[i][0], v: '$' + (totals[i] / 1e6).toFixed(2) + 'M', share: shares[i] + '%',
+      seg: Array.from({length: 40}, (_, k) => k < Math.round(totals[i] / maxT * 40) ? t.ink : t.fill12)}));
+
+    // plan diagram
+    const W = 220, H = 66;
+    const node = (op, x, y, ms, detail, hot) => {
+      const share = ms / 41.2;
+      return {op, ms: ms.toFixed(1), detail, hot: !!hot,
+        style: 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; width: ' + W + 'px; min-height: ' + H + 'px; box-sizing: border-box; padding: 7px 9px; border: 1px solid var(--lineStrong); border-radius: 3px;' + (hot ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+        titleStyle: CAPS + 'color: inherit',
+        dim: CAPS + 'opacity: .6',
+        sub: 'font-family: var(--code); font-size: 10.5px; margin-top: 3px; opacity: .72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis',
+        seg: Array.from({length: 20}, (_, k) => k < Math.max(1, Math.round(share * 20)) ? (hot ? t.amber : t.ink) : (hot ? 'rgba(255,255,255,0.22)' : t.fill12))};
+    };
+    const cx = 158;
+    const nodes = [
+      node('SORT', cx, 0, 0.4, 'rows 3 // est 3 // revenue DESC'),
+      node('GROUP_AGGREGATE', cx, 84, 3.9, 'rows 3 // est 3 // c.plan'),
+      node('HASH_JOIN', cx, 168, 9.6, 'rows 13,903 // est 14,120'),
+      node('INDEX_SCAN // ORDERS', 20, 270, 21.4, 'idx_orders_created // rows 13,903', true),
+      node('HASH', 296, 270, 1.3, 'buckets 4,096 // 2,400 rows'),
+      node('SEQ_SCAN // CUSTOMERS', 296, 354, 4.6, 'rows 2,400 // 0.6 MB'),
+    ];
+    const v = (x, y1, y2) => 'position: absolute; left: ' + (x - 0.5) + 'px; top: ' + y1 + 'px; width: 1.5px; height: ' + (y2 - y1) + 'px; background: var(--ink)';
+    const h = (x1, x2, y) => 'position: absolute; left: ' + x1 + 'px; top: ' + y + 'px; width: ' + (x2 - x1) + 'px; height: 1.5px; background: var(--ink)';
+    const mx = cx + W / 2;
+    const wires = [v(mx, H, 84), v(mx, 84 + H, 168), v(mx, 168 + H, 252), h(130, 406, 252), v(130, 252, 270), v(406, 252, 270), v(406, 270 + H, 354), h(mx - 4, mx + 4, 252)];
+    const planLabel = 'Explain plan, 6 nodes, 41.2 ms total: Sort 0.4 ms, GroupAggregate 3.9, Hash Join 9.6, Index Scan on orders 21.4 (hotspot, 52%), Hash 1.3, Seq Scan on customers 4.6.';
+
+    return {themeVars, dark, cap, capDim, frame, head, box, boxPrimary, big, mid, logo, nav, readouts, rail, tabs, lines, rcols, rhead, result, bars, nodes, wires, planLabel};
+  }
+}
+</script>
+</body>
+</html>

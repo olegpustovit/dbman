@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Halftone 0.7 — Inverted FUI</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="max-width: 1440px; margin: 0 auto; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+
+  <!-- TOP STRIP -->
+  <div style="{{strip}}">
+    <span style="{{navOn}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>KIT</span>
+    <sc-for list="{{navs}}" as="n" hint-placeholder-count="5"><span style="{{nav}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>{{n.t}}</span></sc-for>
+    <span style="flex: 1"></span>
+    <span style="{{cap}}; color: var(--ink3)">HALFTONE // <span style="color: var(--ink)">0.7</span></span>
+    <span style="{{cap}}; color: var(--ink3)">THEME // <span style="color: var(--ink)">{{themeName}}</span></span>
+    <span style="{{cap}}; color: var(--ink3)">TARGET // <span style="color: var(--ink)">SWIFTUI · MACOS 26</span></span>
+  </div>
+
+  <!-- MASTHEAD -->
+  <section style="{{frame}}; padding: 18px 18px 16px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end">
+    <div style="flex: 1 1 560px; min-width: 0">
+      <div style="{{cap}}; color: var(--ink3)">UI KIT // DBMAN // INVERTED FUI</div>
+      <h1 style="margin: 10px 0 0; font-size: 56px; font-weight: 300; letter-spacing: -0.03em; line-height: 0.95">Halftone 0.7</h1>
+      <p style="margin: 10px 0 0; max-width: 620px; font-size: 13px; line-height: 1.5; color: var(--ink2)">The density and structure of instrument panels, inverted to white. Ink lines on paper, caps labels with <b style="font-weight: 600; color: var(--ink)">//</b> metadata, huge light readouts and a tracker-style grid. Colour only appears when it means something.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, auto); gap: 4px">
+      <sc-for list="{{heroStats}}" as="s" hint-placeholder-count="3">
+        <div style="border: 1px solid var(--line); border-radius: 3px; padding: 8px 12px; min-width: 120px">
+          <div style="{{cap}}; color: var(--ink3)">{{s.k}}</div>
+          <div style="font-size: 40px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 4px">{{s.v}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px">
+    <!-- NUMBER RAIL -->
+    <nav aria-label="Sections" style="display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{rail}}" as="r" hint-placeholder-count="10"><a href="{{r.href}}" style="{{r.style}}">{{r.n}}</a></sc-for>
+    </nav>
+
+    <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+
+      <!-- 01 PRINCIPLES -->
+      <section id="k01" style="{{frame}}">
+        <div style="{{head}}"><span>01 // PRINCIPLES</span><span style="{{meta}}">SIX RULES · EVERY SCREEN CHECKED</span><span style="flex: 1"></span><span style="{{chip}}">V7</span></div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line)">
+          <sc-for list="{{principles}}" as="p" hint-placeholder-count="6">
+            <div style="{{p.style}}">
+              <div style="display: flex; align-items: baseline; gap: 10px"><span style="font-size: 28px; font-weight: 300; line-height: 1; color: var(--ink3)">{{p.n}}</span><span style="{{cap}}">{{p.t}}</span></div>
+              <div style="font-size: 12px; line-height: 1.5; color: var(--ink2); margin-top: 6px">{{p.b}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <!-- 02 TOKENS -->
+      <section id="k02" style="{{frame}}">
+        <div style="{{head}}"><span>02 // TOKENS</span><span style="{{meta}}">LIGHT · DARK = TRUE INVERSE</span><span style="flex: 1"></span><span style="{{chip}}">13 VALUES</span></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px; padding: 10px 12px 12px">
+          <sc-for list="{{tokens}}" as="t" hint-placeholder-count="13">
+            <div style="border: 1px solid var(--line); border-radius: 3px; overflow: hidden">
+              <div style="display: flex; height: 44px"><span style="{{t.l}}"></span><span style="{{t.d}}"></span></div>
+              <div style="padding: 6px 8px">
+                <div style="{{cap}}">{{t.name}}</div>
+                <div style="font-family: var(--code); font-size: 11px; color: var(--ink3); margin-top: 2px">{{t.lh}} // {{t.dh}}</div>
+                <div style="font-size: 11px; color: var(--ink2); margin-top: 3px; line-height: 1.35">{{t.use}}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <!-- 03 TYPE -->
+      <section id="k03" style="{{frame}}">
+        <div style="{{head}}"><span>03 // TYPE</span><span style="{{meta}}">FOUR VOICES · SYSTEM FONTS ONLY</span><span style="flex: 1"></span></div>
+        <div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); border-top: 1px solid var(--line)">
+          <div style="padding: 12px; border-right: 1px solid var(--line)">
+            <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap">
+              <div><div style="{{cap}}; color: var(--ink3)">RECORDS // LIVE</div><div style="font-size: 56px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">35.51m</div></div>
+              <div><div style="{{cap}}; color: var(--ink3)">ROWS // ORDERS</div><div style="font-size: 40px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">48,000</div></div>
+              <div><div style="{{cap}}; color: var(--ink3)">TX // S</div><div style="font-size: 28px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">412</div></div>
+            </div>
+            <div style="{{cap}}; margin-top: 16px">SIGNALS_OVER_TIME // LAST_14_DAYS // NAME // windows_sensor</div>
+            <p style="margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink2)">UI text is SF Pro 13/12. It explains, labels controls and carries every sentence. Caps labels never carry sentences.</p>
+            <div style="margin-top: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 3px; font-family: var(--code); font-size: 12px; line-height: 1.6; white-space: pre; overflow-x: auto"><b style="font-weight: 600">SELECT</b> id, total <b style="font-weight: 600">FROM</b> orders <b style="font-weight: 600">WHERE</b> status = <span style="color: var(--ink3)">'pending'</span>;</div>
+          </div>
+          <div role="table" aria-label="Type roles" style="padding: 4px 12px 10px">
+            <sc-for list="{{typeRoles}}" as="r" hint-placeholder-count="7">
+              <div role="row" style="display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); align-items: baseline">
+                <span role="cell" style="{{cap}}; color: var(--ink3)">{{r.role}}</span>
+                <span role="cell" style="font-size: 12px; line-height: 1.45"><span style="{{r.sampleStyle}}">{{r.sample}}</span><br><span style="color: var(--ink3); font-size: 11px">{{r.spec}}</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 FRAMES · STRIP · RAIL · BUTTONS -->
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px">
+        <section id="k04" style="{{frame}}">
+          <div style="{{head}}"><span>04 // FRAMES &amp; STRIP</span><span style="{{meta}}">1PX LINE · 3PX RADIUS · 4PX GAPS</span><span style="flex: 1"></span><span style="{{chip}}">VIEW ALL</span></div>
+          <div style="padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 10px">
+            <div style="{{stripMini}}">
+              <span style="{{navOnSm}}">OVERVIEW</span><span style="{{navSm}}">TABLES</span><span style="{{navSm}}">QUERY</span><span style="{{navSm}}">EXPLAIN</span>
+              <span style="flex: 1"></span><span style="{{capSm}}; color: var(--ink3)">SESSION // <span style="color: var(--ink)">shop</span> · PG 17.2 · 4 MS · 412 TX/S · 14:32:09</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <span style="{{railOn}}">01</span><span style="{{railOff}}">02</span><span style="{{railOff}}">03</span><span style="{{railOff}}">04</span>
+              </div>
+              <div style="border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+                <div style="{{head}}"><span>ENTITIES</span><span style="{{meta}}">// IN_24_HOURS</span><span style="flex: 1"></span><span style="{{chip}}">LIVE</span><span style="{{chipOff}}">14_DAYS</span></div>
+                <div style="display: grid; grid-template-columns: 1fr 1px 1fr; padding: 10px 12px 12px; text-align: center">
+                  <div><div style="font-size: 40px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">1.2k</div><div style="{{capSm}}; color: var(--ink3); margin-top: 4px">ACTIVE_USERS</div></div>
+                  <span style="background: var(--line)"></span>
+                  <div><div style="font-size: 40px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">3.7k</div><div style="{{capSm}}; color: var(--ink3); margin-top: 4px">ACTIVE_DEVICES</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 12px; color: var(--ink2); line-height: 1.45">The top strip carries navigation and the session readout. The number rail maps views to ⌘1–⌘4. Frames have a caps header with <b style="font-weight: 600; color: var(--ink)">TITLE // meta</b> on the left and boxed controls on the right; there is no header fill and no corner bracket.</div>
+          </div>
+        </section>
+
+        <section id="k05" style="{{frame}}">
+          <div style="{{head}}"><span>05 // BUTTONS</span><span style="{{meta}}">BOXES, NOT PILLS</span><span style="flex: 1"></span></div>
+          <div style="padding: 12px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+              <button type="button" style="{{btnPrimary}}">RUN STATEMENT <span style="opacity: .6; letter-spacing: 0">⌘⏎</span></button>
+              <button type="button" style="{{btn}}">EXPLAIN</button>
+              <button type="button" style="{{btn}}">EXPORT <span style="color: var(--ink3); letter-spacing: 0">⇧⌘E</span></button>
+              <button type="button" style="{{btnDanger}}">DELETE 3 ROWS</button>
+              <button type="button" disabled="disabled" style="{{btnOff}}">STOP</button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px">
+              <sc-for list="{{navs}}" as="n" hint-placeholder-count="5"><span style="{{navBig}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>{{n.t}}</span></sc-for>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center">
+              <span style="{{capSm}}; color: var(--ink3)">SEGMENTS //</span>
+              <span style="{{chipOn}}">PAID 18.9K</span><span style="{{chipOff}}">DELIVERED 13.6K</span><span style="{{chipOff}}">SHIPPED 12.0K</span><span style="{{chipAmber}}">PENDING 2.2K</span><span style="{{chipAlert}}">REFUNDED 1.2K</span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border: 1px solid var(--lineStrong); border-radius: 3px; background: var(--paper)">
+              <span style="{{capSm}}; color: var(--ink3)">WHERE</span>
+              <input type="text" aria-label="Filter condition" value="total &gt; 500 AND status = 'paid'" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--code); font-size: 12px; color: var(--ink)">
+              <span style="font-size: 11px; color: var(--ink3)">⏎</span>
+            </label>
+            <div style="font-size: 12px; color: var(--ink2); line-height: 1.45">Outline box = action. Solid ink box = the one primary action per screen. Destructive actions use an alert outline and state their count. Chips toggle filters, and the active chip is inverted.</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 06 DATA GRID -->
+      <section id="k06" style="{{frame}}">
+        <div style="{{head}}"><span>06 // DATA GRID</span><span style="{{meta}}">TRACKER STYLE · ORDERS · 48,000 ROWS</span><span style="flex: 1"></span><span style="{{chip}}">DATA</span><span style="{{chipOff}}">STRUCTURE</span><span style="{{chipOff}}">RELATIONS</span></div>
+        <div role="grid" aria-label="Grid specimen" style="border-top: 1px solid var(--lineStrong); font-family: var(--code); font-size: 12px">
+          <div role="row" style="{{gridHead}}">
+            <span role="columnheader" style="{{gutter}}">ROW</span>
+            <sc-for list="{{gridCols}}" as="c" hint-placeholder-count="6"><span role="columnheader" style="{{c.style}}">{{c.t}}</span></sc-for>
+            <span role="columnheader" style="{{gutterR}}">ROW</span>
+          </div>
+          <sc-for list="{{gridRows}}" as="r" hint-placeholder-count="8">
+            <div role="row" aria-selected="{{r.sel}}" style="{{r.style}}">
+              <span role="gridcell" style="{{r.g}}">{{r.n}}</span>
+              <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="6"><span role="gridcell" style="{{c.style}}">{{c.v}}</span></sc-for>
+              <span role="gridcell" style="{{r.gR}}">{{r.n}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 18px; padding: 8px 12px 10px; font-size: 12px; color: var(--ink2); border-top: 1px solid var(--line)">
+          <span><b style="font-weight: 600; color: var(--ink)">Selection</b> = full-width band across both gutters, with a hairline above and below.</span>
+          <span><b style="font-weight: 600; color: var(--ink)">Focused cell</b> = inverted.</span>
+          <span><b style="font-weight: 600; color: var(--ink)">FK</b> = dotted underline.</span>
+          <span><b style="font-weight: 600; color: var(--ink)">null</b> = faint.</span>
+          <span><b style="font-weight: 600; color: var(--amber)">pending</b> = amber text.</span>
+        </div>
+      </section>
+
+      <!-- 07 INSTRUMENTS -->
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px">
+        <section id="k07" style="{{frame}}">
+          <div style="{{head}}"><span>SIGNALS_OVER_TIME</span><span style="{{meta}}">// LINE</span><span style="flex: 1"></span><span style="{{chip}}">LIVE</span><span style="{{chipOff}}">14_DAYS</span></div>
+          <div style="padding: 6px 12px 10px">
+            <svg viewBox="0 0 300 140" width="100%" height="150" role="img" aria-label="Line chart: three series over 14 days, peak on Aug 24.">
+              <line x1="0" y1="20" x2="300" y2="20" stroke="currentColor" stroke-opacity=".18" stroke-dasharray="2 3"></line>
+              <line x1="0" y1="60" x2="300" y2="60" stroke="currentColor" stroke-opacity=".18" stroke-dasharray="2 3"></line>
+              <line x1="0" y1="100" x2="300" y2="100" stroke="currentColor" stroke-opacity=".18" stroke-dasharray="2 3"></line>
+              <line x1="0" y1="130" x2="300" y2="130" stroke="currentColor" stroke-opacity=".5"></line>
+              <path d="M0 118 C30 116 40 70 70 72 S100 120 130 104 S170 40 190 36 S220 96 250 92 S280 112 300 110" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="1.5"></path>
+              <path d="M0 124 C25 122 45 92 70 96 S110 126 130 116 S165 70 190 60 S225 108 250 100 S285 120 300 118" fill="none" stroke="currentColor" stroke-opacity=".55" stroke-width="1.5"></path>
+              <path d="M0 120 C20 118 40 50 60 52 S95 108 120 96 S160 22 185 18 S215 84 240 80 S280 98 300 96" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+              <circle cx="60" cy="52" r="3" fill="currentColor"></circle><circle cx="120" cy="96" r="3" fill="currentColor"></circle><circle cx="185" cy="18" r="4.5" fill="{{accentHex}}"></circle><circle cx="240" cy="80" r="3" fill="currentColor"></circle>
+            </svg>
+            <div style="display: flex; justify-content: space-between; {{capSm}}; color: var(--ink3)"><span>AUG 14</span><span>AUG 18</span><span>AUG 24</span><span>AUG 28</span></div>
+          </div>
+        </section>
+
+        <section style="{{frame}}">
+          <div style="{{head}}"><span>SENSORS</span><span style="{{meta}}">// SPECTRUM · SEGMENTS</span><span style="flex: 1"></span><span style="{{capSm}}">1 // 2 // 3</span></div>
+          <div style="padding: 8px 12px 10px">
+            <div role="img" aria-label="Bar spectrum of 40 buckets, peak in bucket 9." style="display: flex; align-items: flex-end; gap: 2px; height: 70px; border-bottom: 1px solid var(--lineStrong)">
+              <sc-for list="{{bars}}" as="b" hint-placeholder-count="40"><span style="{{b}}"></span></sc-for>
+            </div>
+            <div style="{{capSm}}; color: var(--ink3); margin: 10px 0 4px">CACHE_HIT // 99.2%</div>
+            <div aria-hidden="true" style="display: flex; gap: 2px; height: 12px"><sc-for list="{{segs}}" as="s" hint-placeholder-count="24"><span style="{{s}}"></span></sc-for></div>
+            <div style="{{capSm}}; color: var(--ink3); margin: 10px 0 4px">CONNECTIONS // 7 OF 100</div>
+            <div aria-hidden="true" style="display: flex; gap: 2px; height: 12px"><sc-for list="{{segs2}}" as="s" hint-placeholder-count="24"><span style="{{s}}"></span></sc-for></div>
+            <div style="display: flex; justify-content: space-between; margin-top: 8px; {{capSm}}"><span style="color: var(--ink3)">NAME // <span style="color: var(--ink)">windows_sensor</span></span><span style="color: var(--ink3)">STATUS // <span style="color: var(--amber)">WARNING</span></span></div>
+          </div>
+        </section>
+
+        <section style="{{frame}}">
+          <div style="{{head}}"><span>SEVERITY</span><span style="{{meta}}">// RADAR</span><span style="flex: 1"></span><span style="{{chip}}">RESOLVE</span></div>
+          <div style="padding: 6px 12px 10px; display: flex; justify-content: center">
+            <svg viewBox="0 0 200 170" width="220" height="186" role="img" aria-label="Radar chart over three axes: severity, name, category; two overlaid profiles.">
+              <polygon points="100,10 185,155 15,155" fill="none" stroke="currentColor" stroke-opacity=".25"></polygon>
+              <polygon points="100,48 152,138 48,138" fill="none" stroke="currentColor" stroke-opacity=".18" stroke-dasharray="2 3"></polygon>
+              <line x1="100" y1="10" x2="100" y2="107" stroke="currentColor" stroke-opacity=".2"></line>
+              <line x1="185" y1="155" x2="100" y2="107" stroke="currentColor" stroke-opacity=".2"></line>
+              <line x1="15" y1="155" x2="100" y2="107" stroke="currentColor" stroke-opacity=".2"></line>
+              <path d="M100 24 Q150 90 165 146 Q100 150 40 140 Q60 80 100 24 Z" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+              <path d="M100 52 Q135 100 140 136 Q100 132 66 130 Q80 92 100 52 Z" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="1.3"></path>
+              <circle cx="100" cy="24" r="3.5" fill="currentColor"></circle><circle cx="165" cy="146" r="3.5" fill="currentColor"></circle><circle cx="40" cy="140" r="3.5" fill="currentColor"></circle>
+              <text x="100" y="6" text-anchor="middle" font-size="8" letter-spacing=".8" fill="currentColor" fill-opacity=".6">SEVERITY</text>
+              <text x="190" y="168" text-anchor="end" font-size="8" letter-spacing=".8" fill="currentColor" fill-opacity=".6">CATEGORY</text>
+              <text x="10" y="168" font-size="8" letter-spacing=".8" fill="currentColor" fill-opacity=".6">NAME</text>
+            </svg>
+          </div>
+        </section>
+
+        <section style="{{frame}}">
+          <div style="{{head}}"><span>ORDERS_2026</span><span style="{{meta}}">// HALFTONE · 1 DOT ≈ 90</span><span style="flex: 1"></span></div>
+          <div style="padding: 10px 12px 12px">
+            <div role="img" aria-label="Halftone of orders per 5-day bucket in ink; current bucket in accent." style="display: grid; grid-template-columns: repeat(40, minmax(0, 1fr))">
+              <sc-for list="{{halftone}}" as="d" hint-placeholder-count="400"><span style="{{d}}"></span></sc-for>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 6px; {{capSm}}; color: var(--ink3)"><span>JAN 02</span><span>NOW // <span style="color: var(--accent)">NOV 09</span></span></div>
+          </div>
+        </section>
+
+        <section style="{{frame}}">
+          <div style="{{head}}"><span>ACTIVITY FEED</span><span style="flex: 1"></span><span style="{{chip}}">INSIGHTS</span><span style="{{chipOff}}">TEAM</span></div>
+          <div style="padding: 2px 12px 8px">
+            <sc-for list="{{feed}}" as="f" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true" style="margin-top: 2px"><path d="M12 3l9 16H3z"></path><path d="M12 9v4M12 16v.5"></path></svg>
+                <div>
+                  <div style="{{capSm}}; color: var(--ink)">{{f.t}}</div>
+                  <div style="font-size: 12px; color: var(--ink2); margin-top: 2px">{{f.b}}</div>
+                  <div style="font-family: var(--code); font-size: 11px; color: var(--ink3); margin-top: 2px">{{f.at}}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="{{frame}}">
+          <div style="{{head}}"><span>OPTION TILES</span><span style="{{meta}}">// CHOOSE AN ENGINE</span><span style="flex: 1"></span></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px 12px 12px">
+            <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+              <button type="button" style="{{t.style}}"><span style="{{t.bar}}"></span><span style="font-size: 13px; font-weight: 600; letter-spacing: .06em">{{t.t}}</span><span style="font-size: 11px; opacity: .7; font-weight: 400; letter-spacing: 0; text-transform: none">{{t.s}}</span></button>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <!-- 08 DENSITY + 09 KEYBOARD -->
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 4px">
+        <section id="k08" style="{{frame}}">
+          <div style="{{head}}"><span>08 // DENSITY</span><span style="{{meta}}">POINTS · MACOS POINTER TARGETS</span><span style="flex: 1"></span></div>
+          <div style="padding: 2px 12px 8px">
+            <sc-for list="{{density}}" as="d" hint-placeholder-count="10">
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) 60px 120px; gap: 10px; align-items: center; height: 24px; border-bottom: 1px solid var(--line); font-size: 12px">
+                <span>{{d.k}}</span>
+                <span style="text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">{{d.v}}</span>
+                <span aria-hidden="true" style="display: flex; align-items: center"><span style="{{d.bar}}"></span></span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+        <section id="k09" style="{{frame}}">
+          <div style="{{head}}"><span>09 // KEYBOARD</span><span style="{{meta}}">EVERY ACTION IN THE MENU BAR</span><span style="flex: 1"></span></div>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line)">
+            <sc-for list="{{keys}}" as="g" hint-placeholder-count="4">
+              <div style="{{g.style}}">
+                <div style="{{capSm}}; color: var(--ink3); margin-bottom: 4px">{{g.name}}</div>
+                <sc-for list="{{g.items}}" as="k" hint-placeholder-count="6">
+                  <div style="display: flex; justify-content: space-between; gap: 8px; height: 22px; align-items: center; font-size: 12px; border-bottom: 1px solid var(--line)"><span>{{k.t}}</span><span style="font-family: var(--code); font-size: 11px; color: var(--ink2)">{{k.k}}</span></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <div style="{{strip}}; justify-content: space-between">
+        <span style="{{capSm}}; color: var(--ink3)">HALFTONE // 0.7 // INVERTED FUI</span>
+        <span style="{{capSm}}; color: var(--ink3)">NEXT // COLOUR · SCREENS 02–09</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":3000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:13px;-webkit-font-smoothing:antialiased;min-height:100%';
+
+    const capBase = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80';
+    const cap = capBase;
+    const capSm = 'font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; white-space: nowrap; overflow: hidden; ' + capBase;
+    const meta = 'color: var(--ink3); font-weight: 500';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 6px; height: 20px; padding: 0 7px; border-radius: 2px; ' + capSm + ';';
+    const chip = boxBase + 'border: 1px solid var(--lineStrong); color: var(--ink)';
+    const chipOff = boxBase + 'border: 1px solid var(--line); color: var(--ink3)';
+    const chipOn = boxBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const chipAmber = boxBase + 'border: 1px solid var(--line); color: var(--amber)';
+    const chipAlert = boxBase + 'border: 1px solid var(--line); color: var(--alert)';
+    const strip = 'display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 4px; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap';
+    const stripMini = 'display: flex; align-items: center; gap: 4px; height: 28px; padding: 0 4px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; white-space: nowrap';
+    const navBase = 'display: inline-flex; align-items: center; gap: 7px; height: 24px; padding: 0 10px; border-radius: 2px; ' + capSm + ';';
+    const nav = navBase + 'border: 1px solid var(--line); color: var(--ink)';
+    const navOn = navBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const navSm = 'display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 2px; border: 1px solid var(--line); ' + capSm;
+    const navOnSm = 'display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 2px; background: var(--ink); color: var(--paper); ' + capSm;
+    const navBig = 'display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 2px; border: 1px solid var(--lineStrong); ' + capSm;
+    const railBase = 'display: flex; align-items: center; justify-content: center; height: 26px; border-radius: 2px; text-decoration: none; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;';
+    const railOn = railBase + 'background: var(--ink); color: var(--paper)';
+    const railOff = railBase + 'border: 1px solid var(--line); color: var(--ink2); background: var(--paper)';
+    const btnBase = 'display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: 2px; cursor: pointer; font-family: var(--ui); ' + capSm + ';';
+    const btnPrimary = btnBase + 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper)';
+    const btn = btnBase + 'border: 1px solid var(--lineStrong); background: var(--paper); color: var(--ink)';
+    const btnDanger = btnBase + 'border: 1px solid var(--alert); background: var(--paper); color: var(--alert)';
+    const btnOff = btnBase + 'border: 1px solid var(--line); background: var(--paper); color: var(--ink3); cursor: default';
+
+    const I = {
+      overview: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', tables: 'M3 4h18v16H3zM3 10h18M9 4v16', query: 'M4 17l6-5-6-5M12 19h8',
+      explain: 'M5 4v6h6M5 10l7 7M13 17h6v-6', activity: 'M3 12h4l3-8 4 16 3-8h4',
+    };
+    const navs = [['TABLES', I.tables], ['QUERY', I.query], ['EXPLAIN', I.explain], ['ACTIVITY', I.activity], ['OVERVIEW', I.overview]].map(([tt, icon]) => ({t: tt, icon}));
+    const heroStats = [{k: 'TOKENS', v: '13'}, {k: 'COMPONENTS', v: '24'}, {k: 'TYPE SIZES', v: '6'}];
+    const rail = ['01', '02', '03', '04', '05', '06', '07', '08', '09'].map((n, i) => ({n, href: '#k' + n, style: i === 0 ? railOn : railOff}));
+
+    const principles = [
+      ['01', 'INK ON PAPER', 'Monochrome lines, bars and curves. Colour is a signal, never decoration.'],
+      ['02', 'DENSITY WITH AIR', '28 pt rows, 4 pt gaps between frames, 12 pt padding inside them. Dense but never cramped.'],
+      ['03', 'CAPS LABEL, SENTENCE BODY', 'Caps with // carry metadata; sentences stay in sentence case, in SF Pro.'],
+      ['04', 'READOUTS ARE HUGE AND LIGHT', 'One big number per frame, at weight 300, with its label stacked beside it.'],
+      ['05', 'INSTRUMENTS OVER GRIDS', 'Every table arrives with its shape: header halftones, curves, spectrum, ER and plan.'],
+      ['06', 'KEYBOARD FIRST', 'Rail ⌘1–⌘4, palette ⌘K, run ⌘⏎. Every action sits in the menu bar.'],
+    ].map(([n, tt, b], i) => ({n, t: tt, b, style: 'padding: 12px; border-right: ' + (i % 3 === 2 ? '0' : '1px solid var(--line)') + '; border-bottom: ' + (i < 3 ? '1px solid var(--line)' : '0')}));
+
+    const sw = (c) => 'flex: 1; background: ' + c + '; box-shadow: inset 0 0 0 1px rgba(128,128,128,.15)';
+    const tokens = [
+      ['BACKDROP', 'backdrop', 'Window behind frames, 8 pt dot grid.'], ['PAPER', 'paper', 'Frames, grid, sheets.'], ['SUNKEN', 'sunken', 'Inputs, code blocks.'],
+      ['INK', 'ink', 'Text, lines, bars, primary fill.'], ['INK 2', 'ink2', 'Secondary text.'], ['INK 3', 'ink3', 'Labels, meta, gutters.'],
+      ['LINE', 'line', 'Frame borders, row rules.'], ['LINE STRONG', 'lineStrong', 'Header rule, outline buttons.'], ['FILL 12', 'fill12', 'Selection band, empty segments.'],
+      ['FILL 30', 'fill30', 'Secondary series, ghosts.'], ['ACCENT', 'accent', 'Live, now, selected. Nothing else.'], ['AMBER', 'amber', 'Pending, production, warning.'], ['ALERT', 'alert', 'Errors, destructive.'],
+    ].map(([name, key, use]) => ({name, use, lh: L[key].length > 9 ? L[key].replace('rgba(', '').replace(')', '') : L[key], dh: D[key].length > 9 ? D[key].replace('rgba(', '').replace(')', '') : D[key], l: sw(L[key]), d: sw(D[key])}));
+
+    const typeRoles = [
+      ['READOUT', '35.51m', 'font-size: 28px; font-weight: 300; letter-spacing: -0.03em', 'SF Pro Display 300 · 28 / 40 / 56 · −3%'],
+      ['LABEL', 'RECORDS // LIVE', capBase, 'SF Pro condensed 600 · 11 · caps · +8%'],
+      ['TITLE', 'orders', 'font-size: 15px; font-weight: 600', 'SF Pro 600 · 15'],
+      ['BODY', 'Paste a connection URL to begin.', 'font-size: 13px', 'SF Pro 400 · 13 / 12'],
+      ['GRID', '58429  1182  1,177.20', 'font-family: var(--code); font-size: 12px', 'SF Mono 400 · 12 · tabular'],
+      ['META', '30_minutes_ago', 'font-family: var(--code); font-size: 11px; color: var(--ink3)', 'SF Mono 400 · 11 · ink 3'],
+      ['NULL', 'null', 'font-family: var(--code); font-size: 12px; color: var(--ink3); font-style: italic', 'SF Mono italic · ink 3'],
+    ].map(([role, sample, sampleStyle, spec]) => ({role, sample, sampleStyle, spec}));
+
+    // grid specimen
+    const gcols = [['ID', 'right', 70], ['CUSTOMER_ID', 'right', 110], ['STATUS', 'left', 100], ['TOTAL', 'right', 100], ['CREATED_AT', 'left', 150], ['SHIPPED_AT', 'left', 0]];
+    const tmpl = '48px 70px 110px 100px 100px 150px minmax(120px, 1fr) 48px';
+    const gridHead = 'display: grid; grid-template-columns: ' + tmpl + '; height: 28px; align-items: center; border-bottom: 1px solid var(--lineStrong); font-family: var(--ui); ' + capSm;
+    const gutter = 'padding: 0 8px; color: var(--ink3); text-align: right';
+    const gutterR = 'padding: 0 8px; color: var(--ink3)';
+    const gridCols = gcols.map(([tt, al]) => ({t: tt, style: 'padding: 0 10px; border-left: 1px solid var(--line); text-align: ' + al + ';' + (tt === 'ID' ? ' text-decoration: underline 1px solid; text-underline-offset: 3px;' : '')}));
+    const raw = [
+      ['58431', '1182', 'paid', '412.00', '2026-11-09 14:07', '—'],
+      ['58430', '2207', 'shipped', '1,177.20', '2026-11-09 12:51', '2026-11-10 14:02'],
+      ['58429', '944', 'pending', '88.40', '2026-11-09 11:23', null],
+      ['58428', '1610', 'delivered', '2,040.00', '2026-11-09 09:48', '2026-11-10 08:30'],
+      ['58427', '73', 'paid', '96.10', '2026-11-09 08:02', null],
+      ['58426', '1999', 'refunded', '640.75', '2026-11-08 23:40', '2026-11-09 21:10'],
+      ['58425', '1182', 'paid', '233.50', '2026-11-08 21:15', null],
+      ['58424', '512', 'shipped', '1,402.00', '2026-11-08 19:44', '2026-11-09 18:20'],
+    ];
+    const selIdx = 2;
+    const gridRows = raw.map((r, i) => {
+      const sel = i === selIdx;
+      const cells = r.map((v, j) => {
+        const al = gcols[j][1];
+        let st = 'padding: 0 10px; border-left: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: ' + al + ';';
+        if (j === 1) st += ' text-decoration: underline dotted; text-underline-offset: 3px;';
+        if (j === 2 && v === 'pending') st += ' color: var(--amber); font-weight: 600;';
+        if (j === 2 && v === 'refunded') st += ' color: var(--alert);';
+        if (v === null) st += ' color: var(--ink3); font-style: italic;';
+        if (sel && j === 3) st += ' background: var(--ink); color: var(--paper); font-weight: 600;';
+        return {v: v === null ? 'null' : v, style: st};
+      });
+      return {
+        n: (i + 30).toString(16).toUpperCase().padStart(2, '0'), sel: sel ? 'true' : 'false', cells,
+        style: 'display: grid; grid-template-columns: ' + tmpl + '; height: 28px; align-items: stretch; line-height: 28px; border-bottom: 1px solid var(--line);' + (sel ? ' background: var(--fill12); box-shadow: inset 0 1px 0 var(--lineStrong), inset 0 -1px 0 var(--lineStrong);' : ''),
+        g: 'padding: 0 8px; text-align: right; color: ' + (sel ? 'var(--ink)' : 'var(--ink3)') + ';' + (sel ? ' font-weight: 600;' : ''),
+        gR: 'padding: 0 8px; color: ' + (sel ? 'var(--ink)' : 'var(--ink3)') + ';' + (sel ? ' font-weight: 600;' : ''),
+      };
+    });
+
+    // instruments
+    let seed = 11;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const bars = [];
+    for (let i = 0; i < 40; i++) { const v = i === 9 ? 1 : Math.max(0.12, Math.min(0.92, 0.35 + 0.3 * Math.sin(i / 3.1) + (rnd() - 0.5) * 0.35)); bars.push('flex: 1; height: ' + Math.round(v * 100) + '%; background: ' + (i === 9 ? t.accent : (i % 7 === 3 ? t.fill30 : t.ink))); }
+    const seg = (n, on, c) => Array.from({length: 24}, (_, i) => 'flex: 1; border-radius: 1px; background: ' + (i < on ? c : t.fill12));
+    const segs = seg(24, 23, t.ink);
+    const segs2 = seg(24, 2, t.ink);
+    const halftone = [];
+    const hgt = [];
+    for (let c = 0; c < 40; c++) hgt.push(Math.max(2, Math.min(10, Math.round((0.3 + 0.6 * Math.pow(c / 40, 1.2) + 0.08 * Math.sin(c / 3) + (rnd() - 0.5) * 0.1) * 10))));
+    for (let r = 0; r < 10; r++) for (let c = 0; c < 40; c++) {
+      const lvl = 9 - r; const on = lvl < hgt[c];
+      const size = on ? (55 + lvl * 3) : 34;
+      const col = on ? (c === 39 ? t.accent : (lvl === hgt[c] - 1 && c % 6 === 2 ? t.amber : t.ink)) : t.fill12;
+      halftone.push('aspect-ratio: 1; background: radial-gradient(circle closest-side, ' + col + ' 0 ' + size + '%, transparent ' + (size + 8) + '%)');
+    }
+    const feed = [
+      {t: 'INSIDER_THREAT // LONG_TRANSACTION', b: 'etl has held a transaction open for 4m 12s on events.', at: '30_minutes_ago'},
+      {t: 'INSIGHT // PENDING_DOUBLED', b: 'Pending orders doubled since Monday; most await payment.', at: '2_hours_ago'},
+      {t: 'INDEX // UNUSED', b: 'idx_events_payload_gin has had 0 scans in 30 days.', at: 'yesterday'},
+    ];
+    const tileBase = 'display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 12px 12px 16px; position: relative; border-radius: 3px; text-align: left; cursor: pointer; font-family: var(--ui); text-transform: uppercase; min-height: 64px;';
+    const tiles = [['POSTGRESQL', 'localhost:5432 · 17.2', true], ['MYSQL', 'staging.crm · 8.4'], ['SQLITE', 'any .sqlite or .db file'], ['DUCKDB', 'v1.1 · roadmap']].map(([tt, s2, on]) => ({t: tt, s: s2,
+      style: tileBase + (on ? 'border: 1px solid var(--lineStrong); background: var(--ink); color: var(--paper);' : 'border: 1px solid var(--lineStrong); background: var(--paper); color: var(--ink);'),
+      bar: 'position: absolute; left: 6px; top: 12px; bottom: 12px; width: 2px; background: ' + (on ? 'var(--paper)' : 'var(--ink)')}));
+
+    const density = [
+      ['Window padding', 6], ['Gap between frames', 4], ['Frame padding', 12], ['Frame header', 34], ['Top strip', 32], ['Number rail', 28],
+      ['Grid row', 28], ['Box button', 28], ['Chip / small box', 20], ['Icon hit area', 24],
+    ].map(([k, v]) => ({k, v: v + ' pt', bar: 'height: 8px; width: ' + Math.round(v / 34 * 100) + '%; background: var(--ink)'}));
+    const kgroup = (name, items, i) => ({name, style: 'padding: 10px 12px; ' + (i < 3 ? 'border-right: 1px solid var(--line);' : ''), items: items.map(([tt, k]) => ({t: tt, k}))});
+    const keys = [
+      kgroup('NAVIGATE', [['Palette', '⌘K'], ['Back / forward', '⌘[ ⌘]'], ['Views 01–04', '⌘1–⌘4'], ['Overview', '⌘0'], ['Filter navigator', '⌥⌘F'], ['Follow FK', '⌘↓']], 0),
+      kgroup('GRID', [['Find', '⌘F'], ['Edit cell', '⏎'], ['Quick Look row', 'Space'], ['Add row', '⌥⌘N'], ['Copy as JSON', '⌥⌘C'], ['Relative dates', '⌃⌘R']], 1),
+      kgroup('QUERY', [['Run statement', '⌘⏎'], ['Cancel', '⌘.'], ['Explain', '⌥⌘E'], ['Review & commit', '⇧⌘R'], ['Undo staged', '⌘Z'], ['Export', '⇧⌘E']], 2),
+      kgroup('WINDOW', [['New tab', '⌘T'], ['Close tab', '⌘W'], ['Console', '⌘J'], ['Inspector', '⌥⌘I'], ['Lock production', '⌘L'], ['New connection', '⌘N']], 3),
+    ];
+    return {themeVars, themeName: dark ? 'DARK' : 'LIGHT', accentHex: t.accent, cap, capSm, frame, head, meta, chip, chipOff, chipOn, chipAmber, chipAlert, strip, stripMini, nav, navOn, navSm, navOnSm, navBig, railOn, railOff,
+      btn, btnPrimary, btnDanger, btnOff, navs, heroStats, rail, principles, tokens, typeRoles, gridHead, gutter, gutterR, gridCols, gridRows, bars, segs, segs2, halftone, feed, tiles, density, keys};
+  }
+}
+</script>
+</body>
+</html>

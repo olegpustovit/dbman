@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI-built dashboard — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="width: 1392px; margin: 0 auto; padding-top: 14px; display: flex; flex-direction: column; gap: 0">
+
+  <!-- ============ STATE 1 · EMPTY ============ -->
+  <div style="display: flex; align-items: baseline; gap: 8px; height: 26px">
+    <span style="{{cap}}">01 // new dashboard</span><span style="{{capDim}}">empty state · three ways in · F5 step 1 of 5</span>
+  </div>
+  <section aria-label="New dashboard, empty" style="{{win}} height: 300px">
+    <div style="{{titleBar}}">
+      <span aria-hidden="true" style="display: inline-flex; gap: 7px"><span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span></span>
+      <span style="{{cap}} margin-left: 8px">untitled dashboard</span><span style="{{capDim}}">// shop · local · 0 widgets</span>
+      <span style="flex: 1"></span>
+      <span style="{{boxOff}}">edit // ⌘E</span><span style="{{boxOff}}">layer // mine ▾</span>
+    </div>
+    <div style="position: relative; height: 270px; display: grid; grid-template-columns: 240px minmax(0, 1fr) 230px 200px; gap: 8px; padding: 10px; box-sizing: border-box">
+      <div aria-hidden="true" style="position: absolute; inset: 10px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; pointer-events: none">
+        <sc-for list="{{ghostCols}}" as="g" hint-placeholder-count="12"><span style="{{g}}"></span></sc-for>
+      </div>
+
+      <div style="position: relative; display: flex; flex-direction: column; justify-content: center; padding: 0 14px">
+        <div style="font-size: 64px; font-weight: 300; letter-spacing: -0.04em; line-height: .9">00</div>
+        <div style="{{cap}} font-size: 13px; margin-top: 8px">no widgets yet</div>
+        <div style="font-size: 12px; line-height: 1.5; color: var(--ink2); margin-top: 6px; max-width: 220px">A dashboard is a 12-column grid of widgets. Start one of three ways. Every widget keeps its SQL inspectable, and nothing an agent builds reaches MINE until you adopt it.</div>
+        <div style="{{capDim}} margin-top: 10px">12 cols · 8 pt grid · ⌘E edits layout</div>
+      </div>
+
+      <!-- generate -->
+      <div style="position: relative; {{card}} border-color: var(--lineStrong); display: flex; flex-direction: column">
+        <div style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-bottom: 1px solid var(--line)">
+          <span style="{{cap}}">01 // generate with agent</span><span style="flex: 1"></span><span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">⌥⌘G</span>
+        </div>
+        <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 12px; padding: 8px 10px">
+          <div style="min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; align-items: center; gap: 6px"><span style="{{capDim}}">agent //</span>
+              <span role="radiogroup" aria-label="Agent" style="display: inline-flex; gap: 4px">
+                <sc-for list="{{agents}}" as="a" hint-placeholder-count="2">
+                  <button type="button" role="radio" aria-checked="{{a.on}}" title="{{a.tip}}" onClick="{{a.pick}}" style="{{a.style}}"><span style="{{a.mono}}">{{a.m}}</span><span style="font-family: var(--code); font-size: 11.5px">{{a.name}}</span><span style="{{a.stStyle}}">{{a.st}}</span></button>
+                </sc-for>
+              </span>
+            </div>
+            <label style="display: block">
+              <span style="{{capDim}}">prompt</span>
+              <textarea aria-label="Prompt for the agent" rows="3" style="display: block; width: 100%; box-sizing: border-box; margin-top: 3px; height: 62px; resize: none; padding: 6px 8px; border: 1.5px solid var(--accent); border-radius: 3px; background: var(--paper); color: var(--ink); font: 12.5px/1.4 var(--ui)">Sales health for shop: revenue, orders, top products, refunds</textarea>
+            </label>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px">
+              <button type="button" title="Send to the agent  ⌘↩" style="{{boxPrimary}}">generate // ⌘↩</button>
+              <span style="{{capDim}} font-size: 10px; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{genNote}}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line)">
+              <span style="{{capDim}}">no agent connected?</span>
+              <button type="button" title="Copy the build-dashboard prompt, with schema and component catalog, to the clipboard" style="{{box}}">copy prompt</button>
+              <span style="font-size: 11px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">Paste into any agent with dbman MCP; the result still arrives here as a proposal.</span>
+            </div>
+          </div>
+          <div style="min-width: 0; border-left: 1px solid var(--line); padding-left: 10px">
+            <div style="display: flex; gap: 6px"><span style="{{capDim}}">scope // tables</span><span style="flex: 1"></span><span style="{{cap}} font-size: 10px">{{scopeCount}}</span></div>
+            <div role="group" aria-label="Tables the agent may read" style="margin-top: 4px">
+              <sc-for list="{{scope}}" as="s" hint-placeholder-count="8">
+                <button type="button" role="checkbox" aria-checked="{{s.on}}" onClick="{{s.pick}}" style="display: flex; align-items: center; gap: 7px; width: 100%; height: 20px; padding: 0; border: 0; background: transparent; color: var(--ink); cursor: pointer; text-align: left">
+                  <span style="{{s.box}}">{{s.tick}}</span><span style="font-family: var(--code); font-size: 11.5px; flex: 1">{{s.n}}</span><span style="{{s.metaStyle}}">{{s.meta}}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- template -->
+      <div style="position: relative; {{card}} display: flex; flex-direction: column">
+        <div style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">02 // start from template</span></div>
+        <div style="padding: 4px 10px; flex: 1">
+          <sc-for list="{{templates}}" as="tp" hint-placeholder-count="4">
+            <div style="display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; height: 44px; border-bottom: 1px solid var(--line); cursor: pointer">
+              <svg width="34" height="24" viewBox="0 0 34 24" aria-hidden="true" style="color: var(--ink); border: 1px solid var(--line); border-radius: 2px; box-sizing: border-box"><path d="{{tp.thumb}}" fill="currentColor" opacity=".55"></path></svg>
+              <span style="min-width: 0"><span style="display: block; font-size: 12.5px; font-weight: 600">{{tp.n}}</span><span style="display: block; font-size: 11px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{tp.d}}</span></span>
+              <span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">{{tp.c}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- add widget -->
+      <div style="position: relative; {{card}} display: flex; flex-direction: column">
+        <div style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-bottom: 1px solid var(--line)"><span style="{{cap}}">03 // add widget</span><span style="flex: 1"></span><span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">⌘L</span></div>
+        <div style="padding: 10px; flex: 1; display: flex; flex-direction: column">
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px">
+            <sc-for list="{{libThumbs}}" as="lt" hint-placeholder-count="9">
+              <span title="{{lt.id}}" style="display: flex; align-items: center; justify-content: center; height: 30px; border: 1px solid var(--line); border-radius: 2px"><svg width="28" height="18" viewBox="0 0 28 18" fill="none" stroke="currentColor" stroke-width="{{lt.sw}}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{lt.d}}"></path></svg></span>
+            </sc-for>
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.45; color: var(--ink2); margin-top: 8px">Opens the component library: 19 types in 7 groups. Drag one onto the grid.</div>
+          <span style="flex: 1"></span>
+          <a href="Dashboard.dc.html" style="{{boxL}} justify-content: center">+ add widget</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATE 2 · PROPOSAL ============ -->
+  <div style="display: flex; align-items: baseline; gap: 8px; height: 26px; margin-top: 16px">
+    <span style="{{cap}}">02 // proposal review</span><span style="{{capDim}}">incoming dashboard.create · lands in the claude-code layer · ghost preview on live data · per-widget adopt · F5 steps 2–3</span>
+  </div>
+  <section aria-label="Dashboard proposal from claude-code" style="{{win}} height: 560px">
+    <div style="{{titleBar}}">
+      <span aria-hidden="true" style="display: inline-flex; gap: 7px"><span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span></span>
+      <span style="{{cap}} margin-left: 8px">proposal</span><span style="{{capDim}}">// dashboard.create · from claude-code · 14:32:09</span>
+      <span style="flex: 1"></span>
+      <span style="{{chip}}">layer // claude-code · new</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; border-bottom: 1px solid var(--line)">
+      <span style="{{monoTile}}">CC</span>
+      <span style="font-size: 12.5px"><b style="font-weight: 600">claude-code</b> proposes <b style="font-weight: 600">Sales health // shop</b> — 8 widgets, every query validated read-only. It lives in claude-code's layer until adopted.</span>
+      <span style="flex: 1"></span>
+      <span style="{{chip}}">{{okCount}} valid</span><span style="{{chipAlert}}">1 alert</span><span style="{{chip}}">total cost // {{totalCost}}</span><span style="{{chip}}">preview // live data</span>
+    </div>
+
+    <div style="display: flex; height: 438px">
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+        <div role="group" aria-label="Proposed widgets, ghost preview" style="position: relative; height: {{gridH}}px; margin: 10px 10px 0; background-image: radial-gradient(circle, var(--fill30) 1px, transparent 1.3px); background-size: 8px 8px">
+          <sc-for list="{{ghosts}}" as="g" hint-placeholder-count="8">
+            <div onClick="{{g.open}}" aria-label="{{g.aria}}" style="{{g.style}}">
+              <div style="display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 6px">
+                <button type="button" role="checkbox" aria-checked="{{g.on}}" aria-label="{{g.checkLabel}}" title="{{g.checkTip}}" onClick="{{g.toggle}}" style="{{g.box}}">{{g.tick}}</button>
+                <span style="{{cap}} font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; min-width: 0">{{g.title}}</span>
+                <span style="{{capDim}} font-size: 9.5px; flex: none">// {{g.type}}</span>
+                <span style="flex: 1"></span>
+                <span style="{{g.costStyle}}">{{g.costT}}</span>
+                <span aria-hidden="true" style="font-size: 10px; color: var(--ink3)">{{g.chev}}</span>
+              </div>
+              <sc-if value="{{g.isAlert}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 10px 0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true" style="color: var(--alert); flex: none"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.01"></path></svg>
+                  <div style="min-width: 0"><div style="font-family: var(--code); font-size: 12px; color: var(--alert)">column orders.total_cents not found</div><div style="{{capDim}} font-size: 10px; margin-top: 3px">42703 // validation failed · unchecked · not adopted</div></div>
+                </div>
+              </sc-if>
+              <sc-if value="{{g.isChart}}" hint-placeholder-val="{{true}}">
+                <div style="{{g.bodyStyle}}">
+                  <span style="{{g.valStyle}}">{{g.v}}</span>
+                  <svg width="{{g.sw}}" height="{{g.sh}}" viewBox="{{g.vb}}" fill="none" stroke-linecap="round" aria-hidden="true" style="display: block; overflow: visible">
+                    <path d="{{g.p1.d}}" stroke="currentColor" stroke-width="{{g.p1.w}}" style="{{g.p1.s}}"></path>
+                    <path d="{{g.p2.d}}" stroke="currentColor" stroke-width="{{g.p2.w}}" style="{{g.p2.s}}"></path>
+                    <path d="{{g.p3.d}}" stroke="currentColor" stroke-width="{{g.p3.w}}" style="{{g.p3.s}}"></path>
+                  </svg>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- expanded widget: SQL + cost -->
+        <div aria-label="Selected widget SQL" style="flex: 1; min-height: 0; margin: 8px 10px 10px; border: 1px solid {{drawerBorder}}; border-radius: 3px; display: grid; grid-template-columns: minmax(0, 1fr) 260px">
+          <div style="min-width: 0; display: flex; flex-direction: column">
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-bottom: 1px solid var(--line)">
+              <span style="{{cap}} font-size: 10.5px">{{open.id}} // {{open.title}}</span><span style="{{capDim}} font-size: 10.5px">· {{open.type}} · sql</span>
+            </div>
+            <div style="flex: 1; padding: 4px 0; font-family: var(--code); font-size: 11.5px; line-height: 16px; background: var(--sunken); overflow: hidden">
+              <sc-for list="{{open.sql}}" as="ln" hint-placeholder-count="7">
+                <div style="display: flex; white-space: pre"><span style="width: 26px; flex: none; text-align: right; padding-right: 8px; color: var(--ink3)">{{ln.n}}</span><sc-for list="{{ln.tok}}" as="k" hint-placeholder-count="4"><span style="{{k.s}}">{{k.t}}</span></sc-for></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="border-left: 1px solid var(--line); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; gap: 6px; align-items: center"><span style="{{open.badge}}">{{open.badgeT}}</span><span style="font-family: var(--code); font-size: 11px; color: var(--ink3)">{{open.ms}}</span></div>
+            <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2)">{{open.plan}}</div>
+            <sc-if value="{{open.isAlert}}" hint-placeholder-val="{{true}}">
+              <div style="font-size: 11.5px; line-height: 1.4">Did you mean <span style="font-family: var(--code)">orders.total</span>? numeric(10,2), dollars.</div>
+              <button type="button" onClick="{{useFix}}" style="{{box}} align-self: flex-start">use orders.total → ask</button>
+            </sc-if>
+            <sc-if value="{{open.notAlert}}" hint-placeholder-val="{{false}}">
+              <div style="{{capDim}} font-size: 10px">rows // {{open.rows}} · read-only · within row cap 500</div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+
+      <!-- reasoning -->
+      <aside aria-label="Agent reasoning" style="flex: 0 0 420px; border-left: 1px solid var(--lineStrong); padding: 10px 12px; box-sizing: border-box; overflow: hidden">
+        <div style="display: flex; align-items: center; gap: 6px"><span style="{{cap}}">agent reasoning</span><span style="{{capDim}}">// claude-code · 14 calls · 2.1 s</span></div>
+        <div style="font-size: 12px; line-height: 1.45; color: var(--ink2); margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--accent)">“Sales health = money in, volume, what sells, money out. Every query filters created_at by :range.”</div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 10px"><span style="{{capSm}}">calls</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+        <sc-for list="{{calls}}" as="c" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) 50px; gap: 8px; height: 18px; align-items: center; font-family: var(--code); font-size: 11px"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.t}} <span style="color: var(--ink3)">{{c.a}}</span></span><span style="color: var(--ink3); text-align: right">{{c.ms}}</span></div>
+        </sc-for>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px"><span style="{{capSm}}">tables used // 5</span><span style="{{capDim}} font-size: 10px">pii «redacted», not read</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px">
+          <sc-for list="{{used}}" as="u" hint-placeholder-count="5"><span style="display: inline-flex; gap: 5px; align-items: center; height: 18px; padding: 0 6px; border: 1px solid var(--line); border-radius: 2px; font-family: var(--code); font-size: 11px">{{u.n}}<span style="color: var(--ink3)">{{u.r}}</span></span></sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px"><span style="{{capSm}}">why each chart</span><span aria-hidden="true" style="flex: 1; height: 1px; background: var(--line)"></span></div>
+        <sc-for list="{{whys}}" as="y" hint-placeholder-count="8">
+          <div onClick="{{y.open}}" style="{{y.style}}"><span style="font-family: var(--code); font-size: 10.5px; color: var(--ink3)">{{y.id}}</span><span style="{{y.tStyle}}">{{y.why}}</span></div>
+        </sc-for>
+      </aside>
+    </div>
+
+    <div style="height: 50px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid var(--lineStrong); box-sizing: border-box">
+      <button type="button" title="Copy checked widgets from the claude-code layer into MINE  ⌘↩" style="{{boxPrimary}}">{{acceptLabel}}</button>
+      <label style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px 0 8px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 3px">
+        <span style="{{capDim}}">ask for changes //</span>
+        <input type="text" aria-label="Ask the agent for changes" value="{{askText}}" placeholder="e.g. add a funnel from events to paid orders" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 12px var(--ui); color: var(--ink)">
+        <button type="button" title="Send to claude-code as dashboard feedback" style="{{box}}">ask for changes</button>
+      </label>
+      <button type="button" title="Remove it from the claude-code layer; the agent receives REJECTED" style="{{boxL}}">discard</button>
+      <span style="{{capDim}}">layer // claude-code → mine</span>
+    </div>
+  </section>
+
+  <!-- ============ STATE 3 · DRIFT ============ -->
+  <div style="display: flex; align-items: baseline; gap: 8px; height: 26px; margin-top: 16px">
+    <span style="{{cap}}">03 // schema drift</span><span style="{{capDim}}">migration 0042 renamed orders.total → orders.amount_total · widget error → dashboard.update patch in the agent's layer</span>
+  </div>
+  <section aria-label="Schema drift on a saved dashboard" style="{{win}} height: 300px">
+    <div style="{{titleBar}}">
+      <span aria-hidden="true" style="display: inline-flex; gap: 7px"><span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span></span>
+      <span style="{{cap}} margin-left: 8px">Revenue // 30 d</span><span style="{{capDim}}">// shop · 5 widgets · 1 failing since 09:12</span>
+      <span style="flex: 1"></span>
+      <span style="{{chipAlert}}">1 widget error</span>
+    </div>
+    <div style="display: flex; height: 270px">
+      <div style="flex: 0 0 640px; position: relative; padding: 10px; box-sizing: border-box">
+        <div style="position: relative; height: 250px; background-image: radial-gradient(circle, var(--fill30) 1px, transparent 1.3px); background-size: 8px 8px">
+          <sc-for list="{{drift}}" as="d" hint-placeholder-count="5">
+            <div style="{{d.style}}">
+              <div style="display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px"><span style="{{d.titleStyle}}">{{d.title}}</span><span style="{{capDim}} font-size: 9.5px">// {{d.type}}</span><span style="flex: 1"></span><span style="{{capDim}} font-size: 9.5px">{{d.meta}}</span></div>
+              <sc-if value="{{d.ok}}" hint-placeholder-val="{{true}}">
+                <div style="display: flex; align-items: flex-end; gap: 8px; padding: 0 8px">
+                  <span style="font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1">{{d.v}}</span>
+                  <svg width="{{d.sw}}" height="{{d.sh}}" viewBox="{{d.vb}}" fill="none" stroke-linecap="round" aria-hidden="true" style="display: block; overflow: visible"><path d="{{d.p}}" stroke="currentColor" stroke-width="{{d.pw}}" style="color: var(--ink)"></path></svg>
+                </div>
+              </sc-if>
+              <sc-if value="{{d.err}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 8px 12px 0; display: flex; gap: 10px">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true" style="color: var(--alert); flex: none"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.01"></path></svg>
+                  <div style="min-width: 0">
+                    <div style="font-size: 15px; font-weight: 600; color: var(--alert)">column <span style="font-family: var(--code); font-weight: 500">total</span> not found</div>
+                    <div style="font-family: var(--code); font-size: 11px; color: var(--ink2); margin-top: 4px">ERROR 42703 · now orders.amount_total (0042_rename_total)</div>
+                    <div style="{{capDim}} font-size: 10px; margin-top: 4px">last good result // 09:11 · showing nothing rather than stale data</div>
+                    <div style="display: flex; gap: 6px; margin-top: 10px">
+                      <button type="button" title="Sends dashboard.get + the error to the connected agent" style="{{boxPrimary}} height: 24px; background: var(--accent); border-color: var(--accent)">ask agent to fix</button>
+                      <a href="Dashboard.dc.html" title="Open in the widget inspector, DATA tab" style="{{box}} height: 24px">edit sql</a>
+                    </div>
+                    <div style="font-size: 11px; color: var(--ink3); margin-top: 6px">Sends dashboard.get + error 42703 + schema.describe orders to claude-code.</div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-width: 0; border-left: 1px solid var(--lineStrong); display: flex; flex-direction: column">
+        <div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-bottom: 1px solid var(--line)">
+          <span style="{{monoTile}}">CC</span>
+          <span style="{{cap}}">dashboard.update</span><span style="{{capDim}}">// layer claude-code · 3 ops on w5</span>
+          <span style="flex: 1"></span>
+          <span style="{{chip}}">re-validated // 30 rows · 6 ms</span><span style="{{chip}}">explain // cost 1,842</span>
+        </div>
+        <div role="table" aria-label="JSON patch diff" style="flex: 1; min-height: 0; padding: 6px 0; font-family: var(--code); font-size: 11.5px; line-height: 18px; overflow: hidden">
+          <sc-for list="{{patch}}" as="p" hint-placeholder-count="11">
+            <div role="row" style="{{p.style}}"><span style="width: 28px; flex: none; text-align: right; padding-right: 6px; color: var(--ink3)">{{p.n}}</span><span style="{{p.signStyle}}">{{p.sign}}</span><span style="white-space: pre; overflow: hidden; text-overflow: ellipsis">{{p.t}}</span></div>
+          </sc-for>
+        </div>
+        <div style="height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid var(--line)">
+          <button type="button" title="Adopt the patch from the claude-code layer into MINE  ⌘↩" style="{{boxPrimary}}">adopt patch // ⌘↩</button>
+          <button type="button" title="Discard from the claude-code layer; agent receives REJECTED with your note" style="{{boxL}}">discard</button>
+          <a href="Dashboard.dc.html" style="{{boxL}}">open in editor</a>
+          <span style="flex: 1"></span>
+          <span style="{{capDim}}">test op guards against concurrent edits</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {agent: 'cc', scope: {customers: true, products: true, orders: true, order_items: true, invoices: true, refunds: true, events: false, addresses: false},
+      checked: {w1: true, w2: true, w3: true, w4: true, w5: true, w6: true, w7: false, w8: true}, open: 'w7', ask: ''};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:1300px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap;';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap;';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink); text-transform: uppercase;';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink); text-transform: uppercase;';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper); text-transform: uppercase;';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+
+    const st = this.state;
+    const capSm = CAPS + ' font-size: 10.5px; color: var(--ink); white-space: nowrap;';
+    const boxOff = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink3); border-color: var(--line); text-transform: uppercase; cursor: default;';
+    const win = 'position: relative; box-sizing: border-box; background: var(--paper); border: 1px solid var(--lineStrong); border-radius: 3px; box-shadow: 8px 8px 0 var(--fill12); overflow: hidden;';
+    const titleBar = 'height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--line); box-sizing: border-box;';
+    const card = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; overflow: hidden;';
+    const chipBase = 'display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 2px; box-sizing: border-box;' + CAPS + ' font-size: 10.5px; white-space: nowrap;';
+    const chip = chipBase + 'border: 1px solid var(--lineStrong); color: var(--ink);';
+    const chipAlert = chipBase + 'border: 1px solid var(--alert); color: var(--alert);';
+    const monoTile = 'display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none; box-sizing: border-box; border: 1px solid var(--lineStrong); border-radius: 3px;' + CAPS + ' font-size: 9.5px; letter-spacing: .04em; color: var(--ink);';
+    const tickBox = (on, disabled) => 'display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; flex: none; padding: 0; box-sizing: border-box; border-radius: 2px; font-size: 10px; line-height: 1; cursor: ' + (disabled ? 'not-allowed' : 'pointer') + '; border: 1px solid ' + (disabled ? 'var(--alert)' : 'var(--lineStrong)') + ';' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);');
+    let seed = 31;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+    // ---------- state 1 ----------
+    const ghostCols = Array.from({length: 12}, () => 'background: var(--fill12); opacity: .5; border-radius: 2px');
+    const agents = [['cc', 'CC', 'claude-code', 'connected', '2.4.1'], ['cx', 'CX', 'codex', 'connected', '0.9.2']].map(([id, m, name, s, ver]) => {
+      const on = st.agent === id;
+      return {m, name, st: s, tip: name + ' ' + ver + ' · dbman MCP connected', on: on ? 'true' : 'false', pick: () => this.setState({agent: id}),
+        style: 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px 0 3px; box-sizing: border-box; border-radius: 3px; cursor: pointer; font-family: var(--ui); border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + ';' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink);'),
+        mono: monoTile + (on ? 'border-color: var(--paper); color: var(--paper);' : ''),
+        stStyle: CAPS + ' font-size: 9.5px; white-space: nowrap;' + (on ? 'opacity: .7' : 'color: var(--ink3)')};
+    });
+    const agentName = st.agent === 'cc' ? 'claude-code' : 'codex';
+    const tables = [['customers', '2,400', 'redacted'], ['products', '240', ''], ['orders', '48,000', ''], ['order_items', '168,214', ''], ['invoices', '9,812', ''], ['refunds', '412', ''], ['events', '61,532', ''], ['addresses', '3,120', 'redacted']];
+    const scope = tables.map(([n, rows, flag]) => {
+      const on = !!st.scope[n];
+      return {n, on: on ? 'true' : 'false', tick: on ? '✓' : '', box: tickBox(on, false),
+        meta: flag ? flag : rows, metaStyle: flag ? CAPS + ' font-size: 9.5px; white-space: nowrap; color: var(--ink3)' : 'font-family: var(--code); font-size: 10.5px; color: var(--ink3)',
+        pick: () => { const s = Object.assign({}, this.state.scope); s[n] = !s[n]; this.setState({scope: s}); }};
+    });
+    const nScope = tables.filter(([n]) => st.scope[n]).length;
+    const scopeCount = nScope + ' of 8';
+    const genNote = 'sends to ' + agentName + ' // dashboard.components · schema.describe ×' + nScope + ' · read-only';
+    const tbar = (rects) => rects.map(([x, y, w, h]) => 'M' + x + ' ' + y + 'h' + w + 'v' + h + 'h-' + w + 'z').join('');
+    const templates = [
+      ['Sales health', 'revenue, orders, AOV, top products, refunds', '8 w', tbar([[3, 3, 6, 4], [10, 3, 6, 4], [17, 3, 6, 4], [24, 3, 7, 4], [3, 9, 19, 12], [24, 9, 7, 12]])],
+      ['Ops health', 'sessions, locks, slow queries, bloat', '6 w', tbar([[3, 3, 13, 8], [18, 3, 13, 8], [3, 13, 28, 8]])],
+      ['Product usage', 'events by day, funnels, cohorts', '7 w', tbar([[3, 3, 28, 8], [3, 13, 9, 8], [14, 13, 8, 8], [24, 13, 7, 8]])],
+      ['Overview // default', 'the v1 overview, as a dashboard', '9 w', tbar([[3, 3, 8, 18], [13, 3, 18, 6], [13, 11, 18, 10]])],
+    ].map(([n, d, c, thumb]) => ({n, d, c, thumb}));
+    const dots = (pts) => pts.map(([x, y]) => 'M' + x + ' ' + y + 'h0.01').join('');
+    const libThumbs = [
+      ['kpi.spark', 'M4 5h10M3 15l5-3 4 2 5-5 4 2 4-4', 1.2], ['line', 'M2 14l5-4 4 2 6-7 4 3 5-4', 1.2], ['bars', 'M5 16V9M10 16V5M15 16V11M20 16V7M25 16V12', 2.4],
+      ['bars.horizontal', 'M3 4h20M3 8h15M3 12h10M3 16h6', 2.2], ['heatmap.hour_week', dots([[4, 4], [8, 4], [12, 4], [16, 4], [20, 4], [24, 4], [4, 9], [8, 9], [12, 9], [16, 9], [20, 9], [24, 9], [4, 14], [8, 14], [12, 14], [16, 14], [20, 14], [24, 14]]), 2],
+      ['funnel', 'M3 3h22M6 7h16M9 11h10M12 15h4', 2.2], ['table', 'M3 3h22v12H3zM3 7h22M3 11h22M11 3v12', 1], ['er.mini', 'M2 3h9v6H2zM17 9h9v6h-9zM11 6h3v6h3', 1.1], ['text', 'M3 4h22M3 8h20M3 12h22M3 16h12', 1.2],
+    ].map(([id, d, sw]) => ({id, d, sw: String(sw)}));
+
+    // ---------- state 2 · proposal ----------
+    const COLS = 12, GAP = 4, ROW = 40, ROWS = 6;
+    const gridW = 1392 - 2 - 420 - 20;
+    const cw = (gridW - GAP * (COLS - 1)) / COLS;
+    const gridH = ROWS * ROW + (ROWS - 1) * GAP;
+    const rect = (x, y, w, h) => ({l: x * (cw + GAP), t: y * (ROW + GAP), w: w * cw + (w - 1) * GAP, h: h * ROW + (h - 1) * GAP});
+    const G = [
+      {id: 'w1', type: 'kpi.spark', title: 'Revenue', x: 0, y: 0, w: 3, h: 2, kind: 'kpi', v: '$1.65M', cost: 412, ms: '3 ms', rows: '1', plan: 'Index scan on orders_created_at_idx.',
+        sql: ['select sum(total) as value', 'from orders', 'where created_at > now() - :range'], why: 'Money in. sum(orders.total) over :range, compared to previous_period.'},
+      {id: 'w2', type: 'kpi.spark', title: 'Orders', x: 3, y: 0, w: 3, h: 2, kind: 'kpi', v: '4,012', cost: 388, ms: '2 ms', rows: '1', plan: 'Index only scan on orders_created_at_idx.',
+        sql: ['select count(*) as value', 'from orders', 'where created_at > now() - :range'], why: 'Volume. Separates demand from price effects in revenue.'},
+      {id: 'w3', type: 'kpi', title: 'Avg order value', x: 6, y: 0, w: 3, h: 2, kind: 'kpi', v: '$412', cost: 412, ms: '3 ms', rows: '1', plan: 'Index scan on orders_created_at_idx.',
+        sql: ['select avg(total) as value', 'from orders', 'where created_at > now() - :range', "  and status <> 'refunded'"], why: 'Basket size. Excludes refunded orders so refunds are not double counted.'},
+      {id: 'w4', type: 'kpi', title: 'Refund rate', x: 9, y: 0, w: 3, h: 2, kind: 'kpi', v: '2.6 %', cost: 1106, ms: '5 ms', rows: '1', plan: 'Hash left join refunds → invoices, 9,812 rows.',
+        sql: ['select count(r.id)::float / count(distinct i.id)', '       as value', 'from invoices i', 'left join refunds r on r.invoice_id = i.id', 'where i.created_at > now() - :range'], why: 'Money out, as a rate. refunds (412) per invoice (9,812).'},
+      {id: 'w5', type: 'line', title: 'Revenue // daily', x: 0, y: 2, w: 8, h: 2, kind: 'line', v: '', cost: 1842, ms: '6 ms', rows: '30', plan: 'Index scan on orders_created_at_idx, GroupAggregate 30 groups.',
+        sql: ["select date_trunc('day', created_at) as day,", '       sum(total) as revenue', 'from orders', 'where created_at > now() - :range', 'group by 1 order by 1'], why: 'Trend. Daily grain fits 30 d; previous period dashed.'},
+      {id: 'w6', type: 'bars.horizontal', title: 'Top products', x: 8, y: 2, w: 4, h: 2, kind: 'barsH', v: '', cost: 8930, ms: '21 ms', rows: '6', plan: 'Hash join order_items → products → orders, 14.2K rows.',
+        sql: ['select p.name, sum(oi.quantity * oi.unit_price) as revenue', 'from order_items oi', 'join products p on p.id = oi.product_id', 'join orders o on o.id = oi.order_id', 'where o.created_at > now() - :range', 'group by 1 order by 2 desc limit 6'], why: 'What sells. Top 6 of 240 products by line revenue.'},
+      {id: 'w7', type: 'bars', title: 'Refunded amount // weekly', x: 0, y: 4, w: 6, h: 2, kind: 'alert', v: '', cost: 0, ms: '—', rows: '0', plan: 'Validation failed before EXPLAIN: PG 42703 at line 2.',
+        sql: ["select date_trunc('week', r.created_at) as week,", '       sum(o.total_cents) / 100.0 as refunded', 'from refunds r', 'join invoices i on i.id = r.invoice_id', 'join orders o on o.id = i.order_id', 'where r.created_at > now() - :range', 'group by 1 order by 1'], why: 'Refund value per week. Assumed cents storage, wrong for shop.'},
+      {id: 'w8', type: 'heatmap.hour_week', title: 'Orders // hour × weekday', x: 6, y: 4, w: 6, h: 2, kind: 'heat', v: '', cost: 2210, ms: '9 ms', rows: '168', plan: 'Index scan, HashAggregate 168 groups.',
+        sql: ['select extract(isodow from created_at) as dow,', '       extract(hour from created_at) as hour, count(*)', 'from orders', 'where created_at > now() - :range', 'group by 1, 2'], why: 'When orders arrive. Picks refresh cadence and support hours.'},
+    ];
+    // overlap guard (grid math)
+    let overlaps = 0;
+    G.forEach((a, i) => G.slice(i + 1).forEach((b) => { if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) overlaps++; }));
+    if (overlaps || G.some((g) => g.x + g.w > COLS || g.y + g.h > ROWS)) throw new Error('proposal grid overlaps');
+
+    const fmtCost = (c) => c >= 1000 ? (c / 1000).toFixed(1).replace('.0', '') + 'K' : String(c);
+    const valid = G.filter((g) => g.kind !== 'alert');
+    const okCount = valid.length;
+    const totalCost = fmtCost(valid.filter((g) => st.checked[g.id]).reduce((a, g) => a + g.cost, 0));
+    const nChecked = G.filter((g) => st.checked[g.id]).length;
+    const acceptLabel = 'adopt ' + nChecked + ' of ' + G.length + ' into mine // ⌘↩';
+    const pathOf = (vals, w, h) => { const lo = Math.min(...vals), hi = Math.max(...vals); return vals.map((v, i) => (i ? 'L' : 'M') + (i / (vals.length - 1) * w).toFixed(1) + ' ' + (h - (v - lo) / (hi - lo || 1) * h).toFixed(1)).join(' '); };
+    const P = (d, w, s) => ({d, w: String(w), s});
+    const none = P('', 0, '');
+    const ghosts = G.map((g) => {
+      const r = rect(g.x, g.y, g.w, g.h);
+      const on = !!st.checked[g.id], alert = g.kind === 'alert', isOpen = st.open === g.id;
+      const bw = r.w - 20, bh = r.h - 22 - 8;
+      const o = {id: g.id, title: g.title, type: g.type, on: on ? 'true' : 'false', tick: on ? '✓' : '', box: tickBox(on, alert),
+        aria: g.title + ', ' + g.type + (alert ? ', failed validation' : '') + (on ? ', checked for adopt' : ', not checked'),
+        checkLabel: 'Adopt ' + g.title, checkTip: alert ? 'Fix or ask for changes first' : 'Include when adopting into MINE',
+        isAlert: alert, isChart: !alert, v: g.v, chev: isOpen ? '▾ sql' : '▸ sql',
+        costT: alert ? 'invalid' : 'cost ' + fmtCost(g.cost), costStyle: CAPS + ' font-size: 9.5px; white-space: nowrap; color: ' + (alert ? 'var(--alert)' : g.cost > 5000 ? 'var(--ink)' : 'var(--ink3)'),
+        style: 'position: absolute; left: ' + r.l.toFixed(2) + 'px; top: ' + r.t + 'px; width: ' + r.w.toFixed(2) + 'px; height: ' + r.h + 'px; box-sizing: border-box; border-radius: 3px; overflow: hidden; cursor: pointer; background: var(--paper);' +
+          (alert ? 'border: 1px solid var(--alert);' : isOpen ? 'border: 1px solid var(--accent); box-shadow: 0 0 0 1px var(--accent);' : 'border: 1px dashed ' + (on ? 'var(--ink3)' : 'var(--line)') + ';') + (isOpen && alert ? 'box-shadow: 0 0 0 1px var(--alert);' : ''),
+        bodyStyle: 'display: flex; align-items: flex-end; gap: 10px; padding: 2px 10px 0; opacity: ' + (on ? '.62' : '.25') + ';',
+        valStyle: 'font-size: 24px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; white-space: nowrap;' + (g.v ? '' : 'display: none;'),
+        open: () => this.setState({open: g.id}),
+        toggle: () => { if (alert) return; const c = Object.assign({}, this.state.checked); c[g.id] = !c[g.id]; this.setState({checked: c}); },
+        p1: none, p2: none, p3: none, sw: '0', sh: '0', vb: '0 0 1 1'};
+      let sw = bw, sh = bh;
+      if (g.kind === 'kpi') {
+        sw = Math.max(40, bw - 90); sh = Math.min(30, bh - 4);
+        const vals = Array.from({length: 20}, (_, i) => 10 + i * 0.4 + Math.sin(i / 1.7) * 2 + rnd() * 1.5);
+        o.p1 = P(pathOf(vals, sw, sh), 1.5, 'color: var(--ink)');
+      } else if (g.kind === 'line') {
+        const vals = Array.from({length: 30}, (_, i) => 50 + i * 0.4 + [0, 4, 6, 5, 7, -3, -8][i % 7] + rnd() * 4);
+        const prev = vals.map((v, i) => v - 6 + Math.sin(i) * 2);
+        o.p1 = P(pathOf(prev, sw, sh), 1, 'color: var(--ink3); stroke-dasharray: 3 3');
+        o.p2 = P(pathOf(vals, sw, sh), 2, 'color: var(--accent)');
+        o.p3 = P('M0 ' + sh + 'H' + sw.toFixed(1), 1, 'color: var(--line)');
+      } else if (g.kind === 'barsH') {
+        const v = [1, .8, .66, .54, .42, .35];
+        const step = sh / v.length;
+        o.p1 = P('M0 ' + (step / 2).toFixed(1) + 'H' + (v[0] * sw * .9).toFixed(1), Math.max(3, step - 4), 'color: var(--accent)');
+        o.p2 = P(v.slice(1).map((x, i) => 'M0 ' + ((i + 1.5) * step).toFixed(1) + 'H' + (x * sw * .9).toFixed(1)).join(''), Math.max(3, step - 4), 'color: var(--ink); stroke-linecap: butt');
+        o.p1.s += '; stroke-linecap: butt';
+      } else if (g.kind === 'heat') {
+        const cols = 24, rows = 7, dx = sw / cols, dy = sh / rows;
+        const sm = [], md = [], lg = [];
+        for (let d = 0; d < rows; d++) for (let h = 0; h < cols; h++) {
+          const v = (d < 5 ? 1 : 0.55) * (0.15 + Math.exp(-Math.pow((h - 11) / 2.5, 2)) + 0.7 * Math.exp(-Math.pow((h - 15.5) / 2, 2)));
+          (v > 0.75 ? lg : v > 0.35 ? md : sm).push([(h + 0.5) * dx, (d + 0.5) * dy]);
+        }
+        o.p1 = P(dots(sm), Math.max(1.2, Math.min(dx, dy) * 0.3), 'color: var(--ink)');
+        o.p2 = P(dots(md), Math.max(2, Math.min(dx, dy) * 0.6), 'color: var(--ink)');
+        o.p3 = P(dots(lg), Math.max(3, Math.min(dx, dy) * 0.9), 'color: var(--ink)');
+      }
+      o.sw = sw.toFixed(1); o.sh = String(sh); o.vb = '0 0 ' + sw.toFixed(1) + ' ' + sh;
+      return o;
+    });
+
+    const og = G.find((g) => g.id === st.open) || G[6];
+    const KW = /^(select|from|where|and|join|left|on|group|by|order|limit|as|desc|asc|sum|count|avg|distinct|extract|date_trunc|now|float)$/i;
+    const tok = (line) => line.split(/(:range|o\.total_cents|\s+|[(),*<>=/]+)/).filter((x) => x !== '').map((x) => ({t: x,
+      s: x === ':range' ? 'color: var(--accent); background: var(--fill12); border-radius: 2px; font-weight: 600' : x === 'o.total_cents' ? 'color: var(--alert); text-decoration: underline wavy var(--alert); text-underline-offset: 3px' : KW.test(x) ? 'color: var(--ink); font-weight: 600' : 'color: var(--ink2)'}));
+    const oAlert = og.kind === 'alert';
+    const open = {id: og.id, title: og.title, type: og.type, ms: og.ms, plan: og.plan, rows: og.rows, isAlert: oAlert, notAlert: !oAlert,
+      sql: og.sql.map((l, i) => ({n: String(i + 1), tok: tok(l)})),
+      badgeT: oAlert ? '42703 // not run' : 'explain // cost ' + og.cost.toLocaleString('en-US'),
+      badge: chipBase + 'height: 18px; font-size: 10px; border: 1px solid ' + (oAlert ? 'var(--alert)' : 'var(--lineStrong)') + '; color: ' + (oAlert ? 'var(--alert)' : 'var(--ink)') + ';'};
+    const drawerBorder = oAlert ? 'var(--alert)' : 'var(--accent)';
+
+    const calls = [
+      ['connections.list', '', '4 ms'], ['dashboard.components', 'catalog + schema', '2 ms'], ['schema.tables', 'shop', '6 ms'],
+      ['schema.describe', '×5 orders, order_items, products, …', '31 ms'], ['query.explain', '×8 · 1 failed', '88 ms'], ['dashboard.create', '→ proposal', '1 ms'],
+    ].map(([tt, a, ms]) => ({t: tt, a, ms}));
+    const used = [['orders', '48,000'], ['order_items', '168,214'], ['products', '240'], ['invoices', '9,812'], ['refunds', '412']].map(([n, r]) => ({n, r}));
+    const whys = G.map((g) => {
+      const isOpen = st.open === g.id, alert = g.kind === 'alert';
+      return {id: g.id, why: g.why, open: () => this.setState({open: g.id}),
+        style: 'display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; align-items: center; height: 21px; padding: 0 4px; border-radius: 2px; cursor: pointer;' + (isOpen ? 'background: var(--fill12);' : ''),
+        tStyle: 'font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ' + (alert ? 'var(--alert)' : 'var(--ink2)')};
+    });
+    const askText = st.ask;
+    const useFix = () => this.setState({ask: 'w7: use orders.total (dollars), drop / 100.0, keep weekly grain'});
+
+    // ---------- state 3 · drift ----------
+    const DW = 620, DROW = 56, DROWS = 4;
+    const dcw = (DW - GAP * 11) / 12;
+    const drect = (x, y, w, h) => ({l: x * (dcw + GAP), t: y * (DROW + GAP), w: w * dcw + (w - 1) * GAP, h: h * DROW + (h - 1) * GAP});
+    const DR = [
+      {id: 'w1', title: 'Orders', type: 'kpi.spark', x: 0, y: 0, w: 4, h: 1, v: '4,012', meta: '▲ 8 %'},
+      {id: 'w2', title: 'Active customers', type: 'kpi.spark', x: 4, y: 0, w: 4, h: 1, v: '2,391', meta: '▲ 3 %'},
+      {id: 'w3', title: 'Refunds', type: 'kpi.spark', x: 8, y: 0, w: 4, h: 1, v: '104', meta: '▼ 2 %'},
+      {id: 'w5', title: 'Revenue // daily', type: 'line', x: 0, y: 1, w: 8, h: 3, err: true, meta: 'error // 09:12'},
+      {id: 'w6', title: 'Top products', type: 'bars.horizontal', x: 8, y: 1, w: 4, h: 3, v: '182K', meta: 'ok'},
+    ];
+    let dOver = 0;
+    DR.forEach((a, i) => DR.slice(i + 1).forEach((b) => { if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) dOver++; }));
+    if (dOver || DR.some((g) => g.x + g.w > 12 || g.y + g.h > DROWS)) throw new Error('drift grid overlaps');
+    const drift = DR.map((d) => {
+      const r = drect(d.x, d.y, d.w, d.h);
+      const bw = r.w - 16, bh = r.h - 22 - 6;
+      let sw = Math.max(30, bw - 90), sh = Math.min(22, bh), p = '', pw = '1.5';
+      if (d.type === 'kpi.spark') p = pathOf(Array.from({length: 16}, (_, i) => 5 + Math.sin(i / 2 + d.x) * 1.5 + i * 0.15 + rnd()), sw, sh);
+      if (d.type === 'bars.horizontal') {
+        sw = Math.max(40, bw - 60); sh = bh - 10; pw = String(Math.max(4, Math.floor(sh / 6) - 6));
+        p = [1, .8, .66, .54, .42, .35].map((x, i) => 'M0 ' + ((i + 0.5) * sh / 6).toFixed(1) + 'H' + (x * sw).toFixed(1)).join('');
+      }
+      return {title: d.title, type: d.type, meta: d.meta, v: d.v || '', ok: !d.err, err: !!d.err, p, pw, sw: sw.toFixed(1), sh: String(sh), vb: '0 0 ' + sw.toFixed(1) + ' ' + sh,
+        titleStyle: CAPS + ' font-size: 10.5px; white-space: nowrap; color: ' + (d.err ? 'var(--alert)' : 'var(--ink)'),
+        style: 'position: absolute; left: ' + r.l.toFixed(2) + 'px; top: ' + r.t + 'px; width: ' + r.w.toFixed(2) + 'px; height: ' + r.h + 'px; box-sizing: border-box; border-radius: 3px; overflow: hidden; background: var(--paper); border: 1px solid ' + (d.err ? 'var(--alert)' : 'var(--line)') + ';' + (d.err ? 'box-shadow: 0 0 0 1px var(--alert);' : '')};
+    });
+    const PL = [
+      ['ctx', ' ', '['],
+      ['ctx', ' ', '  {"op": "test",    "path": "/widgets/3/query",'],
+      ['ctx', ' ', '   "value": "select date_trunc(\'day\', created_at) as day, sum(total) as revenue …"},'],
+      ['ctx', ' ', '  {"op": "replace", "path": "/widgets/3/query",'],
+      ['del', '−', '   "value": "… sum(total) as revenue from orders where created_at > now() - :range …"},'],
+      ['add', '+', '   "value": "… sum(amount_total) as revenue from orders where created_at > now() - :range …"},'],
+      ['add', '+', '  {"op": "add",     "path": "/widgets/3/meta/fixedBy",'],
+      ['add', '+', '   "value": "claude-code · drift 0042_rename_total · 14:41:03"}'],
+      ['ctx', ' ', ']'],
+    ];
+    const patch = PL.map(([k, sign, tt], i) => ({n: String(i + 1), sign, t: tt,
+      style: 'display: flex; padding-right: 10px;' + (k === 'add' ? 'background: var(--fill12); box-shadow: inset 2px 0 0 var(--accent);' : k === 'del' ? 'box-shadow: inset 2px 0 0 var(--ink3);' : ''),
+      signStyle: 'width: 14px; flex: none; text-align: center; color: ' + (k === 'add' ? 'var(--accent)' : 'var(--ink3)') + (k === 'del' ? '; text-decoration: none' : ''),
+    }));
+    // removed line rendered dim with strike via style on row text
+    patch.forEach((p, i) => { p.style += PL[i][0] === 'del' ? 'color: var(--ink3); text-decoration: line-through; text-decoration-color: var(--ink3);' : PL[i][0] === 'add' ? 'color: var(--ink);' : 'color: var(--ink2);'; });
+
+    return {themeVars, dark, cap, capDim, capSm, box, boxL, boxPrimary, boxOff, field, win, titleBar, card, chip, chipAlert, monoTile,
+      ghostCols, agents, scope, scopeCount, genNote, templates, libThumbs,
+      okCount, totalCost, acceptLabel, gridH: String(gridH), ghosts, open, drawerBorder, calls, used, whys, askText, useFix,
+      drift, patch};
+  }
+}
+</script>
+</body>
+</html>

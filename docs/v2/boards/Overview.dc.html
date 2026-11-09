@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Overview — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="display: flex; flex-direction: column; gap: 4px; height: 900px; box-sizing: border-box; padding: 6px; overflow: hidden">
+
+  <!-- TOP STRIP -->
+  <div style="height: 30px; flex: none; display: flex; align-items: stretch; gap: 4px">
+    <div aria-hidden="true" style="display: flex; align-items: center; gap: 7px; padding: 0 8px">
+      <span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840"></span>
+    </div>
+    <nav aria-label="Sections" style="display: flex; gap: 4px">
+      <sc-for list="{{navs}}" as="n" hint-placeholder-count="5">
+        <a href="{{n.href}}" title="{{n.tip}}" aria-current="{{n.current}}" style="{{n.style}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg><span>{{n.t}}</span></a>
+      </sc-for>
+    </nav>
+    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); overflow: hidden">
+      <sc-for list="{{readouts}}" as="r" hint-placeholder-count="5"><span style="display: inline-flex; gap: 5px"><span style="{{cap}} color: var(--ink3)">{{r.k}} //</span><span style="{{r.vs}}">{{r.v}}</span></span></sc-for>
+    </div>
+    <label style="display: flex; align-items: center; gap: 6px; width: 220px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color: var(--ink3)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" aria-label="Jump to table, column or query" placeholder="JUMP_TO" style="flex: 1; min-width: 0; border: 0; background: transparent; font: 600 11px var(--ui); letter-spacing: .08em; color: var(--ink)">
+      <span style="font-family: var(--mono); font-size: 11px; color: var(--ink3)">⌘K</span>
+    </label>
+  </div>
+
+  <div style="height: 852px; flex: none; display: flex; gap: 4px; min-height: 0">
+    <div style="flex: 0 0 220px; height: 852px">
+      <dc-import name="Sidebar" active="overview" conn="shop" dark="{{dark}}" hint-size="220px,852px"></dc-import>
+    </div>
+
+    <div role="radiogroup" aria-label="Time range" style="flex: 0 0 28px; display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{ranges}}" as="v" hint-placeholder-count="4">
+        <button type="button" role="radio" aria-checked="{{v.on}}" title="{{v.tip}}" onClick="{{v.pick}}" style="{{v.style}}"><span style="font-family: var(--mono); font-size: 10.5px">{{v.n}}</span><span style="{{v.labelStyle}}">{{v.t}}</span></button>
+      </sc-for>
+      <div aria-hidden="true" style="flex: 1; border: 1px solid var(--line); border-radius: 3px; background: repeating-linear-gradient(180deg, transparent 0 5px, var(--fill12) 5px 6px)"></div>
+    </div>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+      <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 290px minmax(0, 1fr) 280px; gap: 4px">
+
+        <!-- LEFT -->
+        <div style="display: flex; flex-direction: column; gap: 4px; min-height: 0">
+          <section style="{{frame}} padding: 12px 14px; display: flex; align-items: baseline; gap: 8px">
+            <h1 style="margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.01em">Dashboard</h1>
+            <span style="{{cap}} color: var(--ink3)">// monday_november_09</span>
+          </section>
+
+          <section aria-label="Entities" style="{{frame}} padding: 10px 14px 12px">
+            <div style="{{cap}} color: var(--ink); text-align: center">entities</div>
+            <div style="display: grid; grid-template-columns: 1fr 1px 1fr; gap: 12px; margin-top: 10px; align-items: center">
+              <div style="text-align: center"><div style="font-size: 34px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">2,391</div><div style="{{cap}} font-size: 10.5px; color: var(--ink3); margin-top: 6px; white-space: normal">active_customers<br>in_2026</div></div>
+              <span aria-hidden="true" style="height: 56px; background: var(--line)"></span>
+              <div style="text-align: center"><div style="font-size: 34px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">48.0K</div><div style="{{cap}} font-size: 10.5px; color: var(--ink3); margin-top: 6px; white-space: normal">orders<br>in_2026</div></div>
+            </div>
+          </section>
+
+          <section aria-label="Orders over time" style="{{frame}} flex: 1; padding: 10px 14px 12px; display: flex; flex-direction: column">
+            <div style="{{cap}} color: var(--ink); text-align: center">orders_over_time</div>
+            <div role="radiogroup" aria-label="Range" style="display: flex; gap: 4px; justify-content: center; margin-top: 8px">
+              <sc-for list="{{oot}}" as="o" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.t}}</button></sc-for>
+            </div>
+            <div style="position: relative; flex: 1; min-height: 0; margin-top: 10px; display: flex">
+              <div style="width: 30px; display: flex; flex-direction: column; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--ink3); padding-bottom: 18px"><span>120</span><span>80</span><span>40</span><span>0</span></div>
+              <div style="flex: 1; position: relative; display: flex; flex-direction: column">
+                <div style="flex: 1; position: relative; background: repeating-linear-gradient(180deg, var(--line) 0 1px, transparent 1px 25%); background-size: 100% calc(33.33% - 0.3px)">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible">
+                    <path d="{{lines.paid}}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" style="color: var(--ink)"></path>
+                    <path d="{{lines.delivered}}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" style="color: var(--ink); opacity: .55"></path>
+                    <path d="{{lines.shipped}}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" style="color: var(--ink); opacity: .3"></path>
+                    <path d="{{lines.pending}}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" style="color: var(--amber)"></path>
+                  </svg>
+                </div>
+                <div style="display: flex; justify-content: space-between; height: 18px; align-items: flex-end; font-family: var(--mono); font-size: 10px; color: var(--ink3)"><span>oct 11</span><span>oct 21</span><span>oct 31</span><span>nov 9</span></div>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; margin-top: 10px">
+              <sc-for list="{{legend}}" as="g" hint-placeholder-count="4"><span style="display: inline-flex; align-items: center; gap: 6px"><span style="{{g.sw}}"></span><span style="{{cap}} font-size: 10px; color: var(--ink2)">{{g.t}}</span></span></sc-for>
+            </div>
+          </section>
+        </div>
+
+        <!-- CENTER -->
+        <div style="display: flex; flex-direction: column; gap: 4px; min-height: 0">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px">
+            <sc-for list="{{tiles}}" as="k" hint-placeholder-count="2">
+              <section aria-label="{{k.aria}}" style="{{frame}} padding: 12px 14px 10px; height: 196px; display: flex; flex-direction: column">
+                <div style="display: flex; align-items: flex-start; gap: 10px">
+                  <div><div style="{{cap}} font-size: 13px; color: var(--ink)">{{k.t}}</div><div style="{{cap}} font-size: 10.5px; color: var(--accent); margin-top: 3px">live</div></div>
+                  <div style="font-size: 46px; font-weight: 300; letter-spacing: -0.03em; line-height: .9; margin-left: 8px">{{k.v}}</div>
+                  <span style="flex: 1"></span>
+                  <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" style="color: var(--ink)"><path d="M5 22a11 11 0 1122 0"></path><path d="M16 22l6-7"></path><path d="M8 18l1.5 0.8M24 18l-1.5 0.8M16 10v1.6M10.5 12.5l1.1 1.1M21.5 12.5l-1.1 1.1"></path><circle cx="16" cy="22" r="1.6"></circle></svg>
+                </div>
+                <div style="flex: 1; position: relative; margin-top: 8px">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible">
+                    <path d="{{k.d}}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" style="color: var(--ink)"></path>
+                  </svg>
+                </div>
+                <div style="{{cap}} font-size: 10px; color: var(--ink3); text-align: center; margin-top: 4px">{{k.axis}}</div>
+              </section>
+            </sc-for>
+          </div>
+
+          <section aria-label="Insights" style="{{frame}} flex: 1; display: flex; flex-direction: column; padding: 12px 14px">
+            <div style="display: flex; align-items: flex-start; gap: 10px">
+              <div><div style="{{cap}} font-size: 13px; color: var(--ink)">insights</div><div style="{{cap}} font-size: 10.5px; color: var(--ink3); margin-top: 3px">new_in_24_hours</div></div>
+              <div style="font-size: 46px; font-weight: 300; letter-spacing: -0.03em; line-height: .9; margin-left: 8px">03</div>
+              <span style="flex: 1"></span>
+              <button type="button" style="{{btn}}">view_all</button>
+            </div>
+            <div style="flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 10px">
+              <div style="flex: 1; position: relative; min-width: 0">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="position: absolute; inset: 6% 2% 6% 2%; width: 96%; height: 88%; overflow: visible">
+                  <path d="{{insight.d}}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" style="color: var(--ink)"></path>
+                </svg>
+                <div role="img" aria-label="{{insight.label}}" style="position: absolute; inset: 6% 2% 6% 2%">
+                  <sc-for list="{{insight.pts}}" as="p" hint-placeholder-count="9"><span style="{{p}}"></span></sc-for>
+                  <span aria-hidden="true" style="{{insight.leader}}"></span>
+                </div>
+              </div>
+              <div style="width: 1px; background: var(--line)"></div>
+              <div style="width: 250px; flex: none; display: flex; flex-direction: column">
+                <div style="font-size: 14px; font-weight: 600; line-height: 1.3">Pending orders doubled since Monday</div>
+                <div style="font-size: 12px; line-height: 1.45; color: var(--ink2); margin-top: 6px">2,214 orders are waiting on payment. 71% use the same card provider, which started timing out at 09:40.</div>
+                <div style="height: 1px; background: var(--line); margin: 10px 0"></div>
+                <div style="{{cap}} font-size: 10.5px; color: var(--ink2)">1_day_ago</div>
+                <div style="{{cap}} font-size: 10.5px; color: var(--ink2); margin-top: 4px">3_related_signals</div>
+                <div style="margin-top: 10px; display: flex; gap: 4px"><a href="Query.dc.html" style="{{btnPrimary}}">open_query</a><button type="button" style="{{btn}}">resolve</button></div>
+                <div style="position: relative; flex: 1; min-height: 120px; margin-top: 8px">
+                  <svg viewBox="0 0 100 100" aria-label="Radar of severity, affected tables and trend for the three insights" role="img" style="position: absolute; left: 50%; top: 50%; width: 130px; height: 130px; transform: translate(-50%, -46%); overflow: visible">
+                    <path d="M50 8 L90 78 L10 78 Z" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--ink3)"></path>
+                    <path d="M50 8 L50 55 M90 78 L50 55 M10 78 L50 55" fill="none" stroke="currentColor" stroke-width=".8" stroke-dasharray="2 2" style="color: var(--ink3)"></path>
+                    <path d="M50 22 L78 72 L24 70 Z" fill="none" stroke="currentColor" stroke-width="1.2" style="color: var(--ink); opacity: .35"></path>
+                    <path d="M50 30 L70 68 L30 66 Z" fill="none" stroke="currentColor" stroke-width="1.2" style="color: var(--ink); opacity: .55"></path>
+                    <path d="M50 14 L84 75 L34 64 Z" fill="none" stroke="currentColor" stroke-width="1.8" style="color: var(--ink)"></path>
+                    <circle cx="50" cy="14" r="2.6" fill="currentColor" style="color: var(--ink)"></circle><circle cx="84" cy="75" r="2.6" fill="currentColor" style="color: var(--ink)"></circle><circle cx="34" cy="64" r="2.6" fill="currentColor" style="color: var(--ink)"></circle>
+                  </svg>
+                  <span style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); {{cap}} font-size: 9.5px; color: var(--ink3)">severity</span>
+                  <span style="position: absolute; left: 0; bottom: 0; {{cap}} font-size: 9.5px; color: var(--ink3)">tables</span>
+                  <span style="position: absolute; right: 0; bottom: 0; {{cap}} font-size: 9.5px; color: var(--ink3)">trend</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section aria-label="Sessions" style="{{frame}} height: 168px; flex: none; padding: 10px 14px">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span style="{{cap}} font-size: 13px; color: var(--ink)">sessions</span>
+              <span style="{{cap}} color: var(--ink3)">// 7 of 100 · pg_stat_activity</span>
+              <span style="flex: 1"></span>
+              <span style="font-family: var(--mono); font-size: 11px; color: var(--ink3)"><b style="color: var(--ink)">1</b> // 2 // 3</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 10px">
+              <sc-for list="{{sessions}}" as="s" hint-placeholder-count="3">
+                <div>
+                  <div aria-hidden="true" style="display: flex; align-items: flex-end; gap: 3px; height: 66px; border-bottom: 1px solid var(--lineStrong)">
+                    <sc-for list="{{s.bars}}" as="b" hint-placeholder-count="16"><span style="{{b}}"></span></sc-for>
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap">
+                    <span style="{{cap}} font-size: 10px; color: var(--ink3)">name // <b style="color: var(--ink); font-weight: 600">{{s.name}}</b></span>
+                    <span style="{{s.stStyle}}">status // {{s.status}}</span>
+                  </div>
+                  <div style="font-family: var(--mono); font-size: 11px; color: var(--ink2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.q}}</div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT: ACTIVITY FEED -->
+        <section aria-label="Activity feed" style="{{frame}} padding: 12px 14px; display: flex; flex-direction: column">
+          <div style="{{cap}} font-size: 13px; color: var(--ink); text-align: center">activity_feed</div>
+          <div role="radiogroup" aria-label="Feed" style="display: flex; gap: 4px; justify-content: center; margin-top: 8px">
+            <sc-for list="{{feedTabs}}" as="f" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{f.on}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.t}}</button></sc-for>
+          </div>
+          <div style="flex: 1; min-height: 0; overflow: auto; margin-top: 10px">
+            <sc-for list="{{feed}}" as="e" hint-placeholder-count="8">
+              <div style="display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true" style="{{e.iconStyle}}"><path d="M12 3l9 16H3z"></path><path d="M12 3v16M3 19l9-6 9 6"></path></svg>
+                <div style="min-width: 0">
+                  <div style="{{e.titleStyle}}">{{e.t}}</div>
+                  <div style="font-size: 12px; color: var(--ink2); margin-top: 2px; line-height: 1.35">{{e.b}}</div>
+                  <div style="font-family: var(--mono); font-size: 10.5px; color: var(--ink3); margin-top: 3px">{{e.when}}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <div style="height: 20px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 4px; white-space: nowrap; overflow: hidden">
+        <span style="{{cap}} font-size: 10.5px; color: var(--ink)">290,198 rows // 182 MB // 6 tables</span>
+        <span style="{{cap}} font-size: 10.5px; color: var(--ink3)">cache_hit // 99.2%</span>
+        <span style="{{cap}} font-size: 10.5px; color: var(--amber)">oldest_tx // 4m 12s</span>
+        <span style="flex: 1"></span>
+        <span style="{{cap}} font-size: 10.5px; color: var(--ink3)">auto_refresh // 5 s</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {range: '24h', oot: '14d', feed: 'insights'};
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--mono:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.3px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:900px;overflow:hidden';
+    const st = this.state;
+    const cap = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80; white-space: nowrap;';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;';
+    const btn = cap + ' font-size: 10.5px; display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border: 1px solid var(--lineStrong); border-radius: 3px; background: transparent; color: var(--ink); cursor: pointer; text-decoration: none;';
+    const btnPrimary = cap + ' font-size: 10.5px; display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border: 1px solid var(--ink); border-radius: 3px; background: var(--ink); color: var(--paper); cursor: pointer; text-decoration: none;';
+    const toggle = (on) => cap + ' font-size: 10.5px; height: 20px; padding: 0 9px; border-radius: 3px; cursor: pointer; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + ';' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: transparent; color: var(--ink3);');
+
+    const NAVI = {
+      overview: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z', tables: 'M3 4h18v16H3zM3 10h18M9 4v16', query: 'M4 17l6-5-6-5M12 19h8',
+      explain: 'M6 3v6M6 9h12M6 9v6M18 9v6M6 15h4M18 15h-4M10 15v6M14 15v6', activity: 'M3 12h4l3-8 4 16 3-8h4',
+    };
+    const navs = [['overview', 'Overview', 'Overview.dc.html', '⌘0'], ['tables', 'Tables', 'Table.dc.html', '⌘T'], ['query', 'Query', 'Query.dc.html', '⌘⏎'], ['explain', 'Explain', 'Query.dc.html', '⌥⌘E'], ['activity', 'Activity', 'Overview.dc.html', '⇧⌘A']].map(([id, label, href, key]) => {
+      const on = id === 'overview';
+      return {t: label, href, icon: NAVI[id], tip: label + '  ' + key, current: on ? 'page' : 'false',
+        style: cap + ' display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px; text-decoration: none;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')};
+    });
+    const readouts = [['session', 'shop'], ['engine', 'pg 17.2'], ['latency', '4 ms'], ['tx/s', '412'], ['clock', '14:32:09']].map(([k, v], i) => ({k, v, vs: cap + ' color: ' + (i === 3 ? 'var(--accent)' : 'var(--ink)')}));
+    const ranges = [['live', 'Live', '01'], ['24h', '24h', '02'], ['7d', '7d', '03'], ['30d', '30d', '04']].map(([id, label, n], i) => {
+      const on = st.range === id;
+      return {t: label, n, tip: label + '  ⌘' + (i + 1), on: on ? 'true' : 'false',
+        labelStyle: cap + ' font-size: 10.5px; writing-mode: vertical-rl; transform: rotate(180deg);',
+        style: 'display: flex; flex-direction: column; align-items: center; gap: 8px; height: 84px; padding: 8px 0; box-sizing: border-box; border: 1px solid ' + (on ? 'var(--ink)' : 'var(--line)') + '; border-radius: 3px; cursor: pointer;' + (on ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);'),
+        pick: () => this.setState({range: id})};
+    });
+
+    // smooth path through points in a 0..100 box (y: 0 = top)
+    const smooth = (vals, lo, hi, padTop) => {
+      const n = vals.length;
+      const pts = vals.map((v, i) => [i / (n - 1) * 100, (padTop || 4) + (1 - (v - lo) / (hi - lo)) * (100 - (padTop || 4) - 2)]);
+      let d = 'M' + pts[0][0].toFixed(2) + ',' + pts[0][1].toFixed(2);
+      for (let i = 0; i < n - 1; i++) {
+        const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+        const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+        const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+        d += ' C' + c1[0].toFixed(2) + ',' + c1[1].toFixed(2) + ' ' + c2[0].toFixed(2) + ',' + c2[1].toFixed(2) + ' ' + p2[0].toFixed(2) + ',' + p2[1].toFixed(2);
+      }
+      return {d, pts};
+    };
+    let seed = 23;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+    const recVals = [281.2, 282.0, 282.4, 283.9, 284.1, 284.6, 285.8, 286.9, 286.7, 287.4, 288.5, 289.1, 289.6, 290.2];
+    const txVals = [];
+    for (let h = 0; h < 24; h++) txVals.push(180 + 520 * Math.exp(-Math.pow((h - 10.7) / 2.4, 2)) + 260 * Math.exp(-Math.pow((h - 15.5) / 2.2, 2)) + 140 * Math.exp(-Math.pow((h - 2.5) / 0.9, 2)));
+    const tiles = [
+      {t: 'records', aria: 'Records, live', v: '290.2K', d: smooth(recVals, 280, 291, 10).d, axis: 'last_14_days'},
+      {t: 'tx/s', aria: 'Transactions per second, live', v: '412', d: smooth(txVals, 100, 950, 10).d, axis: 'last_24_hours · peak 918 at 10:45'},
+    ];
+
+    const days = 30;
+    const mk = (base, amp, phase, trend) => Array.from({length: days}, (_, i) => base + trend * i + amp * Math.sin(i / 3.1 + phase) + (rnd() - 0.5) * amp * 0.6);
+    const paid = mk(58, 9, 0, 0.6), delivered = mk(44, 7, 1, 0.4), shipped = mk(36, 6, 2, 0.3);
+    const pending = Array.from({length: days}, (_, i) => 6 + (i > 22 ? (i - 22) * 2.2 : 0) + (rnd() - 0.5) * 2);
+    const lines = {paid: smooth(paid, 0, 120, 2).d, delivered: smooth(delivered, 0, 120, 2).d, shipped: smooth(shipped, 0, 120, 2).d, pending: smooth(pending, 0, 120, 2).d};
+    const legend = [['paid', 'height: 2px; width: 14px; background: var(--ink)'], ['delivered', 'height: 2px; width: 14px; background: var(--ink); opacity: .55'], ['shipped', 'height: 2px; width: 14px; background: var(--ink); opacity: .3'], ['pending', 'height: 2px; width: 14px; background: var(--amber)']].map(([tt, sw]) => ({t: tt, sw}));
+    const oot = [['live', 'live'], ['14d', '14_days']].map(([id, label]) => ({t: label, on: st.oot === id ? 'true' : 'false', style: toggle(st.oot === id), pick: () => this.setState({oot: id})}));
+
+    // insights chart: pending-orders signal with 9 points, point 7 highlighted
+    const iv = [18, 30, 22, 46, 64, 52, 40, 41, 30];
+    const ins = smooth(iv, 0, 72, 6);
+    const HL = 6;
+    const pts = ins.pts.map((p, i) => 'position: absolute; left: ' + p[0].toFixed(2) + '%; top: ' + p[1].toFixed(2) + '%; width: ' + (i === HL ? 14 : 8) + 'px; height: ' + (i === HL ? 14 : 8) + 'px; transform: translate(-50%, -50%); border-radius: 50%; box-sizing: border-box;' + (i === HL ? 'background: var(--accent); box-shadow: 0 0 0 4px var(--paper), 0 0 0 5px var(--accent);' : 'background: var(--paper); border: 2px solid var(--ink);'));
+    const hp = ins.pts[HL];
+    const insight = {d: ins.d, pts,
+      leader: 'position: absolute; left: ' + hp[0].toFixed(2) + '%; top: 0; height: ' + Math.max(0, hp[1] - 4).toFixed(2) + '%; width: 1px; background: var(--ink); opacity: .5',
+      label: 'Pending-orders signal over the last 9 hours; the highlighted point marks the jump that created the insight.'};
+
+    const bars = (vals, warnIdx) => vals.map((v, i) => 'flex: 1; height: ' + Math.round(v * 100) + '%; background: ' + (i === warnIdx ? t.amber : (i % 4 === 3 ? t.fill30 : t.ink)) + ';');
+    const sessions = [
+      {name: 'app', status: 'ok', q: "SELECT * FROM orders WHERE status = 'pending' …", bars: bars([.3, .5, .4, .7, .6, .9, .5, .4, .6, .8, .55, .7, .5, .6, .45, .35], -1), warn: false},
+      {name: 'etl', status: 'idle in tx', q: 'UPDATE events SET processed = true …', bars: bars([.2, .3, .25, .2, .3, .35, .3, .25, .2, .25, .3, .2, .15, .1, .1, .1], 12), warn: true},
+      {name: 'metabase', status: 'ok', q: "SELECT date_trunc('day', created_at) …", bars: bars([.5, .6, .45, .3, .2, .55, .65, .5, .4, .3, .5, .6, .7, .5, .45, .4], -1), warn: false},
+    ].map((s) => ({...s, stStyle: cap + ' font-size: 10px; color: ' + (s.warn ? 'var(--amber)' : 'var(--ink3)')}));
+
+    const feedTabs = [['insights', 'insights'], ['team', 'team']].map(([id, label]) => ({t: label, on: st.feed === id ? 'true' : 'false', style: toggle(st.feed === id), pick: () => this.setState({feed: id})}));
+    const ev = (tt, b, when, kind) => ({t: tt, b, when,
+      titleStyle: cap + ' font-size: 11px; white-space: normal; line-height: 1.35; color: ' + (kind === 'warn' ? 'var(--amber)' : kind === 'err' ? 'var(--alert)' : 'var(--ink)'),
+      iconStyle: 'color: ' + (kind === 'warn' ? 'var(--amber)' : kind === 'err' ? 'var(--alert)' : 'var(--ink)')});
+    const feed = st.feed === 'insights' ? [
+      ev('idle_in_transaction // etl pid 48117', 'Holding row locks on events for 4m 12s.', '1_minute_ago', 'warn'),
+      ev('lock_wait // app pid 48109', 'UPDATE orders waited 1.8 s behind pid 48117.', '23_minutes_ago', 'warn'),
+      ev('insight_created // pending_orders', 'Pending doubled since Monday · 2,214 open.', '30_minutes_ago'),
+      ev('slow_query // events_p95', '212 ms mean across 233 calls in 24 h.', '1_hour_ago'),
+      ev('vacuum_suggested // events', '18% bloat · 67 MB on disk.', '2_hours_ago'),
+      ev('index_unused // idx_events_payload_gin', 'Zero scans in 30 days · 4.1 MB.', '3_hours_ago'),
+      ev('error // 42703', 'column "totl" does not exist (Query 1).', '4_hours_ago', 'err'),
+      ev('backup_complete // shop', '182 MB in 41 s · verified.', 'yesterday'),
+    ] : [
+      ev('grace // committed 2 changes', 'analytics.customers · reviewed with typed confirm.', '12_minutes_ago'),
+      ev('ada // saved query', 'Revenue by plan · shared to team.', '1_hour_ago'),
+      ev('linus // opened connection', 'crm · staging · read-only.', '3_hours_ago'),
+      ev('hedy // exported csv', 'orders · 2,214 rows · pending only.', 'yesterday'),
+    ];
+
+    return {themeVars, dark, cap, frame, btn, btnPrimary, navs, readouts, ranges, tiles, lines, legend, oot, insight, sessions, feedTabs, feed};
+  }
+}
+</script>
+</body>
+</html>

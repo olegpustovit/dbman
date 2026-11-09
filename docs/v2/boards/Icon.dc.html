@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App icon — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="position: absolute; inset: 24px; display: flex; flex-direction: column; gap: 12px">
+
+  <!-- MASTHEAD -->
+  <header style="height: 44px; flex: none; display: flex; align-items: flex-end; gap: 24px">
+    <div style="flex: none">
+      <div style="{{capDim}}">13 // APP ICON // DBMAN // MACOS 26 · ICON COMPOSER</div>
+      <h1 style="margin: 4px 0 0; font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1">Halftone Drum</h1>
+    </div>
+    <p style="flex: 1; min-width: 0; margin: 0 auto 0 0; max-width: 700px; font-size: 12px; line-height: 1.45; color: var(--ink2)">A database drawn the way DBMan draws data: no outline, no letters, only dots whose size is the shade. They wrap a drum and crowd at its rim. One cobalt row runs around it: the row you selected.</p>
+    <sc-for list="{{stats}}" as="s" hint-placeholder-count="3">
+      <div style="flex: none; border: 1px solid var(--line); border-radius: 3px; padding: 5px 10px; min-width: 84px; background: var(--paper)">
+        <div style="{{capDim}}">{{s.k}}</div>
+        <div style="font-size: 24px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; margin-top: 2px">{{s.v}}</div>
+      </div>
+    </sc-for>
+  </header>
+
+  <div style="display: flex; gap: 12px; height: 916px; flex: none">
+
+    <!-- CONCEPTS 2×2 -->
+    <section aria-label="Concepts" style="flex: 0 0 844px; display: grid; grid-template-columns: 418px 418px; grid-auto-rows: 454px; gap: 8px">
+      <sc-for list="{{concepts}}" as="c" hint-placeholder-count="4">
+        <article style="{{c.frame}}">
+          <div style="{{head}}">
+            <span style="{{c.letterStyle}}">{{c.letter}}</span><span style="{{cap}}">{{c.name}}</span>
+            <span style="flex: 1"></span><span style="{{c.chipStyle}}">{{c.verdict}}</span>
+          </div>
+          <div style="{{well}}; height: 400px">
+            <svg viewBox="0 0 1024 1024" width="{{c.x.w}}" height="{{c.x.w}}" style="{{c.x.style}}" role="img" aria-label="{{c.name}}">
+              <path d="{{c.x.bg}}" fill="{{c.x.bgFill}}" fill-opacity="{{c.x.bgOp}}"></path>
+              <path d="{{c.x.tint}}" fill="{{c.x.tintFill}}" fill-opacity="{{c.x.tintOp}}"></path>
+              <path d="{{c.x.grid}}" fill="{{c.x.inkFill}}" fill-opacity="{{c.x.gridOp}}"></path>
+              <path d="{{c.x.ink}}" fill="{{c.x.inkFill}}" fill-opacity="{{c.x.inkOp}}"></path>
+              <path d="{{c.x.inkS}}" fill="none" stroke="{{c.x.inkFill}}" stroke-opacity="{{c.x.inkOp}}" stroke-width="{{c.x.sw}}" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="{{c.x.acc}}" fill="{{c.x.accFill}}" fill-opacity="{{c.x.accOp}}"></path>
+              <path d="{{c.x.accS}}" fill="none" stroke="{{c.x.accFill}}" stroke-width="{{c.x.asw}}" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="{{c.x.rim}}" fill="none" stroke="{{c.x.rimStroke}}" stroke-opacity="{{c.x.rimOp}}" stroke-width="{{c.x.rimW}}"></path>
+            </svg>
+          </div>
+          <div style="display: flex; align-items: center; height: 28px; padding: 0 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink); white-space: nowrap; overflow: hidden">{{c.idea}}</div>
+        </article>
+      </sc-for>
+    </section>
+
+    <!-- RIGHT: MASTER, APPEARANCE -->
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+      <section aria-label="1024 master" style="{{frame}}">
+        <div style="{{head}}"><span style="{{cap}}">MASTER</span><span style="{{capDim}}">// 1024 × 1024 // SHOWN 1:2 = 512</span><span style="flex: 1"></span><span style="{{chipAcc}}">RECOMMENDED // A</span></div>
+        <div style="{{well}}; height: 524px">
+          <svg viewBox="0 0 1024 1024" width="{{master.w}}" height="{{master.w}}" style="{{master.style}}" role="img" aria-label="DBMan app icon, 1024 master">
+            <path d="{{master.bg}}" fill="{{master.bgFill}}" fill-opacity="{{master.bgOp}}"></path>
+            <path d="{{master.grid}}" fill="{{master.inkFill}}" fill-opacity="{{master.gridOp}}"></path>
+            <path d="{{master.ink}}" fill="{{master.inkFill}}" fill-opacity="{{master.inkOp}}"></path>
+            <path d="{{master.acc}}" fill="{{master.accFill}}" fill-opacity="{{master.accOp}}"></path>
+            <path d="{{master.rim}}" fill="none" stroke="{{master.rimStroke}}" stroke-opacity="{{master.rimOp}}" stroke-width="{{master.rimW}}"></path>
+          </svg>
+        </div>
+        <div style="display: flex; gap: 12px; padding: 8px 10px 10px; border-top: 1px solid var(--line)">
+          <div style="flex: 1; min-width: 0; display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 3px 8px; align-content: start">
+            <sc-for list="{{spec}}" as="s" hint-placeholder-count="6">
+              <span style="{{capDim}}">{{s.k}}</span><span style="font-size: 11.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.v}}</span>
+            </sc-for>
+          </div>
+          <div style="flex: none; text-align: center">
+            <svg viewBox="0 0 1024 1024" width="104" height="104" role="img" aria-label="macOS icon grid keylines" style="display: block; background: var(--sunken); border: 1px solid var(--line); border-radius: 3px">
+              <path d="{{keyBody}}" fill="var(--paper)" stroke="var(--ink3)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="{{keyLines}}" fill="none" stroke="var(--accent)" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="{{keyDrum}}" fill="var(--ink)" fill-opacity=".85"></path>
+            </svg>
+            <div style="{{capDim}}; margin-top: 3px">GRID // 824 · 640 · ⌀412</div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Appearance modes" style="{{frame}}; flex: 1">
+        <div style="{{head}}"><span style="{{cap}}">APPEARANCE</span><span style="{{capDim}}">// MACOS 26 // SAME 3 LAYERS, 4 RENDERINGS</span></div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px">
+          <sc-for list="{{modes}}" as="m" hint-placeholder-count="4">
+            <div>
+              <div style="{{m.bgStyle}}">
+                <svg viewBox="0 0 1024 1024" width="{{m.x.w}}" height="{{m.x.w}}" style="{{m.x.style}}" role="img" aria-label="{{m.name}}">
+                  <path d="{{m.x.bg}}" fill="{{m.x.bgFill}}" fill-opacity="{{m.x.bgOp}}"></path>
+                  <path d="{{m.x.tint}}" fill="{{m.x.tintFill}}" fill-opacity="{{m.x.tintOp}}"></path>
+                  <path d="{{m.x.grid}}" fill="{{m.x.inkFill}}" fill-opacity="{{m.x.gridOp}}"></path>
+                  <path d="{{m.x.ink}}" fill="{{m.x.inkFill}}" fill-opacity="{{m.x.inkOp}}"></path>
+                  <path d="{{m.x.acc}}" fill="{{m.x.accFill}}" fill-opacity="{{m.x.accOp}}"></path>
+                  <path d="{{m.x.rim}}" fill="none" stroke="{{m.x.rimStroke}}" stroke-opacity="{{m.x.rimOp}}" stroke-width="{{m.x.rimW}}"></path>
+                </svg>
+              </div>
+              <div style="display: flex; gap: 6px; margin-top: 6px"><span style="{{cap}}">{{m.name}}</span></div>
+              <div style="font-size: 11px; line-height: 1.35; color: var(--ink3); margin-top: 2px">{{m.note}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- LADDER + LAYERS -->
+  <div style="display: flex; gap: 12px; height: 320px; flex: none">
+    <section aria-label="Size ladder" style="{{frame}}; flex: 0 0 844px">
+      <div style="{{head}}"><span style="{{cap}}">SIZE LADDER</span><span style="{{capDim}}">// ACTUAL PX // 512 = MASTER ABOVE // 32 + 16 HINTED: FEWER, BIGGER DOTS ON THE @2X GRID</span></div>
+      <div style="display: flex; align-items: flex-end; gap: 22px; padding: 0 12px 10px; height: 294px; box-sizing: border-box">
+        <sc-for list="{{ladder}}" as="l" hint-placeholder-count="5">
+          <div style="flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 40px">
+            <svg viewBox="0 0 1024 1024" width="{{l.x.w}}" height="{{l.x.w}}" style="{{l.x.style}}" role="img" aria-label="{{l.label}}">
+              <path d="{{l.x.bg}}" fill="{{l.x.bgFill}}" fill-opacity="{{l.x.bgOp}}"></path>
+              <path d="{{l.x.grid}}" fill="{{l.x.inkFill}}" fill-opacity="{{l.x.gridOp}}"></path>
+              <path d="{{l.x.ink}}" fill="{{l.x.inkFill}}" fill-opacity="{{l.x.inkOp}}"></path>
+              <path d="{{l.x.acc}}" fill="{{l.x.accFill}}" fill-opacity="{{l.x.accOp}}"></path>
+              <path d="{{l.x.rim}}" fill="none" stroke="{{l.x.rimStroke}}" stroke-opacity="{{l.x.rimOp}}" stroke-width="{{l.x.rimW}}"></path>
+            </svg>
+            <div style="display: flex; flex-direction: column; gap: 1px"><span style="{{cap}}">{{l.label}}</span><span style="{{l.subStyle}}">{{l.sub}}</span></div>
+          </div>
+        </sc-for>
+        <span style="flex: 1"></span>
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
+          <div style="position: relative; width: 128px; height: 128px; background: var(--sunken); border: 1px solid var(--line); border-radius: 3px">
+            <svg viewBox="0 0 1024 1024" width="128" height="128" style="position: absolute; inset: 0" role="img" aria-label="16 px icon at 8× with the @2x pixel grid">
+              <path d="{{z16.bg}}" fill="{{z16.bgFill}}" fill-opacity="{{z16.bgOp}}"></path>
+              <path d="{{z16.ink}}" fill="{{z16.inkFill}}"></path>
+              <path d="{{z16.acc}}" fill="{{z16.accFill}}"></path>
+              <path d="{{px32}}" fill="none" stroke="var(--ink)" stroke-opacity=".08" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="{{px16}}" fill="none" stroke="var(--ink)" stroke-opacity=".2" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+            </svg>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 1px"><span style="{{cap}}">16 @ 8×</span><span style="{{capDim}}; font-size: 10px">PT + @2X GRID</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="Icon Composer layers" style="{{frame}}; flex: 1; min-width: 0">
+      <div style="{{head}}"><span style="{{cap}}">LAYERS</span><span style="{{capDim}}">// ICON COMPOSER // DBMAN.ICON</span></div>
+      <div style="display: flex; height: 294px">
+        <div style="flex: 0 0 214px; position: relative; overflow: hidden; border-right: 1px solid var(--line); background: var(--sunken)">
+          <div style="position: absolute; left: 32px; top: 64px; width: 150px; height: 150px">
+            <sc-for list="{{layers}}" as="y" hint-placeholder-count="3">
+              <svg viewBox="0 0 1024 1024" width="150" height="150" style="{{y.style}}" aria-hidden="true">
+                <path d="{{y.x.bg}}" fill="{{y.x.bgFill}}" fill-opacity="{{y.x.bgOp}}" stroke="{{y.outline}}" stroke-width="1" stroke-dasharray="{{y.dash}}" vector-effect="non-scaling-stroke"></path>
+                <path d="{{y.x.grid}}" fill="{{y.x.inkFill}}" fill-opacity="{{y.x.gridOp}}"></path>
+                <path d="{{y.x.ink}}" fill="{{y.x.inkFill}}" fill-opacity="{{y.x.inkOp}}"></path>
+                <path d="{{y.x.acc}}" fill="{{y.x.accFill}}" fill-opacity="{{y.x.accOp}}"></path>
+              </svg>
+            </sc-for>
+          </div>
+        </div>
+        <ol style="flex: 1; min-width: 0; margin: 0; padding: 10px 12px; list-style: none; display: flex; flex-direction: column; gap: 10px">
+          <sc-for list="{{layers}}" as="y" hint-placeholder-count="3">
+            <li>
+              <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 20px; font-weight: 300; line-height: 1; color: var(--ink3)">{{y.n}}</span><span style="{{cap}}">{{y.name}}</span><span style="{{y.chipStyle}}">{{y.chip}}</span></div>
+              <div style="font-size: 11.5px; line-height: 1.4; color: var(--ink2); margin-top: 3px">{{y.d}}</div>
+              <div style="{{capDim}}; margin-top: 2px">{{y.props}}</div>
+            </li>
+          </sc-for>
+        </ol>
+      </div>
+    </section>
+  </div>
+
+  <!-- IN CONTEXT -->
+  <div style="display: flex; gap: 12px; height: 136px; flex: none">
+    <section aria-label="Dock" style="{{frame}}; flex: 0 0 844px">
+      <div style="{{head}}"><span style="{{cap}}">IN CONTEXT</span><span style="{{capDim}}">// DOCK // NEIGHBOURS ARE NEUTRAL PLACEHOLDERS</span></div>
+      <div style="{{dockWall}}">
+        <div style="{{dockBar}}">
+          <sc-for list="{{dock}}" as="d" hint-placeholder-count="10">
+            <div style="{{d.wrap}}">
+              <span style="{{d.tipStyle}}">{{d.tip}}</span>
+              <svg viewBox="0 0 1024 1024" width="{{d.x.w}}" height="{{d.x.w}}" style="{{d.x.style}}" aria-label="{{d.label}}" role="img">
+                <path d="{{d.x.bg}}" fill="{{d.x.bgFill}}" fill-opacity="{{d.x.bgOp}}"></path>
+                <path d="{{d.x.grid}}" fill="{{d.x.inkFill}}" fill-opacity="{{d.x.gridOp}}"></path>
+                <path d="{{d.x.ink}}" fill="{{d.x.inkFill}}" fill-opacity="{{d.x.inkOp}}"></path>
+                <path d="{{d.x.acc}}" fill="{{d.x.accFill}}" fill-opacity="{{d.x.accOp}}"></path>
+                <path d="{{d.x.rim}}" fill="none" stroke="{{d.x.rimStroke}}" stroke-opacity="{{d.x.rimOp}}" stroke-width="{{d.x.rimW}}"></path>
+              </svg>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="Finder and menu bar" style="{{frame}}; flex: 1; min-width: 0; display: flex; flex-direction: column">
+      <div style="{{head}}"><span style="{{cap}}">FINDER</span><span style="{{capDim}}">// LAUNCHPAD</span><span style="flex: 1"></span><span style="{{cap}}">MENU BAR</span><span style="{{capDim}}">// 16 PT TEMPLATE</span></div>
+      <div style="flex: 1; display: flex; min-height: 0">
+        <div style="flex: 0 0 236px; display: flex; justify-content: space-around; align-items: flex-start; padding: 12px 6px 0; border-right: 1px solid var(--line)">
+          <sc-for list="{{finder}}" as="d" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 72px">
+              <svg viewBox="0 0 1024 1024" width="{{d.x.w}}" height="{{d.x.w}}" style="{{d.x.style}}" aria-hidden="true">
+                <path d="{{d.x.bg}}" fill="{{d.x.bgFill}}" fill-opacity="{{d.x.bgOp}}"></path>
+                <path d="{{d.x.grid}}" fill="{{d.x.inkFill}}" fill-opacity="{{d.x.gridOp}}"></path>
+                <path d="{{d.x.ink}}" fill="{{d.x.inkFill}}" fill-opacity="{{d.x.inkOp}}"></path>
+                <path d="{{d.x.acc}}" fill="{{d.x.accFill}}" fill-opacity="{{d.x.accOp}}"></path>
+                <path d="{{d.x.rim}}" fill="none" stroke="{{d.x.rimStroke}}" stroke-opacity="{{d.x.rimOp}}" stroke-width="{{d.x.rimW}}"></path>
+              </svg>
+              <span style="{{d.labelStyle}}">{{d.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; gap: 10px; padding: 10px; align-items: flex-start">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <sc-for list="{{menubars}}" as="b" hint-placeholder-count="2">
+              <div style="{{b.style}}">
+                <span style="flex: 1"></span>
+                <svg viewBox="0 0 1024 1024" width="16" height="16" aria-label="DBMan menu bar glyph" role="img" style="flex: none"><path d="{{glyph.ink}}" fill="{{b.fg}}"></path><path d="{{glyph.inkS}}" fill="none" stroke="{{b.fg}}" stroke-width="{{glyph.sw}}" stroke-linecap="round"></path></svg>
+                <span aria-hidden="true" style="{{b.ph1}}"></span>
+                <span aria-hidden="true" style="{{b.ph2}}"></span>
+                <span style="flex: none; font-size: 12px; font-weight: 500; color: {{b.fg}}; white-space: nowrap">Mon 15:42</span>
+              </div>
+            </sc-for>
+            <div style="font-size: 11px; line-height: 1.35; color: var(--ink3)">Template: one tone, the row becomes an arc.</div>
+          </div>
+          <div style="flex: none; text-align: center">
+            <svg viewBox="0 0 1024 1024" width="64" height="64" role="img" aria-label="Menu bar glyph at 4×" style="display: block; background: var(--paper); border: 1px solid var(--line); border-radius: 3px">
+              <path d="{{px16}}" fill="none" stroke="var(--ink)" stroke-opacity=".12" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="{{glyph.ink}}" fill="var(--ink)"></path><path d="{{glyph.inkS}}" fill="none" stroke="var(--ink)" stroke-width="{{glyph.sw}}" stroke-linecap="round"></path>
+            </svg>
+            <div style="{{capDim}}; margin-top: 3px">16 PT @ 4×</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'position:relative;background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;height:1500px;overflow:hidden';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const boxBase = 'display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lineStrong); border-radius: 2px; cursor: pointer; font-weight: 600; letter-spacing: .08em; font-family: var(--ui); white-space: nowrap; text-decoration: none; box-sizing: border-box;';
+    const box = boxBase + 'height: 20px; padding: 0 7px; font-size: 10.5px; background: transparent; color: var(--ink);';
+    const boxL = boxBase + 'height: 28px; padding: 0 12px; font-size: 11px; background: transparent; color: var(--ink);';
+    const boxPrimary = boxBase + 'height: 28px; padding: 0 14px; font-size: 11px; background: var(--ink); color: var(--paper);';
+    const field = 'height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font: 12px var(--ui); color: var(--ink); min-width: 0; box-sizing: border-box';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; box-sizing: border-box';
+    const head = 'display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-bottom: 1px solid var(--line); box-sizing: border-box';
+    const well = 'display: flex; align-items: center; justify-content: center; background-color: var(--backdrop); background-image: radial-gradient(circle,var(--dots) 1px,transparent 1.2px); background-size: 8px 8px';
+    const chip = (c) => CAPS + 'font-size: 10px; height: 16px; display: inline-flex; align-items: center; padding: 0 6px; border-radius: 2px; border: 1px solid ' + c + '; color: ' + c + ';';
+    const chipAcc = CAPS + 'font-size: 10px; height: 16px; display: inline-flex; align-items: center; padding: 0 6px; border-radius: 2px; background: var(--accent); color: ' + (dark ? '#0B0B0C' : '#FFFFFF') + ';';
+
+    // ---------- geometry (1024 canvas, macOS 26 grid) ----------
+    const f = (n) => Math.round(n * 10) / 10;
+    const DEG = Math.PI / 180;
+    const squircle = (x0, y0, w, h, R, s) => {
+      const p = Math.min((1 + s) * R, Math.min(w, h) / 2);
+      const am = 90 * (1 - s), arc = Math.sin(am / 2 * DEG) * R * Math.SQRT2;
+      const p34 = R * Math.tan((90 - am) / 4 * DEG), beta = 45 * s;
+      const c = p34 * Math.cos(beta * DEG), d = c * Math.tan(beta * DEG), b = (p - arc - c - d) / 3, a = 2 * b;
+      const x1 = x0 + w, y1 = y0 + h;
+      const fr = [[[1, 0], [0, 1]], [[0, 1], [-1, 0]], [[-1, 0], [0, -1]], [[0, -1], [1, 0]]];
+      const st = [[x1 - p, y0], [x1, y1 - p], [x0 + p, y1], [x0, y0 + p]];
+      const v = (F, u, w2) => f(u * F[0][0] + w2 * F[1][0]) + ' ' + f(u * F[0][1] + w2 * F[1][1]);
+      let s2 = 'M' + f(x0 + p) + ' ' + f(y0);
+      for (let i = 0; i < 4; i++) {
+        s2 += 'L' + f(st[i][0]) + ' ' + f(st[i][1]) + 'c' + v(fr[i], a, 0) + ' ' + v(fr[i], a + b, 0) + ' ' + v(fr[i], a + b + c, d) +
+          'a' + f(R) + ' ' + f(R) + ' 0 0 1 ' + v(fr[i], arc, arc) + 'c' + v(fr[i], d, c) + ' ' + v(fr[i], d, b + c) + ' ' + v(fr[i], d, a + b + c);
+      }
+      return s2 + 'Z';
+    };
+    const BODY = squircle(100, 100, 824, 824, 185, 0.6);
+    const inBody = (x, y, m) => {
+      const lo = 100 + m, hi = 924 - m, r = 185 - m * 0.5;
+      if (x < lo || x > hi || y < lo || y > hi) return false;
+      const cx = Math.min(Math.max(x, lo + r), hi - r), cy = Math.min(Math.max(y, lo + r), hi - r);
+      return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+    };
+    const dot = (x, y, rx, ry) => {
+      ry = ry ?? rx;
+      if (rx < 0.3 || ry < 0.3) return '';
+      return 'M' + f(x - rx) + ' ' + f(y) + 'a' + f(rx) + ' ' + f(ry) + ' 0 1 0 ' + f(2 * rx) + ' 0a' + f(rx) + ' ' + f(ry) + ' 0 1 0 ' + f(-2 * rx) + ' 0Z';
+    };
+    const rect = (x, y, w, h, r) => 'M' + f(x + r) + ' ' + f(y) + 'h' + f(w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r + 'v' + f(h - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + (-r) + ' ' + r + 'h' + f(-(w - 2 * r)) + 'a' + r + ' ' + r + ' 0 0 1 ' + (-r) + ' ' + (-r) + 'v' + f(-(h - 2 * r)) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + (-r) + 'Z';
+    const paperGrid = (step, r) => {
+      let d = '';
+      for (let y = 100 + step / 2; y < 924; y += step) for (let x = 100 + step / 2; x < 924; x += step) if (inBody(x, y, step * 0.4)) d += dot(x, y, r);
+      return d;
+    };
+    const GRID = paperGrid(32, 2.4);
+
+    // A · HALFTONE DRUM — dots wrap a cylinder; dot size = shade (light from upper-left); one cobalt row = the selected row
+    const drum = (opt) => {
+      const o = Object.assign({cx: 512, top: 312, R: 282, b: 88, cols: 26, rows: [4, 4, 4], dy: 31, gap: 1, sel: 5, rMax: 13, rMin: 2.4, capRings: 4, capR: 0.42, capN: 0.92, capPhase: -1, snap: 0, hcap: 0.5}, opt);
+      const Lt = [-0.62, 0, 0.66], ll = Math.hypot(Lt[0], Lt[2]);
+      const sn = (v) => o.snap ? Math.round(v / o.snap) * o.snap : v;
+      const H = o.rows.reduce((a, b) => a + b, 0) * o.dy + o.gap * (o.rows.length - 1) * o.dy;
+      let ink = '', acc = '', rowIdx = 0, k = 0;
+      o.rows.forEach((n) => {
+        for (let i = 0; i < n; i++, rowIdx++, k++) {
+          const yRow = o.top + o.dy * 0.9 + k * o.dy;
+          for (let j = 0; j < o.cols; j++) {
+            const th = -90 + (j + 0.5) * 180 / o.cols, s = Math.sin(th * DEG), c = Math.cos(th * DEG);
+            const x = sn(o.cx + o.R * s), y = sn(yRow + o.b * c), hsp = o.R * Math.PI / o.cols * c;
+            if (rowIdx === o.sel) { acc += dot(x, y, Math.max(Math.min(o.rMax, hsp * (o.hcap + 0.08)), o.rMax * 0.26), o.rMax); continue; }
+            const I = Math.max(0, (s * Lt[0] + c * Lt[2]) / ll);
+            const dk = Math.min(1, 0.12 + (1 - I) * 0.95 + (yRow - o.top) / H * 0.1);
+            const r = o.rMin + (o.rMax - o.rMin) * dk;
+            ink += dot(x, y, Math.max(Math.min(r, hsp * o.hcap), r * 0.22), r);
+          }
+        }
+        k += o.gap;
+      });
+      for (let i = 1; i <= o.capRings; i++) {
+        const rho = i / o.capRings, n = Math.max(1, Math.round(o.cols * 2 * rho * o.capN));
+        for (let j = 0; j < n; j++) {
+          const ph = (j + (o.capPhase < 0 ? (i % 2) * 0.5 : o.capPhase)) / n * 2 * Math.PI;
+          const x = sn(o.cx + rho * o.R * Math.cos(ph)), y = sn(o.top + rho * o.b * Math.sin(ph));
+          const shade = 0.5 + 0.5 * (Math.cos(ph) * 0.7 + Math.sin(ph) * 0.3);
+          const r = i === o.capRings ? o.rMax * 0.62 : o.rMax * o.capR * (0.55 + 0.6 * shade) * (0.45 + 0.55 * rho);
+          ink += dot(x, y, r, r * Math.max(0.55, o.b / o.R * 2.4));
+        }
+      }
+      return {ink, acc, n: (ink.match(/M/g) || []).length, na: (acc.match(/M/g) || []).length};
+    };
+    // B · THE GRID
+    const gridC = () => {
+      let ink = rect(236, 268, 552, 64, 10), acc = '', inkS = '';
+      const vals = [0.35, 0.8, 0.55, 0, 1, 0.25, 0.65], n1 = [5, 4, 5, 0, 4, 5, 4], n2 = [3, 2, 3, 0, 4, 3, 4];
+      for (let r = 0; r < 7; r++) {
+        const y = 366 + r * 66;
+        if (r === 3) { acc += rect(226, y - 25, 572, 50, 10); continue; }
+        for (let i = 0; i < n1[r]; i++) ink += dot(266 + i * 24, y, 8);
+        for (let i = 0; i < n2[r]; i++) ink += dot(476 + i * 24, y, 8);
+        for (let i = 0; i < 5; i++) ink += dot(646 + i * 26, y, 3 + vals[r] * 9 * (0.7 + 0.3 * Math.sin(i + r)));
+      }
+      for (let r = 0; r <= 7; r++) if (r !== 3 && r !== 4) inkS += 'M236 ' + (332 + r * 66) + 'h552';
+      return {ink, acc, inkS, sw: 4};
+    };
+    // C · THE JOIN
+    const joinC = () => {
+      let ink = '', acc = '', inkS = '';
+      const card = (x, y, w, rows, hl) => {
+        ink += rect(x, y, w, 58, 10);
+        inkS += rect(x, y, w, 58 + rows * 52 + 14, 12);
+        for (let r = 0; r < rows; r++) {
+          const yy = y + 92 + r * 52, n = [5, 3, 4, 2][r % 4];
+          for (let i = 0; i < n; i++) { if (r === hl) acc += dot(x + 34 + i * 26, yy, 9); else ink += dot(x + 34 + i * 26, yy, 8); }
+        }
+      };
+      card(196, 236, 300, 4, 2);
+      card(528, 470, 300, 4, 0);
+      acc += dot(496, 432, 15) + dot(528, 562, 15);
+      for (let y = 132; y < 900; y += 32) for (let x = 132; x < 900; x += 32) {
+        const inA = x > 180 && x < 512 && y > 220 && y < 524, inB = x > 512 && x < 844 && y > 454 && y < 758;
+        if (inA || inB || !inBody(x, y, 30)) continue;
+        ink += dot(x, y, Math.max(0, 4.5 - Math.hypot(x - 512, y - 497) / 520 * 5));
+      }
+      return {ink, acc, inkS, accS: 'M496 432h40v130h-8', sw: 14, asw: 14};
+    };
+    // D · THE READOUT
+    const lensC = () => {
+      let ink = '', acc = '', inkS = '';
+      const cx = 512, cy = 512, R = 236, step = 40;
+      for (let y = 120; y < 924; y += step) for (let x = 120; x < 924; x += step) {
+        const d = Math.hypot(x - cx, y - cy);
+        if (!inBody(x, y, 26) || d < R + 78) continue;
+        ink += dot(x, y, 9 - Math.min(1, (d - R) / 300) * 5);
+      }
+      const s2 = step * 1.9;
+      for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) {
+        const x = cx + i * s2, y = cy + j * s2, d = Math.hypot(x - cx, y - cy);
+        if (d > R - 34) continue;
+        if (i === 0 && j === 0) acc += dot(x, y, 30); else ink += dot(x, y, 18 * (1 - d / R * 0.55));
+      }
+      inkS += dot(cx, cy, R);
+      for (let a = 0; a < 360; a += 15) {
+        const r0 = R + 26, r1 = R + (a % 90 === 0 ? 58 : 42);
+        inkS += 'M' + f(cx + r0 * Math.cos(a * DEG)) + ' ' + f(cy + r0 * Math.sin(a * DEG)) + 'L' + f(cx + r1 * Math.cos(a * DEG)) + ' ' + f(cy + r1 * Math.sin(a * DEG));
+      }
+      return {ink, acc, inkS, sw: 12};
+    };
+
+    // 16 px: hand-placed on the @2x pixel grid (32 units = 1 device px); 5 columns, 8-dot cap, flat shade
+    const tiny = (k, glyphMode) => {
+      const T = (x, y) => [512 + (x - 512) * k, 512 + (y - 511) * k];
+      let ink = '', acc = '';
+      const put = (x, y, r, toAcc) => { const p = T(x, y); const d = dot(p[0], p[1], r * k); if (toAcc) acc += d; else ink += d; };
+      [[256, 300], [384, 232], [512, 220], [640, 232], [768, 300], [640, 368], [512, 380], [384, 368]].forEach(([x, y]) => put(x, y, 30));
+      const xs = [256, 384, 512, 640, 768], off = [0, 32, 48, 32, 0], rr = [38, 40, 44, 46, 48];
+      [460, 600, 740].forEach((y0, row) => xs.forEach((x, i) => { if (row === 1 && glyphMode) return; put(x, y0 + off[i], row === 1 ? 46 : rr[i], row === 1); }));
+      const a = T(256, 600), m = T(512, 696), b = T(768, 600);
+      return {ink, acc, inkS: glyphMode ? 'M' + f(a[0]) + ' ' + f(a[1]) + 'Q' + f(m[0]) + ' ' + f(m[1]) + ' ' + f(b[0]) + ' ' + f(b[1]) : '', sw: 92 * k};
+    };
+
+    const A = drum({});
+    const A64 = drum({cols: 16, rows: [3, 3, 3], dy: 40, top: 300, sel: 4, rMax: 18, rMin: 4, capRings: 3, b: 92});
+    const A32 = drum({cols: 8, rows: [2, 2, 2], dy: 52, top: 300, sel: 2, rMax: 24, rMin: 11, capRings: 2, capN: 0.75, b: 96, hcap: 0.7, gap: 0.9, snap: 16, R: 288});
+    const A16 = tiny(1, false);
+    const glyph = tiny(1.42, true);
+
+    // ---------- renderings ----------
+    const P = {
+      light: {bgFill: '#FFFFFF', inkFill: '#0B0B0C', accFill: '#2F2FE4', gridOp: 0.07, rim: '#0B0B0C', rimOp: 0.12},
+      dark: {bgFill: '#0B0B0C', inkFill: '#F2F2F0', accFill: '#8A8AFF', gridOp: 0.09, rim: '#FFFFFF', rimOp: 0.16},
+      clear: {bgFill: '#FFFFFF', bgOp: 0.16, inkFill: '#FFFFFF', inkOp: 0.86, accFill: '#FFFFFF', accOp: 1, gridOp: 0.1, rim: '#FFFFFF', rimOp: 0.6, rimW: 8},
+      tinted: {bgFill: '#050506', tint: '#2F2FE4', tintOp: 0.34, inkFill: '#8A8AFF', inkOp: 0.92, accFill: '#F2F2F0', accOp: 1, gridOp: 0.12, rim: '#8A8AFF', rimOp: 0.35},
+      ghost: {bgFill: dark ? '#F2F2F0' : '#0B0B0C', bgOp: dark ? 0.2 : 0.16, rimOp: 0},
+    };
+    const icon = (g, mode, w, o) => {
+      o = o || {};
+      const p = P[mode];
+      const sh = Math.max(1, Math.round(w / 40));
+      return {
+        w, bg: BODY, bgFill: p.bgFill, bgOp: p.bgOp ?? 1,
+        tint: p.tint ? BODY : '', tintFill: p.tint || 'none', tintOp: p.tintOp ?? 0,
+        grid: o.grid === false || !g ? '' : GRID, gridOp: p.gridOp ?? 0,
+        ink: g ? g.ink : '', inkFill: p.inkFill || 'none', inkOp: p.inkOp ?? 1,
+        inkS: g && g.inkS ? g.inkS : '', sw: g && g.sw ? g.sw : 0,
+        acc: g ? g.acc : '', accFill: p.accFill || 'none', accOp: p.accOp ?? 1,
+        accS: g && g.accS ? g.accS : '', asw: g && g.asw ? g.asw : 0,
+        rim: BODY, rimStroke: p.rim || 'none', rimOp: p.rimOp ?? 0, rimW: p.rimW ?? Math.max(2, 1024 / (w || 1024)),
+        style: 'display: block; flex: none; overflow: visible; filter: drop-shadow(0 ' + sh + 'px ' + (sh * 1.6).toFixed(1) + 'px rgba(0,0,0,' + (mode === 'ghost' ? 0 : dark ? 0.5 : 0.16) + '))' + (o.style ? ';' + o.style : ''),
+      };
+    };
+    const base = dark ? 'dark' : 'light';
+
+    const concepts = [
+      ['A', 'HALFTONE DRUM', 'RECOMMENDED', A, 'A drum built only from dots. One cobalt row is the selection.', 'RECOMMENDED', true],
+      ['B', 'THE GRID', 'CONCEPT', gridC(), 'A result grid with a halftone heat column and one chosen row.', 'READS AS A SPREADSHEET', false],
+      ['C', 'THE JOIN', 'CONCEPT', joinC(), 'Two tables, one cobalt relation: schemas and agents linking.', 'CARDS BLUR BELOW 64 PX', false],
+      ['D', 'THE READOUT', 'CONCEPT', lensC(), 'An instrument lens lifts one record out of a field of data.', 'READS AS SEARCH / CAMERA', false],
+    ].map(([letter, name, chipT, g, idea, verdict, rec]) => ({
+      letter, name, idea, verdict, chip: chipT, x: icon(g, base, 400),
+      frame: frame + (rec ? '; border: 1.5px solid var(--accent)' : ''),
+      letterStyle: 'font-size: 18px; font-weight: 300; line-height: 1; color: ' + (rec ? 'var(--accent)' : 'var(--ink3)'),
+      chipStyle: rec ? chipAcc : chip('var(--line)') + 'color: var(--ink3);',
+      verdictStyle: CAPS + 'font-size: 10px; color: ' + (rec ? 'var(--accent)' : 'var(--ink3)') + '; white-space: nowrap',
+    }));
+
+    const master = icon(A, base, 512);
+    const spec = [
+      ['CANVAS', '1024 pt · body 824 at 100'],
+      ['CORNER', 'r 185 continuous, smoothing 0.6'],
+      ['DOTS', A.n + ' ink + ' + A.na + ' cobalt · 26 × 12 + 4 rings'],
+      ['SHADE', 'radius 2.4 → 13, lit from upper-left'],
+      ['WRAP', 'equal angles: dots crowd at the rim'],
+      ['FILES', 'icon-dbman.svg · DBMan.icon'],
+    ].map(([k, v]) => ({k, v}));
+    const keyBody = BODY;
+    const keyLines = 'M192 192h640v640h-640Z' + dot(512, 512, 412) + dot(512, 512, 282) + 'M100 512h824M512 100v824';
+    const keyDrum = drum({cols: 12, rows: [2, 2, 2], dy: 62, rMax: 16, rMin: 9, capRings: 2, sel: -1, hcap: 0.7}).ink;
+
+    const modes = [
+      ['DEFAULT', 'light', 'Paper, ink dots, cobalt row.', 'background-color: #F3F3F1; background-image: radial-gradient(circle, rgba(11,11,12,0.06) 1px, transparent 1.2px); background-size: 8px 8px'],
+      ['DARK', 'dark', 'Ink paper, #8A8AFF row.', 'background: #050506'],
+      ['CLEAR', 'clear', 'Glass body, white dots.', 'background-color: #3C3C40; background-image: radial-gradient(circle, rgba(255,255,255,0.22) 1.6px, transparent 1.9px); background-size: 7px 7px'],
+      ['TINTED', 'tinted', 'One tone; the row lifts.', 'background: #050506'],
+    ].map(([name, mode, note, bg]) => ({name, note, x: icon(A, mode, 96), bgStyle: 'height: 120px; border-radius: 3px; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; ' + bg}));
+
+    const ladder = [[256, A, 'MASTER GEOMETRY', false], [128, A, 'MASTER', false], [64, A64, '16 COL', false], [32, A32, '8 COL', true], [16, A16, '5 COL', true]]
+      .map(([w, g, sub, h]) => ({x: icon(g, base, w, {grid: w >= 128}), label: String(w), sub, subStyle: CAPS + 'font-size: 10px; color: ' + (h ? 'var(--accent)' : 'var(--ink3)') + '; white-space: nowrap'}));
+    const z16 = icon(A16, base, 128);
+    let px16 = '', px32 = '';
+    for (let i = 1; i < 32; i++) { const v = i * 32; if (i % 2) px32 += 'M' + v + ' 0V1024M0 ' + v + 'H1024'; else px16 += 'M' + v + ' 0V1024M0 ' + v + 'H1024'; }
+
+    const layerOutline = dark ? 'rgba(255,255,255,0.4)' : 'rgba(11,11,12,0.35)';
+    const lx = (g, keep) => {
+      const x = icon(g, base, 150);
+      if (keep !== 'bg') { x.bgOp = 0; x.grid = ''; }
+      if (keep !== 'ink') x.ink = '';
+      if (keep !== 'acc') x.acc = '';
+      return x;
+    };
+    const layers = [
+      ['01', 'BACKGROUND', 'FILL', 'bg', 'Paper (#FFFFFF / #0B0B0C) with the 8 pt dot grid at 7 %. Carries the light/dark switch.', 'GLASS OFF // TRANSLUCENCY 0'],
+      ['02', 'HALFTONE', 'MID', 'ink', 'The ' + A.n + ' ink dots as one vector group. Ink in Default, light in Dark, white in Clear.', 'GLASS OFF // SHADOW NEUTRAL'],
+      ['03', 'SELECTED ROW', 'FOREGROUND', 'acc', 'The ' + A.na + ' cobalt dots. The only layer that takes the specular glass edge.', 'GLASS ON // SPECULAR // SHADOW CHROMATIC'],
+    ].map(([n, name, chipT, keep, d, props], i) => ({n, name, d, props, chip: chipT, x: lx(A, keep),
+      chipStyle: keep === 'acc' ? chipAcc : chip('var(--line)') + 'color: var(--ink3);',
+      outline: layerOutline, dash: keep === 'bg' ? '0' : '4 4',
+      style: 'position: absolute; inset: 0; overflow: visible; transform: translateY(' + (60 - i * 62) + 'px) rotateX(58deg) rotateZ(-42deg)'}));
+
+    const dockOrder = [0, 0, 0, 0, 1, 0, 0, 0, 2, 0];
+    const tipStyle = 'position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px; transform: translateX(-50%); padding: 2px 9px; border-radius: 6px; background: var(--paper); border: 1px solid var(--line); font-size: 12px; font-weight: 500; color: var(--ink); white-space: nowrap';
+    const dock = dockOrder.map((k) => k === 2
+      ? {x: icon(null, 'ghost', 0), label: '', tip: '', tipStyle: 'display: none', wrap: 'width: 1px; height: 52px; margin: 0 4px; background: var(--line)'}
+      : {x: k ? icon(A, base, 64) : icon(null, 'ghost', 64), label: k ? 'DBMan' : 'App placeholder', tip: k ? 'DBMan' : '', tipStyle: k ? tipStyle : 'display: none', wrap: 'flex: none; position: relative'});
+    const dockWall = 'position: relative; height: 111px; display: flex; align-items: flex-end; justify-content: center; padding: 0 14px 10px; box-sizing: border-box; background-color: var(--backdrop); background-image: radial-gradient(circle,var(--dots) 1px,transparent 1.2px); background-size: 8px 8px';
+    const dockBar = 'display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 22px; border: 1px solid var(--line); background: ' + (dark ? 'rgba(242,242,240,0.08)' : 'rgba(255,255,255,0.72)');
+
+    const finder = [[A, 'DBMan', true], [null, '', false], [null, '', false]].map(([g, label, me]) => ({
+      x: g ? icon(g, base, 56) : icon(null, 'ghost', 56), label: label || ' ',
+      labelStyle: me ? 'font-size: 12px; font-weight: 500; padding: 1px 6px; border-radius: 4px; background: var(--accent); color: ' + (dark ? '#0B0B0C' : '#FFFFFF')
+        : 'display: block; width: 46px; height: 10px; margin-top: 4px; border-radius: 2px; background: var(--fill12)'}));
+
+    const mb = (bgc, fg) => ({fg,
+      style: 'display: flex; align-items: center; gap: 10px; height: 24px; padding: 0 10px; border-radius: 3px; border: 1px solid var(--line); background: ' + bgc,
+      ph1: 'flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid ' + fg + '; opacity: .55; box-sizing: border-box',
+      ph2: 'flex: none; width: 20px; height: 10px; border-radius: 2px; border: 1.5px solid ' + fg + '; opacity: .55; box-sizing: border-box'});
+    const menubars = [mb('#F6F6F4', '#0B0B0C'), mb('#121214', '#F2F2F0')];
+
+    const stats = [['CONCEPTS', '04'], ['LAYERS', '03'], ['MODES', '04']].map(([k, v]) => ({k, v}));
+
+    return {themeVars, cap, capDim, box, boxL, boxPrimary, field, frame, head, well, chipAcc, stats, concepts, master, spec, keyBody, keyLines, keyDrum, modes,
+      ladder, z16, px16, px32, layers, dock, dockWall, dockBar, finder, menubars, glyph};
+  }
+}
+</script>
+</body>
+</html>

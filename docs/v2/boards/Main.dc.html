@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DBMan — Design proposal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="max-width: 1440px; margin: 0 auto; padding: 0 40px 48px; box-sizing: border-box">
+
+  <!-- document bar -->
+  <header style="display: flex; align-items: center; flex-wrap: wrap; gap: 14px; min-height: 38px; border-bottom: 1px solid var(--ruleStrong); font-size: 12px">
+    <span style="font-size: 13px; font-weight: 600">DBMan</span>
+    <span style="color: var(--ink3)">Design proposal · revision 0.7 · inverted FUI · built · macOS 26 · SwiftUI + AppKit</span>
+    <span style="flex: 1"></span>
+    <span style="color: var(--ink2)">For review · 9 November 2026</span>
+  </header>
+
+  <!-- title -->
+  <section style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-end; padding: 36px 0 28px; border-bottom: 1px solid var(--rule)">
+    <div style="flex: 1 1 620px; min-width: 0">
+      <h1 style="margin: 0; font-size: 32px; font-weight: 600; font-stretch: 87.5%; font-variation-settings: 'wdth' 82; letter-spacing: -0.4px; line-height: 1.1">A dense, instrument-grade SQL workspace for the Mac.</h1>
+      <p style="margin: 10px 0 0; max-width: 640px; font-size: 15px; line-height: 1.45; color: var(--ink2)">Connect Postgres, MySQL or SQLite. Every table opens instrumented: its shape, its relations and the cost of your query are visible before you scroll a single row.</p>
+    </div>
+    <div style="flex: 0 1 420px; min-width: 0">
+      <div role="img" aria-label="Halftone signature: orders per day, stacked by status" style="display: grid; grid-template-columns: repeat(48, minmax(0, 1fr))">
+        <sc-for list="{{sig}}" as="d" hint-placeholder-count="384"><span style="aspect-ratio: 1; background: radial-gradient(circle closest-side, {{d}} 0 62%, transparent 72%)"></span></sc-for>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: var(--ink3)"><span>The one signature: quantities as halftone</span><span><span style="color: var(--amber)">pending</span> · <span style="color: var(--alert)">refunded</span></span></div>
+    </div>
+  </section>
+
+  <!-- direction -->
+  <section style="margin-top: 20px; border: 1px solid var(--rule); background: var(--surface)">
+    <div style="{{paneHead}}"><span style="color: var(--ink)">Direction</span><span style="{{meta}}">four commitments every screen is checked against</span></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))">
+      <sc-for list="{{direction}}" as="d" hint-placeholder-count="4">
+        <div style="padding: 10px 12px 14px; border-right: 1px solid var(--rule)">
+          <div style="font-size: 13px; font-weight: 600">{{d.t}}</div>
+          <div style="font-size: 12px; line-height: 1.5; color: var(--ink2); margin-top: 4px">{{d.b}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px">
+    <!-- screens -->
+    <section style="flex: 1 1 520px; min-width: 0; border: 1px solid var(--rule); background: var(--surface)">
+      <div style="{{paneHead}}"><span style="color: var(--ink)">Screens</span><span style="{{meta}}">open any artboard; 04 and 08 are interactive</span></div>
+      <sc-for list="{{screens}}" as="s" hint-placeholder-count="10">
+        <a href="{{s.href}}" style="display: grid; grid-template-columns: 30px 170px minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 5px 10px; border-bottom: 1px solid var(--rule); text-decoration: none; color: var(--ink); font-size: 12px">
+          <span style="color: var(--ink3)">{{s.n}}</span><span style="font-weight: 500">{{s.t}}</span><span style="color: var(--ink2)">{{s.d}}</span>
+        </a>
+      </sc-for>
+    </section>
+
+    <!-- review log -->
+    <section style="flex: 1 1 520px; min-width: 0; border: 1px solid var(--rule); background: var(--surface)">
+      <div style="{{paneHead}}"><span style="color: var(--ink)">How we got here</span><span style="{{meta}}">reviews were run cold, by agents that never saw our reasoning</span></div>
+      <sc-for list="{{log}}" as="l" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px; padding: 6px 10px; border-bottom: 1px solid var(--rule); font-size: 12px; line-height: 1.45">
+          <span style="font-weight: 600">{{l.r}}</span>
+          <span><span style="color: var(--ink)">{{l.what}}</span> <span style="color: var(--ink2)">{{l.result}}</span></span>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+
+  <!-- laws -->
+  <section style="margin-top: 20px; border: 1px solid var(--rule); background: var(--surface)">
+    <div style="{{paneHead}}"><span style="color: var(--ink)">Laws of UX → decisions</span><span style="{{meta}}">each row points at the screen where you can check it</span></div>
+    <div style="overflow-x: auto">
+      <div role="table" aria-label="Laws of UX mapped to decisions" style="min-width: 960px; font-size: 12px">
+        <div role="row" style="display: grid; grid-template-columns: 170px minmax(0, 1fr) minmax(0, 1.7fr) 90px; gap: 12px; padding: 0 10px; height: 24px; align-items: center; border-bottom: 1px solid var(--ruleStrong); color: var(--ink2); font-weight: 500; font-variant-caps: all-small-caps; letter-spacing: .02em">
+          <span role="columnheader">Law</span><span role="columnheader">What it says</span><span role="columnheader">Decision in DBMan</span><span role="columnheader">Check on</span>
+        </div>
+        <sc-for list="{{laws}}" as="l" hint-placeholder-count="14">
+          <div role="row" style="display: grid; grid-template-columns: 170px minmax(0, 1fr) minmax(0, 1.7fr) 90px; gap: 12px; padding: 6px 10px; border-bottom: 1px solid var(--rule); line-height: 1.45">
+            <span role="cell" style="font-weight: 600">{{l.law}}</span>
+            <span role="cell" style="color: var(--ink2)">{{l.says}}</span>
+            <span role="cell">{{l.here}}</span>
+            <span role="cell" style="color: var(--ink2)">{{l.screen}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px">
+    <!-- build -->
+    <section style="flex: 1.3 1 560px; min-width: 0; border: 1px solid var(--rule); background: var(--surface)">
+      <div style="{{paneHead}}"><span style="color: var(--ink)">Build and performance budget</span><span style="{{meta}}">SwiftUI shell, AppKit where it counts</span></div>
+      <sc-for list="{{perf}}" as="p" hint-placeholder-count="8">
+        <div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 110px; gap: 12px; padding: 6px 10px; border-bottom: 1px solid var(--rule); font-size: 12px; line-height: 1.45">
+          <span style="font-weight: 500">{{p.k}}</span><span style="color: var(--ink2)">{{p.v}}</span><span style="text-align: right">{{p.budget}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <!-- decisions for the client -->
+    <section style="flex: 1 1 420px; min-width: 0; border: 1px solid var(--rule); background: var(--surface)">
+      <div style="{{paneHead}}"><span style="color: var(--ink)">Decisions we need from you</span><span style="{{meta}}">our recommendation first</span></div>
+      <sc-for list="{{asks}}" as="a" hint-placeholder-count="5">
+        <div style="padding: 7px 10px; border-bottom: 1px solid var(--rule); font-size: 12px; line-height: 1.45">
+          <div style="font-weight: 600">{{a.q}}</div>
+          <div style="color: var(--ink2)"><span style="color: var(--ink)">{{a.rec}}</span> {{a.why}}</div>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+
+  <footer style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 28px; padding-top: 8px; border-top: 1px solid var(--ruleStrong); font-size: 11px; color: var(--ink3)">
+    <span>DBMan · Halftone kit 0.3</span><span style="flex: 1"></span><span>Next: 01 Halftone kit, then screens 02–09</span>
+  </footer>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":2250}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',grid:'rgba(11,11,12,0.06)',paper:'#FFFFFF',paperSolid:'#FFFFFF',chrome:'#FFFFFF',surface:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',rule:'rgba(11,11,12,0.14)',ruleStrong:'#0B0B0C',accent:'#2F2FE4',accentSoft:'rgba(47,47,228,0.08)',accentText:'#FFFFFF',grad:'#0B0B0C',dot:'rgba(11,11,12,0.12)',signal:'#2F2FE4',amber:'#A86400',alert:'#D21F1A',bracket:'transparent'};
+    const D = {backdrop:'#050506',grid:'rgba(255,255,255,0.06)',paper:'#0B0B0C',paperSolid:'#0B0B0C',chrome:'#0B0B0C',surface:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',rule:'rgba(255,255,255,0.14)',ruleStrong:'#F2F2F0',accent:'#8A8AFF',accentSoft:'rgba(138,138,255,0.12)',accentText:'#0B0B0C',grad:'#F2F2F0',dot:'rgba(255,255,255,0.12)',signal:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E',bracket:'transparent'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--serif:'New York',ui-serif,Newsreader,Georgia,serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1,'case' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--grid) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;min-height:100%';
+    const paneHead = 'height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-bottom: 1px solid var(--rule); font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; box-shadow: inset 4px 0 0 var(--accent)';
+    const meta = 'font-size: 11px; font-weight: 400; font-stretch: 100%; color: var(--ink3); overflow: hidden; text-overflow: ellipsis';
+
+    // signature halftone: 48 x 8, stacked by status, recent growth, pending rising at the end
+    let seed = 9;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const sig = [];
+    const h = [];
+    for (let c = 0; c < 48; c++) h.push(Math.max(1, Math.min(8, Math.round((0.25 + 0.65 * Math.pow(c / 48, 1.2) + 0.08 * Math.sin(c / 3) + (rnd() - .5) * .1) * 8))));
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 48; c++) {
+      const lvl = 7 - r;
+      if (lvl >= h[c]) { sig.push(t.dot); continue; }
+      const top = h[c] - 1;
+      sig.push(lvl === top && c > 42 ? t.amber : lvl === top && c % 11 === 5 ? t.alert : lvl < h[c] * 0.45 ? t.ink : t.ink3);
+    }
+
+    const direction = [
+      {t: 'Dense, not cramped', b: '28 pt rows, framed panes on an engineering grid, thin readout numerals. Table, console, inspector and distribution all fit on one 1440 × 900 screen. Panes collapse with ⌘J and ⌥⌘I when you want them out of the way.'},
+      {t: 'Instrumented, not plain', b: 'Every column header carries a halftone of its distribution. Relations become an ER diagram, and queries show their plan as a diagram with the hotspot marked. A grid shows rows; DBMan shows shape.'},
+      {t: 'Keyboard first, pointer friendly', b: 'Every action is in the menu bar with its shortcut, and ⌘K reaches all of them. Focus works per cell, and ⌘↓ follows a foreign key. Pointer targets stay 24–28 pt.'},
+      {t: 'Safe by default', b: 'Writes are staged in a transaction. Production opens read-only, unlocking lasts only for the session, and every commit gets a review sheet with the diff, the SQL, the cascades and a typed confirmation.'},
+    ];
+    const screens = [
+      ['00', 'Proposal', 'This page', 'Main.dc.html'],
+      ['01', 'Halftone kit 0.5', 'Technical-light tokens, type, instruments, density, keyboard map', 'UIKit.dc.html'],
+      ['01b', 'Colour system', 'OKLCH harmony: monochromatic indigo + warm split-complement, measured contrast', 'Colour.dc.html'],
+      ['02', 'Connections', 'A real window. Paste a URL and it fills the form; production is tagged', 'Connect.dc.html'],
+      ['03', 'Overview', '24 h radial activity clock, vitals, orders halftone, sessions, slow queries', 'Overview.dc.html'],
+      ['04', 'Table workspace', 'Grid with column halftones; Data, Structure, Relations (ER) and Stats views', 'Table.dc.html'],
+      ['05', 'Query', 'Editor, schema tree, results, Explain diagram, auto-chart', 'Query.dc.html'],
+      ['06', '⌘K palette', 'Tables, columns, actions and recent queries, with a preview', 'Palette.dc.html'],
+      ['07', 'Dark', 'The same workspace in dark mode', 'TableDark.dc.html'],
+      ['08', 'Safety', 'Staged writes on production with a review-and-commit sheet', 'Safety.dc.html'],
+      ['09', 'States', 'Running, error, failed connect, empty, connection lost, delete, first run, unsaved', 'States.dc.html'],
+      ['10', 'Motion', 'Rules, tokens and 8 live demos, Reduce Motion mapping', 'Motion.dc.html'],
+      ['11', 'Implementation plan', 'Packages, design→code map, data flow, milestones, perf gates', 'Plan.dc.html'],
+    ].map(([n, tt, d, href]) => ({n, t: tt, d, href}));
+    const log = [
+      {r: 'v1', what: 'Editorial "Halftone" kit from the four references.', result: 'Three cold reviews (reference fidelity, Laws of UX, technical lint) returned 25, 21 and 4 findings. The worst: the "one inverted element" rule was broken on every screen, and there was no write safety and no failure states.'},
+      {r: 'v2', what: 'Fixed every P0 and P1 finding, then added the Safety and States artboards.', result: 'Client: "not desktop enough, more density", with dense multi-pane references.'},
+      {r: 'v2 dense', what: 'Rebuilt as a workspace: panes, tabs, console, inspector, 22 pt rows.', result: 'Client: bring in diagrams and data viz, not plain grids. Added the ER, Stats, plan diagram and ops mosaic.'},
+      {r: 'Baseline', what: 'An agent designed the same app with no direction at all.', result: 'Our type still matched that AI default on 11 of 15 decisions: mono everywhere, status dots, PG tiles, KPI tiles.'},
+      {r: 'Built', what: 'Native SwiftUI + AppKit app in ~/projects/dbman, built from this v7 design by Sonnet and Haiku agents.', result: 'Drivers for SQLite, PostgreSQL and MySQL/MariaDB with TLS, cancel and staged writes; Overview, Table (data, structure, ER, stats), Query with Explain diagram, palette, Connections; 28 tests passing against live servers, including cancel, TLS verify-full and wrong-password paths. Shipped to github.com/olegpustovit/dbman (default branch dev); make install produces a signed, hardened-runtime build.'},
+      {r: 'v6–v7', what: 'Client: v6 too generic; new dense FUI references (dashboards, node view, tracker, system sheets).', result: 'Inverted FUI: white paper, monochrome ink frames with caps // labels, a top strip and number rail, tracker-style grid, huge light readouts, line charts; colour reduced to one signal.'},
+      {r: 'v4–v5', what: 'Client: “too Windows 95, not sexy enough”, plus light technical FUI references.', result: 'Rebuilt as technical light: a cobalt field and a black tile per screen, black navigator, warm paper, thin readout numerals, tick meters, a 24 h radial activity clock; motion spec and implementation plan added.'},
+      {r: 'v3', what: 'Rebuilt the type system. Mono is now only for SQL; headers use SF condensed; labels use small caps; null is New York italic; keys use ER underline notation; connection state is plain text.', result: 'Every screen was relinted, and a final cold review was run against the references and the laws.'},
+    ];
+    const laws = [
+      ['Jakob’s Law', 'People expect your app to work like the others they use.', 'Xcode/Finder anatomy: navigator, tabs, content, console, inspector. Native menus, ⌘ shortcuts and selection colours.', 'All'],
+      ['Hick’s Law', 'More choices, slower decisions.', 'One URL field fills the connection form. ⌘K narrows the list as you type. Quick filters show only the five status values.', '02 · 04 · 06'],
+      ['Fitts’s Law', 'Big, close targets are faster to hit.', 'Run sits at the editor’s edge. Rows are full width. Drop a file anywhere in the Connections window. Icon buttons are 24 pt.', '02 · 05'],
+      ['Miller’s Law', 'Working memory holds about 7 ± 2 chunks.', 'Inspector sections Row, Relations and Customer. The Overview groups its panes; readouts sit on one line.', '03 · 04'],
+      ['Doherty threshold', 'Feedback within 400 ms keeps people in flow.', 'Pages of 500 rows stream in. Past 400 ms you get a spinner, a live count and Cancel (⌘.).', '09'],
+      ['Tesler’s Law', 'Complexity can’t vanish; the app should carry it.', 'The URL is parsed into fields, a status chip writes the WHERE clause, and the plan diagram explains why a node is slow.', '02 · 04 · 05'],
+      ['Postel’s Law', 'Accept liberally, send conservatively.', 'Accepts URLs, DSNs, psql commands, file paths and drops. Writes are staged and shown as SQL before commit.', '02 · 08'],
+      ['Von Restorff', 'The one that differs is remembered.', 'Hue is reserved for attention: accent for selection, amber for pending or production, red for errors. Everything else is ink.', '03 · 04 · 08'],
+      ['Common Region', 'Things inside a shared boundary group together.', 'Every pane has a 24 pt header strip. Hairlines separate panes; there are no floating cards.', 'All'],
+      ['Similarity', 'Things that look alike seem related.', 'Mono means SQL, nothing else. null is always New York italic. Foreign keys always carry a dotted accent underline.', '04 · 05'],
+      ['Zeigarnik effect', 'Unfinished work stays on the mind.', 'Edited tabs and staged changes stay visible until resolved. Closing asks “Save changes to Query 1?”.', '05 · 08 · 09'],
+      ['Peak–End rule', 'We judge by the peak and the end.', 'Runs end on a result line plus the plan. Commits end on a review sheet, not a raw dialog.', '05 · 08'],
+      ['Goal-gradient', 'Effort rises near the goal.', 'Parsing shows which fields are filled, then Test reports “Reached in 4 ms” before you connect.', '02 · 09'],
+      ['Aesthetic–usability', 'Beautiful feels easier.', 'One signature (the halftone), calm ink, and four type sizes.', 'All'],
+    ].map(([law, says, here, screen]) => ({law, says, here, screen}));
+    const perf = [
+      {k: 'Data grid', v: 'NSTableView via NSViewRepresentable: cell reuse, fixed 22 pt rows, and a custom header cell that draws the column halftone.', budget: '10M rows scroll'},
+      {k: 'Halftones', v: 'One Canvas pass per chart with paths bucketed by colour, about four fill calls per chart whatever the dot count.', budget: '< 2 ms / chart'},
+      {k: 'Concurrency', v: 'Each connection is an actor. Rows arrive as AsyncSequence<RowPage>; the main actor only appends.', budget: '0 main-thread I/O'},
+      {k: 'Invalidation', v: '@Observable models with Equatable row values, so only the cells that change re-render.', budget: '< 16 ms / keystroke'},
+      {k: 'SQL editor', v: 'TextKit 2 NSTextView, re-highlighting only the paragraph being edited, with schema-aware completion.', budget: '< 8 ms highlight'},
+      {k: 'Stats', v: 'Column halftones come from a 5,000-row sample, refreshed in the background, never blocking the grid.', budget: '< 150 ms / table'},
+      {k: 'Drivers', v: 'PostgresNIO, system SQLite3 and MySQLNIO behind one Database protocol. Credentials stay in the Keychain.', budget: '—'},
+      {k: 'Platform', v: 'Window tabs and state restoration, a Settings scene, Commands for the whole keyboard map, Quick Look on Space, Services menu export.', budget: 'macOS 26+'},
+    ];
+    const asks = [
+      {q: 'Colour', rec: 'Monochrome ink on white, one cobalt signal (#2F2FE4) for live, now and selected.', why: 'Monochromatic indigo plus a warm split-complement (amber, red) for attention; neutrals share the indigo hue. See the colour chapter.'},
+      {q: 'Landing screen after connect', rec: 'The last-used tab, falling back to Overview.', why: 'This cuts “steps to first row” from about 6 to 1 for returning users.'},
+      {q: 'Bundle a typeface?', rec: 'No.', why: 'SF condensed, small caps and New York italic give the identity with zero licence cost and native rendering.'},
+      {q: 'Explain diagram for MySQL and SQLite', rec: 'Ship Postgres first.', why: 'MySQL’s EXPLAIN FORMAT=JSON can map onto the same diagram in v1.1; SQLite gets a simplified tree.'},
+      {q: 'Default appearance', rec: 'Follow the system.', why: 'Both themes are designed; the dark one is shown on 07.'},
+    ];
+    return {themeVars, paneHead, meta, sig, direction, screens, log, laws, perf, asks};
+  }
+}
+</script>
+</body>
+</html>

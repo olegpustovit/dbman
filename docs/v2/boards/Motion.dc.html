@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion — DBMan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="{{themeVars}}">
+<div style="max-width: 1440px; margin: 0 auto; padding: 16px 20px 28px; box-sizing: border-box">
+
+  <header style="display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px solid var(--lineStrong)">
+    <div style="font-size: 56px; font-weight: 300; letter-spacing: -2px; line-height: .9">180<span style="font-size: 18px; letter-spacing: 0">MS</span></div>
+    <div>
+      <div style="{{cap}}">MOTION // SUBTLE, FAST, ALWAYS EXPLAINS A CHANGE</div>
+      <div style="font-size: 12px; color: var(--ink2); margin-top: 4px">Eight live demos loop below. Critically damped, no bounce; every token has a Reduce Motion fallback.</div>
+    </div>
+    <span style="flex: 1"></span>
+    <button type="button" onClick="{{toggle}}" style="{{boxPrimary}}">{{toggleLabel}}</button>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-bottom: 4px">
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">RULES</span><span style="{{capDim}}">// 05</span></div>
+      <div style="padding: 4px 12px 8px">
+        <sc-for list="{{rules}}" as="r" hint-placeholder-count="5">
+          <div style="display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 12px; line-height: 1.45">
+            <span style="font-size: 20px; font-weight: 300; line-height: 1">{{r.n}}</span>
+            <span><span style="{{cap}}">{{r.t}}</span> <span style="color: var(--ink2)">{{r.b}}</span></span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">TOKENS</span><span style="{{capDim}}">// CSS_MOCK → SWIFTUI</span></div>
+      <div role="table" aria-label="Motion tokens" style="padding: 4px 12px 8px; font-size: 12px">
+        <div role="row" style="display: grid; grid-template-columns: 70px 64px minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px; height: 26px; align-items: center; border-bottom: 1px solid var(--lineStrong)"><span role="columnheader" style="{{capDim}}">TOKEN</span><span role="columnheader" style="{{capDim}}">TIME</span><span role="columnheader" style="{{capDim}}">USED_FOR</span><span role="columnheader" style="{{capDim}}">SWIFTUI</span></div>
+        <sc-for list="{{tokens}}" as="k" hint-placeholder-count="6">
+          <div role="row" style="display: grid; grid-template-columns: 70px 64px minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px; min-height: 26px; align-items: center; border-bottom: 1px dashed var(--line)">
+            <span role="cell" style="{{cap}}">{{k.name}}</span>
+            <span role="cell" style="font-variant-numeric: tabular-nums">{{k.ms}}</span>
+            <span role="cell" style="color: var(--ink2)">{{k.use}}</span>
+            <span role="cell" style="font-family: var(--code); font-size: 11px">{{k.swift}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+    <!-- 01 selection band -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">01 // SELECTION_BAND</span></div>
+      <div style="padding: 10px 12px">
+        <div style="position: relative; height: 130px; font-family: var(--code); font-size: 12px">
+          <span aria-hidden="true" style="{{d1.band}}"></span>
+          <sc-for list="{{d1.rows}}" as="r" hint-placeholder-count="5"><div style="{{r.style}}"><span style="color: var(--ink3)">{{r.n}}</span><span>{{r.id}}</span><span style="{{r.cell}}">{{r.v}}</span><span style="color: var(--ink3); text-align: right">{{r.n}}</span></div></sc-for>
+        </div>
+        <p style="{{note}}">The band glides to the new row across both gutters; the focused cell inverts.</p>
+        <div style="{{code}}">.animation(.snappy(duration: 0.18), value: selection)</div>
+      </div>
+    </section>
+
+    <!-- 02 rail -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">02 // NUMBER_RAIL</span></div>
+      <div style="padding: 10px 12px">
+        <div style="display: flex; gap: 10px; height: 130px">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <sc-for list="{{d2.rail}}" as="v" hint-placeholder-count="4"><span style="{{v.style}}">{{v.n}}</span></sc-for>
+          </div>
+          <div style="{{d2.pane}}"><span style="{{cap}}">{{d2.label}}</span></div>
+        </div>
+        <p style="{{note}}">⌘1–⌘4 invert the rail number; the pane cross-fades with no layout jump.</p>
+        <div style="{{code}}">.matchedGeometryEffect(id: "rail", in: ns)</div>
+      </div>
+    </section>
+
+    <!-- 03 readout -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">03 // READOUT_ROLL</span></div>
+      <div style="padding: 10px 12px">
+        <div style="height: 130px">
+          <div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 52px; font-weight: 300; letter-spacing: -2px; line-height: 1; font-variant-numeric: tabular-nums">{{d3.value}}</span><span style="{{capDim}}">TX/S</span></div>
+          <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(40, minmax(0, 1fr)); gap: 1px; height: 16px; margin-top: 14px"><sc-for list="{{d3.seg}}" as="s" hint-placeholder-count="40"><span style="{{s}}"></span></sc-for></div>
+          <div style="display: flex; justify-content: space-between; margin-top: 4px"><span style="{{capDim}}">0</span><span style="{{capDim}}">PEAK 918</span></div>
+        </div>
+        <p style="{{note}}">Digits roll, segments fill one by one. Live values update at most every 5 s.</p>
+        <div style="{{code}}">.contentTransition(.numericText(value: tps))</div>
+      </div>
+    </section>
+
+    <!-- 04 halftone -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">04 // HALFTONE_SWEEP</span></div>
+      <div style="padding: 10px 12px">
+        <div aria-hidden="true" style="height: 130px; display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); align-content: center">
+          <sc-for list="{{d4}}" as="d" hint-placeholder-count="192"><span style="{{d}}"></span></sc-for>
+        </div>
+        <p style="{{note}}">Dots fill left to right in one 240 ms sweep once rows have streamed in.</p>
+        <div style="{{code}}">Canvas + TimelineView, dots ≤ progress · x</div>
+      </div>
+    </section>
+
+    <!-- 05 running -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">05 // RUNNING_QUERY</span></div>
+      <div style="padding: 10px 12px">
+        <div style="height: 130px">
+          <div style="display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border: 1px solid var(--lineStrong); border-radius: 3px">
+            <span aria-hidden="true" style="display: grid; grid-template-columns: repeat(3, 5px); gap: 2px"><sc-for list="{{d5.spin}}" as="s" hint-placeholder-count="9"><span style="{{s}}"></span></sc-for></span>
+            <span style="{{cap}}">{{d5.label}}</span><span style="flex: 1"></span><span style="{{capDim}}">⌘. CANCEL</span>
+          </div>
+          <div style="{{d5.result}}"><span style="font-size: 36px; font-weight: 300; letter-spacing: -1.2px">3 ROWS</span><span style="{{capDim}}; margin-left: 8px">// 41 MS</span></div>
+        </div>
+        <p style="{{note}}">Silent under 400 ms. Then spinner + live count; the result rises 6 px into place.</p>
+        <div style="{{code}}">.transition(.offset(y: 6).combined(with: .opacity))</div>
+      </div>
+    </section>
+
+    <!-- 06 staged -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">06 // STAGED_EDIT</span></div>
+      <div style="padding: 10px 12px">
+        <div style="height: 130px; font-family: var(--code); font-size: 12px">
+          <div style="{{d6.row}}"><span aria-hidden="true" style="{{d6.bar}}"></span><span style="color: var(--ink3)">05</span><span>1182</span><span style="flex: 1"></span><span style="{{d6.old}}">free</span><span style="font-weight: 600">pro</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; height: 26px; padding: 0 8px; border-bottom: 1px dashed var(--line)"><span style="color: var(--ink3)">06</span><span>1183</span><span style="flex: 1"></span><span>team</span></div>
+          <div style="{{d6.chip}}">1 STAGED // REVIEW ⇧⌘R</div>
+        </div>
+        <p style="{{note}}">The amber gutter draws in; the staged bar slides up once. Nothing pulses.</p>
+        <div style="{{code}}">.transition(.move(edge: .bottom)) · scaleEffect(y:)</div>
+      </div>
+    </section>
+
+    <!-- 07 inspector -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">07 // INSPECTOR_SLIDE</span></div>
+      <div style="padding: 10px 12px">
+        <div style="position: relative; height: 130px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden">
+          <div aria-hidden="true" style="position: absolute; inset: 8px; background: repeating-linear-gradient(0deg, var(--line) 0 1px, transparent 1px 18px)"></div>
+          <div style="{{d7.panel}}"><div style="font-size: 26px; font-weight: 300; letter-spacing: -0.8px">58429</div><div style="{{capDim}}">ORDER // GRACE_HOPPER</div></div>
+        </div>
+        <p style="{{note}}">⌥⌘I slides the inspector in 220 ms; the grid reflows with it, never under it.</p>
+        <div style="{{code}}">.inspector(isPresented:) — system animation</div>
+      </div>
+    </section>
+
+    <!-- 08 reduce -->
+    <section style="{{frame}}">
+      <div style="{{head}}"><span style="{{cap}}">08 // REDUCE_MOTION</span></div>
+      <div style="padding: 10px 12px">
+        <div style="height: 130px; font-size: 12px">
+          <sc-for list="{{reduce}}" as="r" hint-placeholder-count="4"><div style="display: flex; justify-content: space-between; height: 30px; align-items: center; border-bottom: 1px dashed var(--line)"><span style="{{capDim}}">{{r.a}}</span><span>{{r.b}}</span></div></sc-for>
+        </div>
+        <p style="{{note}}">One switch reads accessibilityReduceMotion and swaps every token.</p>
+        <div style="{{code}}">Motion.current(reduce) → .smooth(0.12)</div>
+      </div>
+    </section>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {phase: 0, playing: true};
+  }
+  componentDidMount() {
+    this.timer = setInterval(() => { if (this.state.playing) this.setState({phase: (this.state.phase + 1) % 4}); }, 1400);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const L = {backdrop:'#F3F3F1',dots:'rgba(11,11,12,0.06)',paper:'#FFFFFF',sunken:'#F6F6F4',ink:'#0B0B0C',ink2:'#3C3C40',ink3:'#6A6A70',line:'rgba(11,11,12,0.14)',lineStrong:'#0B0B0C',fill12:'rgba(11,11,12,0.08)',fill30:'rgba(11,11,12,0.22)',accent:'#2F2FE4',amber:'#A86400',alert:'#D21F1A'};
+    const D = {backdrop:'#050506',dots:'rgba(255,255,255,0.06)',paper:'#0B0B0C',sunken:'#121214',ink:'#F2F2F0',ink2:'#C4C4C8',ink3:'#8E8E94',line:'rgba(255,255,255,0.14)',lineStrong:'#F2F2F0',fill12:'rgba(255,255,255,0.08)',fill30:'rgba(255,255,255,0.22)',accent:'#8A8AFF',amber:'#E0A84E',alert:'#FF6A5E'};
+    const t = dark ? D : L;
+    const themeVars = Object.entries(t).map(([k, v]) => '--' + k + ':' + v).join(';') +
+      ";--ui:-apple-system,'SF Pro Text',system-ui,Archivo,sans-serif;--code:ui-monospace,'SF Mono',Menlo,monospace;font-feature-settings:'tnum' 1;" +
+      'background-color:var(--backdrop);background-image:radial-gradient(circle,var(--dots) 1px,transparent 1.2px);background-size:8px 8px;color:var(--ink);font-family:var(--ui);font-size:12px;-webkit-font-smoothing:antialiased;min-height:100%;width:100%';
+    const CAPS = 'font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-stretch: 87.5%; font-variation-settings: "wdth" 80;';
+    const cap = CAPS + ' color: var(--ink); white-space: nowrap';
+    const capDim = CAPS + ' color: var(--ink3); white-space: nowrap';
+    const frame = 'background: var(--paper); border: 1px solid var(--line); border-radius: 3px; box-sizing: border-box; overflow: hidden; min-width: 0';
+    const head = 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-bottom: 1px solid var(--line)';
+    const boxPrimary = 'display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border: 1px solid var(--lineStrong); border-radius: 2px; background: var(--ink); color: var(--paper); cursor: pointer; font: 600 11px var(--ui); letter-spacing: .08em';
+    const note = 'margin: 10px 0 8px; font-size: 12px; line-height: 1.45; color: var(--ink2)';
+    const code = 'font-family: var(--code); font-size: 11px; padding: 6px 8px; background: var(--sunken); border: 1px solid var(--line); border-radius: 2px';
+    const p = this.state.phase;
+    const ease = 'cubic-bezier(.2,.8,.2,1)';
+
+    const rules = [
+      {n: '01', t: 'EXPLAIN A CHANGE.', b: 'Where it went, what is new, what is still working. No decorative loops.'},
+      {n: '02', t: 'FAST.', b: '120–240 ms. Only the 24 h clock draw takes 400 ms, once per load.'},
+      {n: '03', t: 'NO BOUNCE.', b: 'Critically damped springs; a data tool must feel precise.'},
+      {n: '04', t: 'SILENT UNDER 400 MS.', b: 'Fast work shows no spinner (Doherty); progress appears only when waiting is real.'},
+      {n: '05', t: 'REDUCE MOTION IS FIRST-CLASS.', b: 'Every token maps to a 120 ms fade or an instant swap.'},
+    ];
+    const tokens = [
+      {name: 'SNAP', ms: '180 MS', use: 'selection band, rail, toggles', swift: '.snappy(duration: 0.18)'},
+      {name: 'GLIDE', ms: '220 MS', use: 'inspector, panes', swift: '.smooth(duration: 0.22)'},
+      {name: 'ENTER', ms: '200 MS', use: 'results, sheets, staged bar', swift: '.offset(y: 6) + .opacity'},
+      {name: 'SWEEP', ms: '240 MS', use: 'halftone fill after load', swift: 'TimelineView + Canvas'},
+      {name: 'ROLL', ms: '300 MS', use: 'live readouts', swift: '.contentTransition(.numericText())'},
+      {name: 'REDUCE', ms: '120 MS', use: 'everything above when reduced', swift: '.smooth(duration: 0.12) / nil'},
+    ];
+
+    // 01 selection band
+    const sel = [1, 2, 3, 2][p];
+    const ids = ['58431', '58430', '58429', '58428', '58427'];
+    const vals = ['412.00', '1,177.20', '88.40', '2,040.00', '96.10'];
+    const d1 = {
+      band: 'position: absolute; left: 0; right: 0; height: 26px; top: ' + (sel * 26) + 'px; background: var(--fill12); box-shadow: inset 0 1px 0 var(--lineStrong), inset 0 -1px 0 var(--lineStrong); transition: top .18s ' + ease,
+      rows: ids.map((id, i) => ({id, v: vals[i], n: String(i + 1).padStart(2, '0'),
+        style: 'position: relative; display: grid; grid-template-columns: 28px 64px minmax(0, 1fr) 28px; height: 26px; align-items: center;',
+        cell: 'text-align: right; padding: 0 6px; align-self: stretch; display: flex; align-items: center; justify-content: flex-end; transition: background .18s, color .18s;' + (i === sel ? 'background: var(--ink); color: var(--paper); font-weight: 600;' : '')})),
+    };
+    // 02 rail
+    const vi = [0, 1, 2, 1][p];
+    const labels = ['DATA', 'STRUCTURE', 'RELATIONS', 'STATS'];
+    const d2 = {
+      rail: ['01', '02', '03', '04'].map((n, i) => ({n, style: 'display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--lineStrong); border-radius: 3px; font: 700 11px var(--ui); transition: background .18s, color .18s;' + (i === vi ? 'background: var(--ink); color: var(--paper);' : 'background: var(--paper); color: var(--ink);')})),
+      label: labels[vi] + ' // VIEW',
+      pane: 'flex: 1; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--lineStrong); border-radius: 3px; transition: opacity .22s; opacity: ' + (p % 2 ? '.55' : '1'),
+    };
+    // 03 readout
+    const tps = [412, 436, 398, 421][p];
+    const filled = Math.round(tps / 918 * 40);
+    const d3 = {value: String(tps), seg: Array.from({length: 40}, (_, k) => 'transition: background .3s ' + (k * 6) + 'ms; background: ' + (k < filled ? (k === filled - 1 ? 'var(--accent)' : 'var(--ink)') : 'var(--fill12)'))};
+    // 04 halftone sweep in ink
+    const prog = [0.15, 0.6, 1, 1][p];
+    const d4 = [];
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 24; c++) {
+      const h = Math.round((0.35 + 0.25 * Math.sin(c / 5) + c / 48) * 8);
+      const lvl = 7 - r;
+      const on = lvl < h;
+      const shown = c / 24 <= prog;
+      const op = on ? (shown ? (0.45 + lvl * 0.08) : 0.08) : 1;
+      d4.push('aspect-ratio: 1; transition: opacity .2s ' + (c * 10) + 'ms; opacity: ' + op.toFixed(2) + '; background: radial-gradient(circle closest-side, ' + (on ? (c === 23 && shown ? t.accent : t.ink) : t.fill12) + ' 0 66%, transparent 76%)');
+    }
+    // 05 running
+    const running = p < 2;
+    const d5 = {
+      label: running ? 'RUNNING // ' + ['3,120', '9,804'][p] + ' ROWS // ' + ['0.5', '1.1'][p] + ' S' : 'DONE',
+      spin: [1, .8, .6, .35, .2, .2, .35, .6, .8].map((o) => 'width: 5px; height: 5px; background: var(--ink); transition: opacity .3s; opacity: ' + (running ? [o, 1 - o][p] : 0.12)),
+      result: 'margin-top: 16px; transition: opacity .2s ' + ease + ', transform .2s ' + ease + '; opacity: ' + (running ? 0 : 1) + '; transform: translateY(' + (running ? 6 : 0) + 'px)',
+    };
+    // 06 staged
+    const staged = p >= 1;
+    const d6 = {
+      row: 'position: relative; display: flex; align-items: center; gap: 10px; height: 26px; padding: 0 8px; border-bottom: 1px dashed var(--line); transition: background .2s;' + (staged ? 'background: var(--fill12);' : ''),
+      bar: 'position: absolute; left: 0; top: 0; width: 3px; height: 26px; background: var(--amber); transform-origin: top; transition: transform .2s ' + ease + '; transform: scaleY(' + (staged ? 1 : 0) + ')',
+      old: 'color: var(--ink3); transition: opacity .2s; text-decoration: line-through; opacity: ' + (staged ? 1 : 0),
+      chip: 'display: inline-flex; align-items: center; height: 26px; margin-top: 14px; padding: 0 10px; border: 1px solid var(--lineStrong); border-radius: 2px; font: 600 10.5px var(--ui); letter-spacing: .08em; color: var(--amber); transition: opacity .2s, transform .2s ' + ease + '; opacity: ' + (staged ? 1 : 0) + '; transform: translateY(' + (staged ? 0 : 8) + 'px)',
+    };
+    // 07 inspector
+    const open = p === 1 || p === 2;
+    const d7 = {panel: 'position: absolute; top: 0; bottom: 0; right: 0; width: 46%; padding: 10px; box-sizing: border-box; background: var(--paper); border-left: 1px solid var(--lineStrong); transition: transform .22s ' + ease + '; transform: translateX(' + (open ? 0 : 102) + '%)'};
+    const reduce = [{a: 'GLIDES, SLIDES', b: '→ 120 ms fade'}, {a: 'HALFTONE SWEEP', b: '→ instant'}, {a: 'DIGIT ROLL', b: '→ swap'}, {a: 'SPINNER', b: '→ static RUNNING…'}];
+    return {themeVars, cap, capDim, frame, head, boxPrimary, note, code, rules, tokens, d1, d2, d3, d4, d5, d6, d7, reduce,
+      toggle: () => this.setState({playing: !this.state.playing}), toggleLabel: this.state.playing ? 'PAUSE_DEMOS' : 'PLAY_DEMOS'};
+  }
+}
+</script>
+</body>
+</html>

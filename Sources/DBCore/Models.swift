@@ -165,7 +165,8 @@ public enum Engine: String, Codable, Sendable, CaseIterable {
 
 public enum SSLMode: String, Codable, Sendable, CaseIterable { case disable, prefer, require, verifyFull = "verify-full" }
 
-public enum EnvironmentTag: String, Codable, Sendable, CaseIterable { case local, staging, production }
+/// `system` is only ever DBMan's own store ("DBMan // internal"); the editor does not offer it.
+public enum EnvironmentTag: String, Codable, Sendable, CaseIterable { case local, staging, production, system }
 
 public struct ConnectionProfile: Codable, Hashable, Sendable, Identifiable {
     public var id: UUID
@@ -185,8 +186,10 @@ public struct ConnectionProfile: Codable, Hashable, Sendable, Identifiable {
     public init(id: UUID = UUID(), name: String, engine: Engine, host: String = "localhost", port: Int? = nil, database: String = "", user: String = "", filePath: String? = nil, sslMode: SSLMode = .prefer, environment: EnvironmentTag = .local, openReadOnly: Bool = false, stageWrites: Bool = true, lastOpened: Date? = nil, sslRootCert: String? = nil) {
         self.id = id; self.name = name; self.engine = engine; self.host = host; self.port = port ?? engine.defaultPort; self.database = database; self.user = user; self.filePath = filePath; self.sslMode = sslMode; self.environment = environment; self.openReadOnly = openReadOnly; self.stageWrites = stageWrites; self.lastOpened = lastOpened; self.sslRootCert = sslRootCert
     }
-    /// Production always opens read-only until unlocked for the session.
-    public var startsReadOnly: Bool { openReadOnly || environment == .production }
+    /// DBMan's own store (a fixed id, so the window and its workspace survive relaunches).
+    public static let internalID = UUID(uuidString: "00000000-0000-0000-0000-00000000DB01")!
+    /// Production and the internal store always open read-only until unlocked for the session.
+    public var startsReadOnly: Bool { openReadOnly || environment == .production || environment == .system }
 }
 
 public enum DBError: LocalizedError, Sendable {
