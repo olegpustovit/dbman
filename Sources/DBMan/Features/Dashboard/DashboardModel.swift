@@ -225,6 +225,16 @@ final class DashboardModel {
         selected = nw.id; save()
     }
 
+    /// SAVE AS WIDGET (query tab): the statement becomes a table widget at the next free spot of the default dashboard, which opens.
+    func saveQuery(_ sql: String, title: String, _ ws: WorkspaceModel) async {
+        await open(nil, ws)
+        guard !isProposal, spec != nil else { return }
+        add("table", ws)
+        guard let id = selected else { return }
+        update(id, ws, refetch: true) { $0.query = sql; $0.title = title }
+        ws.go(.dashboard(itemID ?? ""))
+    }
+
     func remove(_ id: String) { spec?.widgets.removeAll { $0.id == id }; data[id] = nil; if selected == id { selected = nil }; save() }
 
     /// Inspector edit of one widget; `refetch` when the query, encoding or type changed.
@@ -259,6 +269,12 @@ final class DashboardModel {
 
     func create(_ ws: WorkspaceModel) {
         if let id = addMine(DashboardSpec(title: "Untitled dashboard", connection: ws.profile.name)) { ws.go(.dashboard(id)) }
+    }
+    /// START FROM TEMPLATE: fills this empty dashboard with a seeded spec.
+    func useTemplate(_ i: Int, _ ws: WorkspaceModel) async {
+        let s = await DefaultDashboard.template(i, ws)
+        spec?.title = s.title; spec?.widgets = s.widgets; spec?.refresh = s.refresh
+        save(); await refresh(ws)
     }
     func duplicate(_ ws: WorkspaceModel) {
         guard var s = spec else { return }

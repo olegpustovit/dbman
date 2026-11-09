@@ -287,8 +287,25 @@ private struct EmptyDashboard: View {
                     Text(liveNote(MCPHost.shared.live.count)).ht(.labelSmall).foregroundStyle(HT.C.ink3)
                     Text("The prompt is copied; paste it into the agent. The result arrives here as a proposal in its layer.").ht(.bodySmall).foregroundStyle(HT.C.ink3).frame(maxWidth: 360, alignment: .leading)
                 }
+                VStack(alignment: .leading, spacing: 0) {
+                    CapsLabel("02 // Start from template", nil).foregroundStyle(HT.C.ink3).padding(.bottom, 4)
+                    ForEach(Array(DefaultDashboard.templates.enumerated()), id: \.offset) { i, t in
+                        Button { Task { await m.useTemplate(i, ws) } } label: {
+                            HStack(spacing: 8) {
+                                Canvas { c, _ in for r in t.thumb { c.fill(Path(CGRect(x: r[0], y: r[1], width: r[2], height: r[3])), with: .color(HT.C.ink.opacity(0.55))) } }
+                                    .frame(width: 34, height: 24).overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(HT.C.line, lineWidth: 1))
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(t.name).ht(.strong).lineLimit(1)
+                                    Text(t.blurb).ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1)
+                                }
+                                Spacer(minLength: 4)
+                                Text("\(t.ids?.count ?? 9) w").ht(.dataSmall).foregroundStyle(HT.C.ink3)
+                            }.frame(width: 250, height: 44, alignment: .leading).contentShape(Rectangle())
+                        }.buttonStyle(.plain).overlay(alignment: .bottom) { Rectangle().fill(HT.C.line).frame(height: 1) }
+                    }
+                }
                 VStack(alignment: .leading, spacing: 8) {
-                    CapsLabel("02 // Add widget", "⌘L").foregroundStyle(HT.C.ink3)
+                    CapsLabel("03 // Add widget", "⌘L").foregroundStyle(HT.C.ink3)
                     Text("19 types in 7 groups. Open the library and drag one onto the grid.").ht(.bodySmall).foregroundStyle(HT.C.ink2).frame(maxWidth: 220, alignment: .leading)
                     Button("+ ADD WIDGET") { m.edit = true }.buttonStyle(.htOutline)
                     Button("IMPORT JSON…") { m.importJSON(ws) }.buttonStyle(.htOutline)

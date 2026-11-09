@@ -327,11 +327,12 @@ extension MCPService {
             let sc = try await schema(c, s)
             if let plan = try await timed(timeoutMs, s, { try await s.explain(stmt, analyze: false) }),
                let why = Rules.prodVerdict(plan, schema: sc, maxCost: Double(b.store.setting("prod_guard_cost") ?? "") ?? 1e6, maxRows: Double(b.store.setting("prod_guard_rows") ?? "") ?? 1e6) {
+                let hint = Rules.prodHint(plan, schema: sc)
                 let hash = Self.hash(asked)
                 if try !b.store.consumeAllowance(agent: agent, connection: c.id, hash: hash) { // ALLOW ONCE: this exact statement, once
                     try b.store.requestOverride(agent: agent, connection: c.id, hash: hash, payload: Self.json(
-                        ["sql": .string(asked), "reason": .string(why), "tool": "query.run", "connection_name": .string(c.name), "timeout_ms": .int(timeoutMs)]))
-                    throw ToolError("BLOCKED_BY_PROD_GUARD", "\(why); DBMan asked the human to allow it: retry this exact statement after approval, or add a filter on an indexed column", status: "blocked")
+                        ["sql": .string(asked), "reason": .string(why), "hint": .string(hint), "tool": "query.run", "connection_name": .string(c.name), "timeout_ms": .int(timeoutMs)]))
+                    throw ToolError("BLOCKED_BY_PROD_GUARD", "\(why); DBMan asked the human to allow it: retry this exact statement after approval; hint: \(hint)", status: "blocked")
                 }
             }
         }

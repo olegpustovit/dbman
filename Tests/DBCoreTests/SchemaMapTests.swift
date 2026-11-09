@@ -204,6 +204,21 @@ final class SchemaMapTests: XCTestCase {
         }
     }
 
+    /// G17: past 200 tables the clusters start collapsed (name + count, no card origins); expanding them places every card without overlap.
+    func testClustersCollapseAt250Tables() {
+        let g = generated(250), s = g.sizes(.keys)
+        let c = MapLayouts.clusters(g, s)
+        XCTAssertTrue(c.origins.isEmpty); XCTAssertTrue(c.boxes.allSatisfy(\.collapsed))
+        XCTAssertEqual(c.boxes.reduce(0) { $0 + $1.members.count }, 250)
+        for (i, a) in c.boxes.enumerated() { for b in c.boxes[(i + 1)...] { XCTAssertFalse(a.rect.intersects(b.rect), "\(a.name) overlaps \(b.name)") } }
+        let e = MapLayouts.clusters(g, s, expanded: Set(c.boxes.map(\.name)))
+        XCTAssertEqual(e.origins.count, 250); XCTAssertFalse(e.boxes.contains(where: \.collapsed))
+        assertNoOverlap(e, s, "expanded 250")
+        for b in e.boxes { for m in b.members { XCTAssertTrue(b.rect.contains(CGRect(origin: e.origins[m]!, size: s[m]!))) } }
+        for (i, a) in e.boxes.enumerated() { for b in e.boxes[(i + 1)...] { XCTAssertFalse(a.rect.intersects(b.rect), "\(a.name) overlaps \(b.name)") } }
+        XCTAssertEqual(MapLayouts.clusters(generated(150), generated(150).sizes(.keys)).origins.count, 150) // below the threshold: expanded
+    }
+
     func testLayeredPutsParentsLeft() {
         let g = shop, l = MapLayouts.layered(g, g.sizes(.keys))
         for e in g.edges where e.kind == .declared && e.from != e.to { XCTAssertLessThan(l.origins[e.to]!.x, l.origins[e.from]!.x, "\(e.to) must be left of \(e.from)") }

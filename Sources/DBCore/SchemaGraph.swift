@@ -9,6 +9,8 @@ public struct MapEdge: Hashable, Sendable {
     public var optional = false
     /// Drawn in place of a hidden junction table.
     public var manyToMany = false
+    /// Virtual relations: the agent layer that holds it (nil = MINE).
+    public var layer: String?
     public init(from: String, fromColumn: String, to: String, toColumn: String, kind: Kind, optional: Bool = false, manyToMany: Bool = false) {
         self.from = from; self.fromColumn = fromColumn; self.to = to; self.toColumn = toColumn
         self.kind = kind; self.optional = optional; self.manyToMany = manyToMany
@@ -21,6 +23,8 @@ public struct VirtualRelation: Codable, Hashable, Sendable {
     public init(fromTable: String, fromColumn: String, toTable: String, toColumn: String) {
         self.fromTable = fromTable; self.fromColumn = fromColumn; self.toTable = toTable; self.toColumn = toColumn
     }
+    /// Not stored: the agent layer name, set when read from the store (nil = MINE).
+    public var layer: String?
     enum CodingKeys: String, CodingKey { case fromTable = "from_table", fromColumn = "from_column", toTable = "to_table", toColumn = "to_column" }
 }
 
@@ -56,6 +60,7 @@ public struct SchemaGraph: Sendable {
             guard let child = by[v.fromTable], let col = child.columns.first(where: { $0.name == v.fromColumn }), let parent = by[v.toTable],
                   parent.columns.contains(where: { $0.name == v.toColumn }), taken.insert(v.fromTable + "." + v.fromColumn).inserted else { continue }
             edges.append(MapEdge(from: v.fromTable, fromColumn: v.fromColumn, to: v.toTable, toColumn: v.toColumn, kind: .virtual, optional: col.nullable))
+            edges[edges.count - 1].layer = v.layer
         }
         edges += Self.inferRelations(ts, skipping: taken)
         let junctions = Set(ts.filter { t in

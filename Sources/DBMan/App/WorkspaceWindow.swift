@@ -39,6 +39,16 @@ struct WorkspaceView: View {
     var body: some View {
         VStack(spacing: HT.M.gap) {
             TopStrip(ws: ws)
+            if ws.profile.environment == .system, ws.writesUnlocked {
+                HStack(spacing: 10) {
+                    CapsLabel("Unlocked // internal store").foregroundStyle(HT.C.amber)
+                    Text("You are editing DBMan itself: permissions, layers and settings. Edits go through the review sheet and apply live to every window.").ht(.bodySmall).foregroundStyle(HT.C.ink2).lineLimit(1)
+                    Spacer()
+                    CapsLabel("Agents still see nothing").foregroundStyle(HT.C.ink3)
+                    Button("RELOCK") { ws.lockWrites() }.buttonStyle(.htOutline)
+                }
+                .padding(.horizontal, 10).frame(height: 28).overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.amber, lineWidth: 1))
+            }
             HStack(spacing: HT.M.gap) {
                 NavigatorView(ws: ws)
                     .frame(width: HT.M.sidebar)

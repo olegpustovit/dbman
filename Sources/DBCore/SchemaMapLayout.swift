@@ -20,7 +20,8 @@ public extension SchemaGraph {
 
 /// Where every card goes. Origins are top-left; boxes are cluster frames; hops only for FOCUS.
 public struct MapLayout: Sendable {
-    public struct Box: Sendable { public var name: String; public var rect: CGRect; public var members: [String] }
+    /// A collapsed box is one small frame (name + table count); its members get no origin.
+    public struct Box: Sendable { public var name: String; public var rect: CGRect; public var members: [String]; public var collapsed = false }
     public var origins: [String: CGPoint] = [:]
     public var boxes: [Box] = []
     public var hops: [String: Int] = [:]
@@ -39,7 +40,7 @@ public struct MapLayout: Sendable {
         let dx = pad - b.minX, dy = pad - b.minY
         var l = self
         l.origins = origins.mapValues { CGPoint(x: $0.x + dx, y: $0.y + dy) }
-        l.boxes = boxes.map { Box(name: $0.name, rect: $0.rect.offsetBy(dx: dx, dy: dy), members: $0.members) }
+        l.boxes = boxes.map { Box(name: $0.name, rect: $0.rect.offsetBy(dx: dx, dy: dy), members: $0.members, collapsed: $0.collapsed) }
         return l
     }
 }
@@ -93,8 +94,13 @@ public enum MapLayouts {
 
     // MARK: clusters
 
+    /// Above this many tables the clusters start collapsed (G17).
+    public static let collapseAbove = 200
+    static let collapsedSize = CGSize(width: 220, height: 64)
+
     /// One frame per schema; a single-schema database groups by connected component (isolated tables share one frame).
-    public static func clusters(_ g: SchemaGraph, _ sizes: [String: CGSize]) -> MapLayout {
+    /// Past `collapseAbove` tables every cluster not in `expanded` is a small frame with its name and table count.
+    public static func clusters(_ g: SchemaGraph, _ sizes: [String: CGSize], expanded: Set<String> = []) -> MapLayout {
         let flow = layered(g, sizes)
         var groups: [(name: String, members: [String])] = []
         if Set(g.tables.map(\.schema)).count > 1 {
@@ -114,9 +120,10 @@ public enum MapLayouts {
         }
         groups.sort { ($1.members.count, $0.name) < ($0.members.count, $1.name) }
 
-        struct Packed { var name: String; var members: [String]; var cells: [String: CGPoint]; var size: CGSize }
+        struct Packed { var name: String; var members: [String]; var cells: [String: CGPoint]; var size: CGSize; var collapsed = false }
         let pad = MapMetrics.boxPad
         let packed: [Packed] = groups.map { grp in
+            if g.tables.count > collapseAbove, !expanded.contains(grp.name) { return Packed(name: grp.name, members: grp.members.sorted(), cells: [:], size: collapsedSize, collapsed: true) }
             let ms = grp.members.sorted { (flow.origins[$0]!.x, flow.origins[$0]!.y, $0) < (flow.origins[$1]!.x, flow.origins[$1]!.y, $1) }
             let cols = Int(Double(ms.count).squareRoot().rounded(.up))
             var colW = [CGFloat](repeating: 0, count: cols), rowH = [CGFloat](repeating: 0, count: (ms.count + cols - 1) / cols)
@@ -135,7 +142,7 @@ public enum MapLayouts {
         var x: CGFloat = 0, y: CGFloat = 0, shelf: CGFloat = 0
         for p in packed {
             if x > 0, x + p.size.width > target { x = 0; y += shelf + 32; shelf = 0 }
-            l.boxes.append(.init(name: p.name, rect: CGRect(origin: CGPoint(x: x, y: y), size: p.size), members: p.members))
+            l.boxes.append(.init(name: p.name, rect: CGRect(origin: CGPoint(x: x, y: y), size: p.size), members: p.members, collapsed: p.collapsed))
             for (n, c) in p.cells { l.origins[n] = CGPoint(x: x + c.x, y: y + c.y) }
             x += p.size.width + 32; shelf = max(shelf, p.size.height)
         }

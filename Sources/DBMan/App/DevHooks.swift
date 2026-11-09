@@ -7,7 +7,7 @@ import SwiftUI
 ///   DBMAN_ROUTE=table:<name>|query:<sql>|dashboard:<id or title part>[:edit[:<widget id>]]|schema-map (+ DBMAN_MAP=<layout>[:<table>[:<hops>]] DBMAN_MAP_PATH=a>b DBMAN_MAP_DETAIL=names|keys|all)   DBMAN_VIEW=<rail index>   DBMAN_AUTORUN=1   DBMAN_SELECT=<row>
 ///   DBMAN_STAGE=<table>.<column>=<value> (stages an update of the first row by id)   DBMAN_REVIEW=1   DBMAN_COMMIT=1   DBMAN_PALETTE=1
 ///   DBMAN_APPEARANCE=dark   DBMAN_WINDOW=settings|min (min: resize the database window to its 1100x700 minimum)
-///   DBMAN_LAYER=<agent>[:diff|:apply] (open the Store panel on that agent's layer; :diff = compare view, :apply = the review sheet)   DBMAN_SNAPSHOT=<png>[+DBMAN_SNAPSHOT_WINDOW=<title>] (render the key window's own view to a file after 6 s; used where screencapture is not permitted)
+///   DBMAN_LAYER=<agent>[:diff|:apply|:seeas] (open the Store panel on that agent's layer; :diff = compare view, :apply = the review sheet)   DBMAN_SNAPSHOT=<png>[+DBMAN_SNAPSHOT_WINDOW=<title>] (render the key window's own view to a file after 6 s; used where screencapture is not permitted)
 ///   DBMAN_CONNECT_TEST=<url> (Connections editor: fill the URL and press TEST)
 @MainActor enum DevHooks {
     /// Passwords from DBMAN_OPEN URLs, so scripted runs never touch the Keychain (a rebuilt binary triggers an access prompt).

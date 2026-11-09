@@ -100,7 +100,7 @@ struct TableBrowserView: View {
         HStack(spacing: 6) {
             CapsLabel("Where").foregroundStyle(HT.C.ink3)
             TextField("status = 'paid' AND total > 100", text: $whereText).textFieldStyle(.plain).ht(.data)
-                .padding(.horizontal, 6).frame(height: 22).frame(minWidth: 120, maxWidth: 380)
+                .padding(.horizontal, 6).frame(height: 22).frame(minWidth: 60, maxWidth: 380)
                 .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
                 .onSubmit(applyFilter)
                 .accessibilityLabel("WHERE filter, press return to apply")
@@ -114,6 +114,7 @@ struct TableBrowserView: View {
                     }
                 }
             }
+            SeeAsPicker(ws: ws).fixedSize()
             Button("Delete row ⌫") { requestDelete() }.buttonStyle(.htOutline).disabled(selection == nil)
                 .keyboardShortcut(.delete, modifiers: .command)
         }
@@ -178,6 +179,10 @@ struct TableBrowserView: View {
             (base, src, marks) = (m.rows, m.source, m.cells)
             let staleKeys = Set(patches.filter(\.stale).map { Overlay.keyString(pk, $0.key) })
             stale = Set(base.indices.filter { marks[$0] != nil && staleKeys.contains(Overlay.keyString(pk, key(base[$0]))) })
+        }
+        if ws.layers.seeingAsAgent { // the agent's view: what its query.run returns
+            let h = Set(columnNames.indices.filter { ws.layers.hidden.contains(columnNames[$0].lowercased()) })
+            base = base.map { r in r.enumerated().map { h.contains($0) ? Cell.text("«redacted»") : $1 } }
         }
         guard !mine.isEmpty, !pk.isEmpty else { return (base, src, marks, stale) }
         var out: [[Cell]] = [], osrc: [Int] = [], omarks: [Int: Set<Int>] = [:], ostale = Set<Int>()

@@ -10,6 +10,19 @@ func layerMono(_ name: String) -> String {
     return (parts.count > 1 ? parts.prefix(2).compactMap(\.first).map(String.init).joined() : String(name.prefix(2))).uppercased()
 }
 
+/// SEE AS (Store board): the workspace as you, as DATABASE alone, as MINE, or as one agent's query.run sees it.
+struct SeeAsPicker: View {
+    let ws: WorkspaceModel
+    var body: some View {
+        @Bindable var m = ws.layers
+        HStack(spacing: 6) {
+            CapsLabel("See as").foregroundStyle(HT.C.ink3)
+            HTSegmented(selection: $m.seeAs, options: [(nil, "YOU"), ("db", "DB")] + m.layers.map { ($0.id, $0.isMine ? "MINE" : layerMono($0.name)) })
+                .help("YOU: everything you can see. An agent: MINE plus its layer, hidden columns redacted.")
+        }
+    }
+}
+
 private func ago(_ d: Date?) -> String {
     guard let d else { return "never" }
     return RelativeDateTimeFormatter().localizedString(for: d, relativeTo: Date())
@@ -53,11 +66,11 @@ struct LayersPanel: View {
     }
 
     private func layerRow(_ l: Layer) -> some View {
-        let on = m.selected == l.id
+        let on = m.selected == l.id, vis = m.visible.contains(l.id)
         return HStack(spacing: 6) {
-            Button { m.toggle(l) } label: { Image(systemName: l.visible ? "eye" : "eye.slash").font(.system(size: 11)).frame(width: 20, height: 24) }
-                .buttonStyle(.plain).foregroundStyle(l.visible ? HT.C.ink : HT.C.ink3)
-                .accessibilityLabel("\(l.visible ? "Hide" : "Show") layer \(l.name)")
+            Button { m.toggle(l) } label: { Image(systemName: vis ? "eye" : "eye.slash").font(.system(size: 11)).frame(width: 20, height: 24) }
+                .buttonStyle(.plain).foregroundStyle(vis ? HT.C.ink : HT.C.ink3).disabled(m.seeAs != nil)
+                .accessibilityLabel(m.seeAs != nil ? "Visibility follows SEE AS" : "\(vis ? "Hide" : "Show") layer \(l.name)")
             Button { m.selected = l.id } label: {
                 HStack(spacing: 6) {
                     tile(layerMono(l.name), on: on, agent: !l.isMine)
@@ -78,7 +91,7 @@ struct LayersPanel: View {
                 .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(on ? HT.C.accent : HT.C.line, lineWidth: 1))
             }.buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
         }
-        .opacity(l.visible && !l.archived ? 1 : 0.55)
+        .opacity(vis ? 1 : 0.55)
     }
 
     private var databaseRow: some View {

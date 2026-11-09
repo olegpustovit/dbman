@@ -52,11 +52,13 @@ struct AgentsWindow: View {
                         }
                     }.padding(8)
                 }
-                HStack(spacing: 6) {
-                    Button("RESCAN") { m.rescan(); m.reload(app.store) }.buttonStyle(.htOutline).help("Rescan for agents")
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Button("RESCAN") { m.rescan(); m.reload(app.store) }.buttonStyle(.htOutline).help("Rescan for agents").fixedSize()
+                        Spacer()
+                        Text("SCANNED // \(m.scannedAt.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute().second()))").ht(.labelSmall).foregroundStyle(HT.C.ink3).lineLimit(1).fixedSize()
+                    }
                     PauseButton()
-                    Spacer()
-                    Text("SCANNED // \(m.scannedAt.formatted(date: .omitted, time: .standard))").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                 }
                 .padding(8).overlay(alignment: .top) { Rectangle().fill(HT.C.line).frame(height: 1) }
             }

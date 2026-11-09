@@ -11,6 +11,9 @@ final class LayerModel {
     var open = false          // the layers panel is showing
     var compare = false       // the layer diff replaces the page
     var selected: String?     // layer id; nil = DATABASE
+    /// SEE AS: nil = you (the layer toggles), "db" = DATABASE alone, a layer id = MINE plus that layer; an agent's view also redacts hidden columns, like its query.run.
+    var seeAs: String?
+    private(set) var hidden: Set<String> = []
     var notice: String?
     private(set) var layers: [Layer] = []
     private(set) var items: [OverlayItem] = []
@@ -27,11 +30,17 @@ final class LayerModel {
         conn = ws.storeID
         layers = (try? store.layers(conn)) ?? []
         items = ((try? store.items(conn)) ?? []).sorted { rank($0.layer) < rank($1.layer) }
+        hidden = (try? store.hiddenColumns(connection: conn)) ?? []
+        if let s = seeAs, s != "db", !layers.contains(where: { $0.id == s }) { seeAs = nil }
         if let s = selected, !layers.contains(where: { $0.id == s }) { selected = nil }
     }
     private func rank(_ layer: String) -> Int { layers.firstIndex { $0.id == layer } ?? 0 }
 
-    var visible: Set<String> { Set(layers.filter { $0.visible && !$0.archived }.map(\.id)) }
+    var visible: Set<String> {
+        guard let s = seeAs else { return Set(layers.filter { $0.visible && !$0.archived }.map(\.id)) }
+        return s == "db" ? [] : Set(layers.filter { $0.isMine || $0.id == s }.map(\.id))
+    }
+    var seeingAsAgent: Bool { layers.first { $0.id == seeAs }.map { !$0.isMine } ?? false }
     /// Layers top first, as the switcher lists them (agents above MINE).
     var stack: [Layer] { layers.reversed() }
     var layer: Layer? { layers.first { $0.id == selected } }
@@ -115,12 +124,13 @@ final class LayerModel {
 
     // MARK: DevHooks
 
-    /// DBMAN_LAYER=<agent>[:diff]: open the panel on that agent's layer.
+    /// DBMAN_LAYER=<agent>[:diff|:seeas]: open the panel on that agent's layer (:seeas = SEE AS that agent).
     func devSelect(_ spec: String, _ ws: WorkspaceModel) {
         reload(ws)
         let parts = spec.split(separator: ":").map(String.init)
         selected = layers.first { $0.agentID == parts[0] || $0.name == parts[0] }?.id
         open = true; compare = parts.contains("diff")
+        if parts.contains("seeas") { seeAs = selected ?? "db" }
         Task {
             await refresh(ws)
             if parts.contains("apply"), let id = selected { apply(ws, layer: id) }

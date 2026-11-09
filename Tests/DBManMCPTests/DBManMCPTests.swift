@@ -235,6 +235,14 @@ final class DBManMCPTests: XCTestCase {
         XCTAssertNil(Rules.prodVerdict(lite, schema: schema, maxCost: 1e6, maxRows: 10))
     }
 
+    func testProdHintNamesIndexedColumns() {
+        let ix = IndexInfo(name: "idx_events_created_at", columns: ["created_at"], unique: false, definition: "")
+        let schema = SchemaSnapshot(serverVersion: "", databaseName: "", tables: [TableInfo(schema: "public", name: "events", kind: .table, rowCount: 61_532, indexes: [ix]), TableInfo(schema: "public", name: "bare", kind: .table, rowCount: 9)])
+        same(Rules.prodHint(PlanNode(operation: "Seq Scan", relation: "events", estimatedRows: 1, cost: 1), schema: schema), "add a WHERE on created_at (idx_events_created_at), or a LIMIT")
+        same(Rules.prodHint(PlanNode(operation: "Seq Scan", relation: "bare", estimatedRows: 1, cost: 1), schema: schema), "add a LIMIT")
+        same(Rules.prodHint(PlanNode(operation: "Hash Join", estimatedRows: 1, cost: 1), schema: schema), "add a LIMIT or a narrower WHERE")
+    }
+
     func testProdGuardOnSQLite() async throws {
         try store.setSetting("prod_guard_rows", json: "1000")
         let (t, err) = try await call("query.run", ["connection": "analytics", "sql": "select * from events where kind = 'k1'"])

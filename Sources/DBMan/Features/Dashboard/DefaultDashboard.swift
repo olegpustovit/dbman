@@ -115,6 +115,30 @@ enum DashData {
         return DashboardSpec(title: title, connection: ws.profile.name, refresh: "30s", widgets: out)
     }
 
+    /// "Start from template" (DashGen board): subsets of the Overview's own widgets over this connection's tables, re-packed into rows.
+    /// shortcut: the blurbs are the board's copy, but the widgets are schema-generic (row counts, growth, status over time, footprint, sessions), not domain metrics.
+    static let templates: [(name: String, blurb: String, ids: [String]?, thumb: [[CGFloat]])] = [
+        ("Sales health", "revenue, orders, AOV, top products, refunds", ["rows1", "rows2", "growth", "over_time", "footprint"], [[3, 3, 6, 4], [10, 3, 6, 4], [17, 3, 6, 4], [24, 3, 7, 4], [3, 9, 19, 12], [24, 9, 7, 12]]),
+        ("Ops health", "sessions, locks, slow queries, bloat", ["rate", "insights", "activity", "sessions"], [[3, 3, 13, 8], [18, 3, 13, 8], [3, 13, 28, 8]]),
+        ("Product usage", "events by day, funnels, cohorts", ["growth", "over_time", "footprint"], [[3, 3, 28, 8], [3, 13, 9, 8], [14, 13, 8, 8], [24, 13, 7, 8]]),
+        ("Overview // default", "the v1 overview, as a dashboard", nil, [[3, 3, 8, 18], [13, 3, 18, 6], [13, 11, 18, 10]]),
+    ]
+
+    static func template(_ i: Int, _ ws: WorkspaceModel) async -> DashboardSpec {
+        var s = await make(ws)
+        guard let ids = templates[i].ids else { return s }
+        let picked = s.widgets.filter { ids.contains($0.id) }
+        let rest = picked.filter { $0.h != 2 }
+        let rows = [picked.filter { $0.h == 2 }] + stride(from: 0, to: rest.count, by: 2).map { Array(rest[$0..<min($0 + 2, rest.count)]) }
+        var out: [DashWidget] = [], y = 0
+        for var row in rows where !row.isEmpty {
+            for k in row.indices { row[k].x = k * (12 / row.count); row[k].w = k == row.count - 1 ? 12 - k * (12 / row.count) : 12 / row.count; row[k].y = y }
+            y += row.map(\.h).max() ?? 0; out += row
+        }
+        s.title = "\(templates[i].name) // \(ws.profile.name)"; s.widgets = out
+        return s
+    }
+
     /// What the Overview tracks over time and its null scan: the first big table with a timestamp and a low-cardinality text column (status first).
     struct Base { var table = "", column = "", names: [String] = [], sql: String?, nulls: [(table: String, column: String, fraction: Double)] = [] }
 

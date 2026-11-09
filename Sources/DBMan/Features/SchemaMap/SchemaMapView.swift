@@ -9,9 +9,10 @@ struct SchemaMapView: View {
     @Environment(AppModel.self) private var app
     @FocusState private var canvasFocus: Bool
     @FocusState private var filterFocus: Bool
+    @State private var clusterName = ""
 
     private var map: SchemaMapState { ws.map }
-    private var stamp: Int { ws.schema.map { $0.tables.count * 100_000 + $0.tables.reduce(0) { $0 + $1.columns.count } } ?? 0 }
+    private var stamp: String { "\(ws.schema.map { $0.tables.count * 100_000 + $0.tables.reduce(0) { $0 + $1.columns.count } } ?? 0) \(ws.layers.items.count) \(ws.layers.visible.sorted())" }
 
     var body: some View {
         @Bindable var map = ws.map
@@ -28,6 +29,11 @@ struct SchemaMapView: View {
             }
             if ws.showInspector { MapInspector(ws: ws, map: map).frame(width: 288) }
         }
+        .alert("Rename cluster", isPresented: Binding(get: { map.renaming != nil }, set: { if !$0 { map.renaming = nil } })) {
+            TextField(map.renaming ?? "", text: $clusterName)
+            Button("Rename") { if let k = map.renaming { map.rename(k, to: clusterName) }; clusterName = ""; map.renaming = nil }
+            Button("Cancel", role: .cancel) { clusterName = ""; map.renaming = nil }
+        } message: { Text("Saved with this connection. Empty restores the automatic name.") }
         .task(id: stamp) { map.attach(ws, store: app.store) }
     }
 
@@ -58,7 +64,7 @@ struct SchemaMapView: View {
         @Bindable var map = map
         return HStack(spacing: 6) {
             Button { map.filterOpen = true; filterFocus = true } label: { EmptyView() }.keyboardShortcut("f").frame(width: 0).opacity(0).accessibilityHidden(true)
-            HTSearchField(text: $map.filter, prompt: "Filter tables, columns", shortcut: "⌘F").focused($filterFocus).frame(width: 160)
+            HTSearchField(text: $map.filter, prompt: "Filter tables, columns", shortcut: "⌘F").focused($filterFocus).frame(minWidth: 90, maxWidth: 160)
                 .onKeyPress(.escape) { map.filter = ""; filterFocus = false; canvasFocus = true; return .handled }
             HTToggleChip("hide junctions", isOn: $map.hideJunctions)
             HTToggleChip("hide isolated", isOn: $map.hideIsolated)
@@ -71,12 +77,26 @@ struct SchemaMapView: View {
                 }
             }
             Spacer(minLength: 0)
+            layerToggles.fixedSize()
             Button("−") { map.zoom(by: 1 / 1.25, in: vpSize) }.buttonStyle(.htOutline).keyboardShortcut("-").help("Zoom out  ⌘−")
             Text("\(Int(((map.viewport ?? map.fit(in: vpSize)).zoom * 100).rounded())) %").ht(.dataSmall).frame(minWidth: 44)
             Button("+") { map.zoom(by: 1.25, in: vpSize) }.buttonStyle(.htOutline).keyboardShortcut("=").help("Zoom in  ⌘+")
             Button("Fit F") { map.viewport = nil }.buttonStyle(.htOutline).help("Fit to window  F")
         }
         .padding(.horizontal, 10).frame(height: 32)
+    }
+
+    /// DATABASE is always on; MINE and each agent layer can be hidden (the same visibility as the Store panel; SEE AS locks it).
+    private var layerToggles: some View {
+        HStack(spacing: 4) {
+            CapsLabel("layers //").foregroundStyle(HT.C.ink3)
+            Text("DB ✓").ht(.labelSmall).padding(.horizontal, 6).frame(height: 18).overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.ink3, lineWidth: 1)).help("DATABASE is always visible and read-only")
+            ForEach(ws.layers.stack.filter { !$0.archived }) { l in
+                let on = ws.layers.visible.contains(l.id)
+                HTToggleChip((l.isMine ? "MINE" : layerMono(l.name)) + (on ? " ✓" : " –"), isOn: Binding(get: { on }, set: { _ in ws.layers.toggle(l) }))
+                    .disabled(ws.layers.seeAs != nil).help((on ? "Hide " : "Show ") + l.name + " layer: its virtual relations on the map")
+            }
+        }
     }
 
     // MARK: viewport
@@ -202,6 +222,7 @@ private struct MiniMap: View {
             HStack { CapsLabel("map").foregroundStyle(HT.C.ink3).font(.system(size: 9)); Spacer() }.padding(.horizontal, 6).frame(height: 16)
             Divider()
             Canvas { ctx, _ in
+                for bx in map.scene.layout.boxes where bx.collapsed { ctx.fill(Path(CGRect(x: (bx.rect.minX - b.minX) * s, y: (bx.rect.minY - b.minY) * s, width: bx.rect.width * s, height: bx.rect.height * s)), with: .color(HT.C.ink3.opacity(0.6))) }
                 for t in map.scene.graph.tables {
                     guard let r = map.scene.rect(t.name) else { continue }
                     let q = CGRect(x: (r.minX - b.minX) * s, y: (r.minY - b.minY) * s, width: r.width * s, height: r.height * s)

@@ -155,6 +155,7 @@ struct ApprovalCard: View {
                 }
                 Text(a.field("sql") ?? "").ht(.dataSmall).textSelection(.enabled).lineLimit(6).padding(8).frame(maxWidth: .infinity, alignment: .leading)
                     .background(HT.C.sunken, in: RoundedRectangle(cornerRadius: HT.M.radius))
+                if let hint = a.field("hint") { HStack(spacing: 8) { CapsLabel("Suggest").foregroundStyle(HT.C.ink3); Text(hint).ht(.bodySmall).foregroundStyle(HT.C.ink2).lineLimit(2) } }
                 HStack(spacing: 6) {
                     Button("Allow once") { center.allowOnce(a) }.buttonStyle(.htOutline).foregroundStyle(HT.C.amber).help("Let \(a.who) run this one statement once")
                     Button("Raise timeout // \(a.field("timeout_ms").flatMap(Int.init).map { $0 / 1000 } ?? 5) s → \(ApprovalCenter.raisedTimeoutMs / 1000) s") { center.raiseTimeout(a) }

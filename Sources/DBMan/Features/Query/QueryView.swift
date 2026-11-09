@@ -87,6 +87,7 @@ struct QueryView: View {
             TextField("Title", text: $t.title).textFieldStyle(.plain).ht(.label).frame(width: 90).accessibilityLabel("Query title")
             Button("SAVE") { tab.savedSQL = tab.sql }.buttonStyle(.htOutline).disabled(!tab.isEdited).keyboardShortcut("s", modifiers: .command)
             Button("EXPLAIN") { explain() }.buttonStyle(.htOutline)
+            Button("SAVE AS WIDGET") { Task { await ws.dash.saveQuery(currentStatement(), title: tab.title, ws) } }.buttonStyle(.htOutline).help("Add this query as a table widget to the default dashboard")
             Button("RUN ALL") { run(tab.sql, all: true) }.buttonStyle(.htOutline).keyboardShortcut(.return, modifiers: [.command, .shift])
             Button("STOP") { stop() }.buttonStyle(.htOutline).disabled(!tab.running)
             Button("RUN // ⌘⏎") { run(currentStatement()) }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)

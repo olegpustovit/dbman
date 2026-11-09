@@ -36,6 +36,10 @@ final class SchemaMapState {
     var exportFormat: MapExport = .mermaid
     var agentOpen = false { didSet { if agentOpen { exportOpen = false } } }
     var notice: String?
+    /// Clusters the user opened (past MapLayouts.collapseAbove tables they start collapsed) and the names they gave (keyed by the automatic name, saved in map_layouts).
+    private(set) var expanded: Set<String> = []
+    private(set) var clusterNames: [String: String] = [:]
+    var renaming: String?
 
     private(set) var scene = MapScene(graph: SchemaGraph(schema: SchemaSnapshot(serverVersion: "", databaseName: "", tables: [])), detail: .keys, layout: MapLayout())
     private(set) var full: SchemaGraph?
@@ -56,9 +60,18 @@ final class SchemaMapState {
             loaded = connectionID
             let saved = store.mapLayout(connectionID, "free").flatMap { $0.data(using: .utf8) }.flatMap { try? JSONDecoder().decode([String: [CGFloat]].self, from: $0) } ?? [:]
             free = saved.compactMapValues { $0.count == 2 ? CGPoint(x: $0[0], y: $0[1]) : nil }
+            clusterNames = store.mapLayout(connectionID, "clusters").flatMap { $0.data(using: .utf8) }.flatMap { try? JSONDecoder().decode([String: String].self, from: $0) } ?? [:]
+            expanded = []
+            if s.tables.count > MapLayouts.collapseAbove { kind = .clusters } // G17: the layered map is unusable here
         }
         schema = s
-        virtual = store.relations(connectionID).compactMap { $0.data(using: .utf8) }.compactMap { try? JSONDecoder().decode(VirtualRelation.self, from: $0) }
+        // relations of the visible layers (the layer toggles and SEE AS decide), each tagged with its agent layer
+        let layers = ws.layers, vis = layers.visible
+        virtual = layers.items(of: nil).filter { $0.kind == "relation" && vis.contains($0.layer) && ["active", "stale"].contains($0.status) }.compactMap { i in
+            guard var v = i.payload.data(using: .utf8).flatMap({ try? JSONDecoder().decode(VirtualRelation.self, from: $0) }) else { return nil }
+            if layers.layers.first(where: { $0.id == i.layer })?.isMine == false { v.layer = layers.name(i.layer) }
+            return v
+        }
         full = SchemaGraph(schema: s, virtual: virtual)
         if selection.map({ full?.table($0) == nil }) ?? false { selection = nil }
         rebuild()
@@ -71,7 +84,7 @@ final class SchemaMapState {
         var layout: MapLayout
         switch kind {
         case .layered: layout = MapLayouts.layered(g, sizes)
-        case .clusters: layout = MapLayouts.clusters(g, sizes)
+        case .clusters: layout = MapLayouts.clusters(g, sizes, expanded: expanded)
         case .focus:
             let center = [focusOn, selection].compactMap { $0 }.first { g.table($0) != nil } ?? g.tables.max { $0.rowCount < $1.rowCount }?.name ?? ""
             layout = MapLayouts.focus(g, sizes, center: center, hops: hops)
@@ -135,6 +148,19 @@ final class SchemaMapState {
         virtual.append(v)
         full = schema.map { SchemaGraph(schema: $0, virtual: virtual) }
         rebuild()
+    }
+
+    func clusterName(_ key: String) -> String { clusterNames[key] ?? key }
+    func toggleCluster(_ key: String) {
+        if !expanded.insert(key).inserted { expanded.remove(key) }
+        viewport = nil; rebuild()
+    }
+    /// An empty name restores the automatic one.
+    func rename(_ key: String, to name: String) {
+        let n = name.trimmingCharacters(in: .whitespaces)
+        clusterNames[key] = n.isEmpty ? nil : n
+        let json = (try? JSONEncoder().encode(clusterNames)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        try? store?.setMapLayout(connectionID, "clusters", positions: json)
     }
 
     // MARK: viewport

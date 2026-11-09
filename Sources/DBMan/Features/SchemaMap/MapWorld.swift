@@ -23,9 +23,23 @@ struct MapWorld: View {
             ZStack(alignment: .topLeading) {
                 ForEach(scene.layout.boxes, id: \.name) { b in
                     let rows = b.members.reduce(Int64(0)) { $0 + (scene.graph.table($1)?.rowCount ?? 0) }
-                    HStack(spacing: 5) {
-                        Text(b.name).foregroundStyle(HT.C.ink); Text("// \(b.members.count) · \(HTFormat.compact(rows)) rows").foregroundStyle(HT.C.ink3)
-                    }.ht(.labelSmall).offset(x: b.rect.minX + 10, y: b.rect.minY + 8)
+                    let name = style.interactive?.clusterName(b.name) ?? b.name
+                    // a collapsed cluster is one frame: name + table count; click opens it, right-click renames
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 5) {
+                            Text((b.collapsed ? "▸ " : "") + name).foregroundStyle(HT.C.ink)
+                            if !b.collapsed { Text("// \(b.members.count) · \(HTFormat.compact(rows)) rows").foregroundStyle(HT.C.ink3) }
+                        }
+                        if b.collapsed { Text("\(b.members.count) tables · \(HTFormat.compact(rows)) rows").foregroundStyle(HT.C.ink3) }
+                    }
+                    .ht(.labelSmall).padding(.top, 8).padding(.leading, 10).frame(width: b.collapsed ? b.rect.width : nil, height: b.collapsed ? b.rect.height : nil, alignment: .topLeading)
+                    .contentShape(Rectangle())
+                    .onTapGesture { if b.collapsed { style.interactive?.toggleCluster(b.name) } }
+                    .contextMenu {
+                        Button(b.collapsed ? "Expand" : "Collapse") { style.interactive?.toggleCluster(b.name) }
+                        Button("Rename cluster…") { style.interactive?.renaming = b.name }
+                    }
+                    .offset(x: b.rect.minX, y: b.rect.minY)
                 }
                 ForEach(scene.graph.tables, id: \.name) { t in
                     if let o = scene.layout.origins[t.name] { MapCard(scene: scene, table: t, style: style, zoom: viewport.zoom).offset(x: o.x, y: o.y) }
@@ -41,9 +55,9 @@ struct MapWorld: View {
 
     @ViewBuilder private func pill(_ e: MapEdge) -> some View {
         let inferred = e.kind == .inferred
-        let label = inferred ? "ACCEPT AS RELATION" : e.manyToMany ? "M:N" : "MINE"
+        let label = inferred ? "ACCEPT AS RELATION" : e.manyToMany ? "M:N" : e.layer.map(layerMono) ?? "MINE"
         let help = inferred ? "\(e.from).\(e.fromColumn) → \(e.to).\(e.toColumn): name and type match. Accepting stores a virtual relation in your layer (MINE). Never DDL."
-            : e.manyToMany ? "Junction table hidden: drawn as many-to-many" : "VIRTUAL // MINE: accepted relation, lives only in DBMan"
+            : e.manyToMany ? "Junction table hidden: drawn as many-to-many" : "VIRTUAL // \(e.layer?.uppercased() ?? "MINE"): \(e.layer == nil ? "accepted relation" : "added by the agent in its own layer"), lives only in DBMan. Never DDL."
         Button { style.interactive?.accept(e) } label: {
             Text(label).ht(.labelSmall).foregroundStyle(e.manyToMany ? HT.C.ink3 : HT.C.accent)
                 .padding(.horizontal, 6).frame(height: 18)

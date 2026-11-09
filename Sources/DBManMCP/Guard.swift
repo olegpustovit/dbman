@@ -107,6 +107,23 @@ enum Rules {
     /// Reason to block a production query, or nil. Cost comes from the plan root (Postgres total cost, MySQL query_cost); SQLite has no cost,
     /// so only the seq-scan rule applies there, using the schema's row counts. Nothing below a Limit counts: it bounds the scan.
     static func prodVerdict(_ plan: PlanNode, schema: SchemaSnapshot, maxCost: Double, maxRows: Double) -> String? {
+        let worst = worstScan(plan, schema)
+        let costly = plan.cost > maxCost, bigScan = (worst?.rows ?? 0) > maxRows
+        guard costly || bigScan else { return nil }
+        var parts: [String] = []
+        if let w = worst { parts.append("seq scan on \(w.table), \(Int(w.rows).formatted(.number.locale(Locale(identifier: "en_US")))) rows") }
+        if plan.cost > 0 { parts.append("est. cost " + sci(plan.cost)) }
+        return parts.joined(separator: " ")
+    }
+
+    /// What the block tells the agent to do next: filter on an indexed column of the scanned table, or LIMIT. A string, never a rewritten statement.
+    static func prodHint(_ plan: PlanNode, schema: SchemaSnapshot) -> String {
+        guard let w = worstScan(plan, schema), let t = schema.table(w.table) else { return "add a LIMIT or a narrower WHERE" }
+        let cols = t.indexes.compactMap { i in i.columns.first.map { "\($0) (\(i.name))" } }.prefix(3)
+        return cols.isEmpty ? "add a LIMIT" : "add a WHERE on \(cols.joined(separator: ", ")), or a LIMIT"
+    }
+
+    private static func worstScan(_ plan: PlanNode, _ schema: SchemaSnapshot) -> (table: String, rows: Double)? {
         var worst: (table: String, rows: Double)?
         func walk(_ n: PlanNode) {
             if n.operation == "Limit" { return }
@@ -118,12 +135,7 @@ enum Rules {
             n.children.forEach(walk)
         }
         walk(plan)
-        let costly = plan.cost > maxCost, bigScan = (worst?.rows ?? 0) > maxRows
-        guard costly || bigScan else { return nil }
-        var parts: [String] = []
-        if let w = worst { parts.append("seq scan on \(w.table), \(Int(w.rows).formatted(.number.locale(Locale(identifier: "en_US")))) rows") }
-        if plan.cost > 0 { parts.append("est. cost " + sci(plan.cost)) }
-        return parts.joined(separator: " ")
+        return worst
     }
 
     private static func sci(_ c: Double) -> String {
