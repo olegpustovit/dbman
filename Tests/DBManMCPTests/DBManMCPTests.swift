@@ -40,6 +40,7 @@ final class DBManMCPTests: XCTestCase {
         service = MCPService(Backend(store: store, session: { try await headless.session($0) }, isOpen: { await headless.isOpen($0) },
                                      openUI: { c, route, sel in await opened.add("\(c.name):\(route):\(sel ?? "")") }))
         let (ct, st) = await InMemoryTransport.createConnectedPair()
+        MCPService.approvalPollMs = 20
         try await service.start(transport: st)
         client = Client(name: "Test Agent", version: "1.2.3")
         _ = try await client.connect(transport: ct)
@@ -236,7 +237,7 @@ final class DBManMCPTests: XCTestCase {
     func testProdGuardOnSQLite() async throws {
         try store.setSetting("prod_guard_rows", json: "1000")
         let (t, err) = try await call("query.run", ["connection": "analytics", "sql": "select * from events where kind = 'k1'"])
-        yes(err); same(t, "BLOCKED_BY_PROD_GUARD (seq scan on events, 1,200 rows)")
+        yes(err); yes(t.hasPrefix("BLOCKED_BY_PROD_GUARD (seq scan on events, 1,200 rows;"), t)
         yes(try await golden("query.run", ["connection": "analytics", "sql": "select * from events where id = 7"]).contains("[[7,"))
         yes(try await golden("query.run", ["connection": "analytics", "sql": "select * from customers"]).contains("«redacted»")) // small table: allowed
         same(try raw("SELECT status FROM activity WHERE error LIKE 'BLOCKED_BY_PROD_GUARD%'")[0][0] as? String, "blocked")
@@ -260,14 +261,78 @@ final class DBManMCPTests: XCTestCase {
 
     // MARK: approvals
 
-    func testAddAndRemoveWaitForTheHuman() async throws {
-        let (t, err) = try await call("connections.add", ["url": "postgres://app@db.example.com/billing", "name": "billing-replica", "env": "staging"])
-        yes(err); same(t, "NEEDS_APPROVAL (pending in DBMan)")
-        same(try raw("SELECT kind, status, json_extract(payload, '$.name'), json_extract(payload, '$.host') FROM approvals").map { $0.map { "\($0!)" } },
-                       [["credentials", "pending", "billing-replica", "db.example.com"]])
+    /// Waits for a pending approval of `kind`, then decides it the way the app's sheet does.
+    func decide(_ kind: String, _ status: String, merge: String = "{}") async throws {
+        for _ in 0..<200 {
+            if let a = try store.pendingApprovals().first(where: { $0.kind == kind }) { try store.decideApproval(a.id, status, merge: merge); return }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        XCTFail("no pending \(kind) approval")
+    }
+    let addArgs: [String: Value] = ["url": "postgres://app@db.example.com/billing", "name": "billing-replica", "env": "staging"]
+
+    func testAddWaitsForTheHumanAndReturnsTheId() async throws {
+        async let r = call("connections.add", addArgs)
+        try await decide("credentials", "approved", merge: #"{"connection_id":"c-new"}"#)
+        let (t, err) = try await r
+        no(err, t); same(t, #"{"id":"c-new","name":"billing-replica"}"#)
+        same(try raw("SELECT kind, status, json_extract(payload, '$.host'), json_extract(payload, '$.env') FROM approvals").map { $0.map { "\($0!)" } }, [["credentials", "approved", "db.example.com", "staging"]])
         yes(try await call("connections.add", ["url": "postgres://app:hunter2@db.example.com/billing", "name": "x"]).text.hasPrefix("INVALID_ARGUMENT (passwords are never accepted"))
-        same(try await call("connections.remove", ["connection": "shop"]).text, "NEEDS_APPROVAL (pending in DBMan)")
-        same(try store.connections().count, 3) // nothing removed (shop, analytics, internal)
+        yes(try await call("connections.add", ["url": "postgres://app@db.example.com/billing", "name": "Shop"]).text.hasPrefix("INVALID_ARGUMENT (a connection named"))
+    }
+
+    func testRejectCarriesTheNote() async throws {
+        async let r = call("connections.add", addArgs)
+        try await decide("credentials", "rejected", merge: #"{"note":"use the replica"}"#)
+        let (t, err) = try await r
+        yes(err); same(t, "REJECTED (use the replica)")
+        same(try raw("SELECT status FROM activity WHERE tool = 'connections.add'")[0][0] as? String, "denied")
+    }
+
+    func testUndecidedApprovalExpires() async throws {
+        try store.setSetting("approval_ttl_s", json: "1")
+        let t0 = Date()
+        let (t, err) = try await call("connections.add", addArgs)
+        yes(err); same(t, "NEEDS_APPROVAL_TIMEOUT (no decision in DBMan; ask again)")
+        yes(Date().timeIntervalSince(t0) >= 1)
+        same(try raw("SELECT status FROM approvals")[0][0] as? String, "expired")
+        same(try store.pendingApprovals().count, 0)
+    }
+
+    func testRemoveWaitsThenRemoves() async throws {
+        async let r = call("connections.remove", ["connection": "shop"])
+        try await decide("remove", "approved")
+        let (t, err) = try await r
+        no(err, t); same(t, #"{"removed":"shop"}"#)
+        same(try store.connections().map(\.name), ["analytics", "DBMan // internal"])
+        same(try raw("SELECT status FROM activity WHERE tool = 'connections.remove'")[0][0] as? String, "ok") // row survives the connection
+    }
+
+    func testAllowOnceIsOneRetryOfTheSameStatement() async throws {
+        try store.setSetting("prod_guard_rows", json: "1000")
+        let sql = "select * from events where kind = 'k1'", other = "select * from events where kind = 'k2'"
+        func run(_ s: String) async throws -> (text: String, isError: Bool) { try await call("query.run", ["connection": "analytics", "sql": .string(s)]) }
+        let first = try await run(sql)
+        yes(first.isError); yes(first.text.hasPrefix("BLOCKED_BY_PROD_GUARD (seq scan on events, 1,200 rows;") && first.text.contains("retry this exact statement"), first.text)
+        yes(try await run(sql).isError) // asking again does not add a second row
+        same(try store.pendingApprovals().map(\.kind), ["prod_guard"])
+        same(try store.pendingApprovals()[0].field("sql"), sql)
+        try await decide("prod_guard", "approved", merge: #"{"action":"allow_once"}"#)
+        yes(try await run(other).isError) // a different statement is still blocked
+        let ok = try await run("select  * from events where kind = 'k1' ;") // same statement, whitespace and ; aside
+        no(ok.isError, ok.text); yes(ok.text.contains("\"rows\""))
+        yes(try await run(sql).isError) // spent
+        same(try raw("SELECT status FROM approvals WHERE json_extract(payload, '$.sql') LIKE '%k1%' ORDER BY created_at").map { $0[0] as? String }, ["consumed", "pending"])
+    }
+
+    func testPausedAgentsGetAppLocked() async throws {
+        try store.setSetting("agents_paused", json: "true")
+        for tool in ["connections.list", "schema.tables"] {
+            let (t, err) = try await call(tool, ["connection": "shop"])
+            yes(err); same(t, "APP_LOCKED (paused by user)")
+        }
+        try store.setSetting("agents_paused", json: "false")
+        no(try await call("connections.list").isError)
     }
 
     // MARK: activity

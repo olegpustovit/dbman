@@ -46,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         MCPHost.shared.start(AppModel.shared)
+        ApprovalCenter.shared.start(AppModel.shared)
         DevHooks.launch()
     }
     func applicationWillTerminate(_ notification: Notification) { MCPHost.shared.stop() }

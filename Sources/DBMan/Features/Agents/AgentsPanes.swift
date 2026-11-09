@@ -160,7 +160,7 @@ struct ActivityPane: View {
                     Spacer()
                     Text("LIVE // REFRESHES ON EVERY CALL").ht(.labelSmall).foregroundStyle(HT.C.accent)
                 }.padding(8)
-                ActivityFeed(rows: rows, showConnection: true, open: $open)
+                ActivityFeed(rows: rows, approvals: ApprovalCenter.shared.pending.filter { client == nil || $0.agent == client }, showConnection: true, open: $open)
                 HStack(spacing: 14) {
                     ForEach(["ok", "overlay", "blocked", "denied", "error"], id: \.self) { s in
                         let n = rows.filter { $0.status == s }.count
@@ -177,15 +177,19 @@ struct ActivityPane: View {
 /// The feed rows shared by the window and the inspector tab: time · client · tool · args · ms · rows · status; blocked/denied/error in alert.
 struct ActivityFeed: View {
     let rows: [ActivityRow]
+    var approvals: [ApprovalRow] = [] // pending, pinned above the log
     var showConnection = false
     @Binding var open: Int64?
 
     var body: some View {
-        if rows.isEmpty {
+        if rows.isEmpty && approvals.isEmpty {
             Text("NO AGENT CALLS YET").ht(.label).foregroundStyle(HT.C.ink3).padding(12).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         } else {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) { ForEach(rows) { r in line(r) } }
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(approvals) { ApprovalCard(a: $0).padding(8) }
+                    ForEach(rows) { r in line(r) }
+                }
             }
         }
     }
@@ -225,15 +229,20 @@ struct ActivityFeed: View {
 struct AgentsInspector<Row: View>: View {
     let ws: WorkspaceModel
     @ViewBuilder let row: Row
-    @State private var tab = 0
+    @State private var tab = ApprovalCenter.shared.pending.isEmpty ? 0 : 1 // something waits for a human: open on it
     @State private var open: Int64?
 
     var body: some View {
         VStack(spacing: HT.M.gap) {
-            HTSegmented(selection: $tab, options: [(0, "ROW"), (1, "AGENTS")]).frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                HTSegmented(selection: $tab, options: [(0, "ROW"), (1, "AGENTS")])
+                Spacer()
+                if tab == 1 { PauseButton() }
+            }
             if tab == 0 { row } else {
                 let rows = AgentsModel.shared.activity.filter { $0.connectionId == ws.profile.id.uuidString } // shortcut: newest 200 calls overall, page per connection if a busy agent pushes this one out
-                HTFrame(title: "Agents", tail: "\(rows.count) CALLS") { ActivityFeed(rows: rows, open: $open) }
+                let waiting = ApprovalCenter.shared.pending.filter { $0.connection == nil || $0.connection == ws.profile.id.uuidString }
+                HTFrame(title: "Agents", tail: "\(rows.count) CALLS") { ActivityFeed(rows: rows, approvals: waiting, open: $open) }
             }
         }
     }

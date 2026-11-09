@@ -21,7 +21,7 @@ final class DBStoreTests: XCTestCase {
     func testMigrateEmptyToLatest() throws {
         let s = try Store.open(at: url)
         _ = s
-        XCTAssertEqual(try raw("PRAGMA user_version")[0][0] as? Int64, 1)
+        XCTAssertEqual(try raw("PRAGMA user_version")[0][0] as? Int64, 2)
         XCTAssertEqual(try raw("PRAGMA application_id")[0][0] as? Int64, 0x44424D4E)
         XCTAssertEqual(try raw("PRAGMA journal_mode")[0][0] as? String, "wal")
         let names = Set(try raw("SELECT name FROM sqlite_master WHERE type IN ('table','view')").map { $0[0] as! String })
@@ -192,5 +192,50 @@ extension DBStoreTests {
         try s.setLayerVisible(l, false)
         XCTAssertFalse(try s.layers("A")[1].visible)
         XCTAssertTrue(s.relations("A").isEmpty)
+    }
+
+    /// A store at schema v1 (as shipped by P0/P1) migrates to v2 keeping its approvals; 'remove' and 'consumed' become legal.
+    func testMigration0002FromV1Store() throws {
+        let h = try Handle(path: url.path)
+        try h.exec(String(decoding: PackageResources._001_init_sql, as: UTF8.self))
+        try h.exec("PRAGMA user_version = 1")
+        try h.exec("INSERT INTO agents(id, client_name, platform) VALUES ('cc','cc','cc'); INSERT INTO connections(id, name, engine, file_path) VALUES ('c1','shop','sqlite','/x')")
+        try h.exec("INSERT INTO approvals(id, kind, agent_id, connection_id, expires_at) VALUES ('old','prod_guard','cc','c1', 9999999999999)")
+        XCTAssertThrowsError(try h.exec("INSERT INTO approvals(id, kind, expires_at) VALUES ('r','remove', 1)")) // v1 CHECK
+        let s = try Store.open(at: url)
+        XCTAssertEqual(try raw("PRAGMA user_version")[0][0] as? Int64, 2)
+        XCTAssertEqual(try s.pendingApprovals().map(\.id), ["old"])
+        XCTAssertEqual(try raw("SELECT count(*) FROM v_pending_approvals")[0][0] as? Int64, 1)
+        _ = try s.addApproval(kind: "remove", agent: "cc", connection: "c1", payload: "{}")
+        try s.remove("c1")
+        XCTAssertEqual(try raw("SELECT count(*) FROM approvals WHERE connection_id IS NULL")[0][0] as? Int64, 2) // rows survive the connection
+        XCTAssertNoThrow(try raw("UPDATE approvals SET status = 'consumed'"))
+    }
+
+    func testApprovalDecideExpireAndAllowance() throws {
+        let s = try Store.open(at: url)
+        try s.upsertAgent(id: "cc", name: "cc", version: nil)
+        var c = ConnectionRow(id: "c1", name: "prod", engine: "sqlite"); c.filePath = "/x"; c.env = "production"
+        try s.upsert(c)
+        try s.setSetting("approval_ttl_s", json: "1")
+        let a = try s.addApproval(kind: "credentials", agent: "cc", connection: nil, payload: #"{"name":"x"}"#)
+        XCTAssertTrue(try s.decideApproval(a, "approved", merge: #"{"connection_id":"c9"}"#))
+        XCTAssertFalse(try s.decideApproval(a, "rejected")) // decided once
+        XCTAssertEqual(try s.approval(a)?.field("connection_id"), "c9"); XCTAssertEqual(try s.approval(a)?.field("name"), "x")
+        // one pending row per (agent, connection, statement)
+        for _ in 0..<2 { try s.requestOverride(agent: "cc", connection: "c1", hash: "h1", payload: #"{"action":"allow_once"}"#) }
+        let p = try s.pendingApprovals()
+        XCTAssertEqual(p.count, 1)
+        XCTAssertFalse(try s.consumeAllowance(agent: "cc", connection: "c1", hash: "h1")) // not approved yet
+        try s.decideApproval(p[0].id, "approved")
+        XCTAssertFalse(try s.consumeAllowance(agent: "cc", connection: "c1", hash: "h2"))
+        XCTAssertFalse(try s.consumeAllowance(agent: "x", connection: "c1", hash: "h1"))
+        XCTAssertTrue(try s.consumeAllowance(agent: "cc", connection: "c1", hash: "h1"))
+        XCTAssertFalse(try s.consumeAllowance(agent: "cc", connection: "c1", hash: "h1")) // spent
+        // overdue pending rows become expired
+        try s.requestOverride(agent: "cc", connection: "c1", hash: "h3", payload: "{}")
+        _ = try raw("UPDATE approvals SET expires_at = 1 WHERE status = 'pending'")
+        XCTAssertTrue(try s.pendingApprovals().isEmpty)
+        XCTAssertEqual(try raw("SELECT count(*) FROM approvals WHERE status = 'expired'")[0][0] as? Int64, 1)
     }
 }

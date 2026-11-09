@@ -17,6 +17,8 @@ final class AppModel {
     /// App-wide settings, backed by the store's `settings` table (Settings window, table pages, dates).
     var pageSize = 500 { didSet { if pageSize != oldValue && !reloading { save("page_size", String(pageSize)) } } }
     var relativeDates = false { didSet { if relativeDates != oldValue && !reloading { save("relative_dates", String(relativeDates)) } } }
+    /// PAUSE ALL AGENTS: every MCP call returns APP_LOCKED (the tool service reads the same setting).
+    var agentsPaused = false { didSet { if agentsPaused != oldValue && !reloading { save("agents_paused", String(agentsPaused)) } } }
     /// Open workspaces keyed by profile id (one window each).
     var workspaces: [UUID: WorkspaceModel] = [:]
     /// Set by the UI layer so model code can open windows.
@@ -46,6 +48,8 @@ final class AppModel {
         profiles = ((try? store.connections()) ?? []).map(Self.profile)
         pageSize = store.setting("page_size").flatMap(Int.init) ?? 500
         relativeDates = store.setting("relative_dates") == "true"
+        agentsPaused = store.setting("agents_paused") == "true"
+        ApprovalCenter.shared.refresh(store)
         AgentsModel.shared.reload(store) // activity, permissions and the roster live in the same file
     }
 
