@@ -116,7 +116,7 @@ enum DashData {
     }
 
     /// "Start from template" (DashGen board): subsets of the Overview's own widgets over this connection's tables, re-packed into rows.
-    /// shortcut: the blurbs are the board's copy, but the widgets are schema-generic (row counts, growth, status over time, footprint, sessions), not domain metrics.
+    /// shortcut: the blurbs are the board's copy, but the widgets are schema-generic (row counts, growth, status over time, footprint, sessions), so no domain metrics; upgrade by letting an agent propose a tailored default.
     static let templates: [(name: String, blurb: String, ids: [String]?, thumb: [[CGFloat]])] = [
         ("Sales health", "revenue, orders, AOV, top products, refunds", ["rows1", "rows2", "growth", "over_time", "footprint"], [[3, 3, 6, 4], [10, 3, 6, 4], [17, 3, 6, 4], [24, 3, 7, 4], [3, 9, 19, 12], [24, 9, 7, 12]]),
         ("Ops health", "sessions, locks, slow queries, bloat", ["rate", "insights", "activity", "sessions"], [[3, 3, 13, 8], [18, 3, 13, 8], [3, 13, 28, 8]]),

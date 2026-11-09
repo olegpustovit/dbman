@@ -229,6 +229,8 @@ final class DBManMCPTests: XCTestCase {
         same(Rules.prodVerdict(idx, schema: schema, maxCost: 1e6, maxRows: 1e6), "est. cost 3.0e6") // costly without a seq scan
         let limited = PlanNode(operation: "Limit", estimatedRows: 10, cost: 0.5, children: [seq])
         XCTAssertNil(Rules.prodVerdict(limited, schema: schema, maxCost: 1e6, maxRows: 1e4)) // a Limit bounds the scan
+        let sorted = PlanNode(operation: "Limit", estimatedRows: 10, cost: 0.5, children: [PlanNode(operation: "Sort", estimatedRows: 61_532, cost: 9, children: [seq])])
+        XCTAssertNotNil(Rules.prodVerdict(sorted, schema: schema, maxCost: 1e6, maxRows: 1e4)) // ORDER BY unindexed … LIMIT still reads everything
         let mysql = PlanNode(operation: "Table Scan", relation: "events", estimatedRows: 61_532, cost: 0)
         same(Rules.prodVerdict(mysql, schema: schema, maxCost: 1e6, maxRows: 1e4), "seq scan on events, 61,532 rows")
         let lite = PlanNode(operation: "SCAN", relation: "events", detail: "USING COVERING INDEX x", estimatedRows: 0, cost: 0)
@@ -292,6 +294,43 @@ final class DBManMCPTests: XCTestCase {
         same(try raw("SELECT kind, status, json_extract(payload, '$.host'), json_extract(payload, '$.env') FROM approvals").map { $0.map { "\($0!)" } }, [["credentials", "approved", "db.example.com", "staging"]])
         yes(try await call("connections.add", ["url": "postgres://app:hunter2@db.example.com/billing", "name": "x"]).text.hasPrefix("INVALID_ARGUMENT (passwords are never accepted"))
         yes(try await call("connections.add", ["url": "postgres://app@db.example.com/billing", "name": "Shop"]).text.hasPrefix("INVALID_ARGUMENT (a connection named"))
+    }
+
+    func testAddRefusesTheStoreFolder() async throws {
+        for path in [store.url.path, dir.path + "/other.sqlite", dir.path + "/../" + dir.lastPathComponent + "/dbman.sqlite"] {
+            let (t, err) = try await call("connections.add", ["url": .string(path), "name": "sneaky"])
+            yes(err); yes(t.hasPrefix("INVALID_ARGUMENT (that file lives in DBMan's own store folder"), t)
+        }
+        same(try raw("SELECT count(*) FROM approvals")[0][0] as? Int64, 0)
+    }
+
+    /// A driver whose EXPLAIN returns no plan (Postgres/MySQL can: unparsable output). Production must then block, not run.
+    final class NoPlanDriver: DatabaseDriver, @unchecked Sendable {
+        let inner: SQLiteDriver
+        init(_ path: String) throws { inner = try SQLiteDriver(path: path, readOnly: true) }
+        var engine: Engine { inner.engine }
+        func execute(_ sql: String, limit: Int) async throws -> QueryResult { try await inner.execute(sql, limit: limit) }
+        func executeReadOnly(_ sql: String, limit: Int) async throws -> QueryResult { try await inner.executeReadOnly(sql, limit: limit) }
+        func stream(_ sql: String, pageSize: Int) -> AsyncThrowingStream<RowPage, Error> { inner.stream(sql, pageSize: pageSize) }
+        func schema() async throws -> SchemaSnapshot { try await inner.schema() }
+        func explain(_ sql: String, analyze: Bool) async throws -> PlanNode? { nil }
+        func cancelCurrent() async { await inner.cancelCurrent() }
+        func close() async { await inner.close() }
+    }
+
+    func testProductionBlocksWhenThereIsNoPlan() async throws {
+        let c = try XCTUnwrap(store.connections().first { $0.id == "c-prod" })
+        let driver = try NoPlanDriver(dbPath)
+        let backend = Backend(store: store, session: { _ in DatabaseSession(profile: c.agentProfile, driver: driver) }, isOpen: { _ in true }, openUI: { _, _, _ in })
+        let svc = MCPService(backend)
+        let (ct, st) = await InMemoryTransport.createConnectedPair()
+        try await svc.start(transport: st)
+        let cl = Client(name: "Test Agent", version: "1")
+        _ = try await cl.connect(transport: ct)
+        let r = try await cl.callTool(name: "query.run", arguments: ["connection": "analytics", "sql": "select 1"])
+        let text = r.content.compactMap { if case .text(let t, _, _) = $0 { t } else { nil } }.joined()
+        yes(text.hasPrefix("BLOCKED_BY_PROD_GUARD (no plan"), text)
+        await cl.disconnect()
     }
 
     func testRejectCarriesTheNote() async throws {

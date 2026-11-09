@@ -56,13 +56,20 @@ final class AgentsModel {
 
     /// The before/after of the native file for CONNECT (or DISCONNECT).
     func plan(_ p: AgentPlatform, remove: Bool = false) -> Result<ConfigChange, ConfigError> {
-        do { return .success(try AgentConfig.plan(p, scope: scope(p), home: home, project: projectURL, helper: helper, remove: remove)) }
-        catch { return .failure(ConfigError(errorDescription: error.localizedDescription)) }
+        do {
+            let c = try AgentConfig.plan(p, scope: scope(p), home: home, project: projectURL, helper: helper, remove: remove)
+            if !remove { previews[p.id] = c }
+            return .success(c)
+        } catch { return .failure(ConfigError(errorDescription: error.localizedDescription)) }
     }
+    /// What the window last showed per platform: CONNECT writes that, and refuses if the file moved on since.
+    @ObservationIgnored private var previews: [String: ConfigChange] = [:]
 
     func connect(_ p: AgentPlatform) {
         error = nil
-        guard case .success(let c) = plan(p) else { if case .failure(let e) = plan(p) { error = e.localizedDescription }; return }
+        let shown = previews[p.id]
+        if case .failure(let e) = plan(p) { error = e.localizedDescription; return }
+        guard let c = shown ?? previews[p.id] else { return }
         do { try AgentConfig.apply(c, p, scope: scope(p), home: home, helper: helper) } catch { self.error = error.localizedDescription; return }
         rescan()
         let since = Date()

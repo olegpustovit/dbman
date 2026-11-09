@@ -17,12 +17,14 @@ public struct Backend: Sendable {
 }
 
 public extension ConnectionRow {
-    /// Agent sessions always start locked, so `DatabaseSession` refuses writes even before the engine does.
-    var agentProfile: ConnectionProfile {
+    /// The one row -> profile mapping (the app adds its internal-store tweaks).
+    var profile: ConnectionProfile {
         ConnectionProfile(id: UUID(uuidString: id) ?? UUID(), name: name, engine: Engine(rawValue: engine) ?? .sqlite, host: host, port: port, database: database, user: user,
                           filePath: filePath, sslMode: SSLMode(rawValue: sslMode) ?? .prefer, environment: EnvironmentTag(rawValue: env) ?? .local,
-                          openReadOnly: true, stageWrites: stageWrites, lastOpened: lastOpened, sslRootCert: sslRootCert)
+                          openReadOnly: readOnly, stageWrites: stageWrites, lastOpened: lastOpened, sslRootCert: sslRootCert)
     }
+    /// Agent sessions always start locked, so `DatabaseSession` refuses writes even before the engine does.
+    var agentProfile: ConnectionProfile { var p = profile; p.openReadOnly = true; return p }
 }
 
 /// One cached, engine-level read-only session per connection, for when no window has it open. Passwords come from the host (Keychain / dev secrets).
@@ -38,12 +40,6 @@ public actor HeadlessSessions {
         if let old = open[c.id] { await old.session.close() } // the human edited the connection
         let profile = c.agentProfile
         let s = try await DatabaseSession.connect(profile, password: password(c))
-        // Defence in depth for the server engines: SQLite is already opened read-only with query_only (DatabaseSession.connect).
-        switch profile.engine {
-        case .postgres: _ = try await s.driver.execute("SET default_transaction_read_only = on")
-        case .mysql: _ = try await s.driver.execute("SET SESSION TRANSACTION READ ONLY")
-        case .sqlite: break
-        }
         open[c.id] = (c, s)
         return s
     }

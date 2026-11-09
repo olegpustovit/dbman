@@ -28,7 +28,7 @@ public extension DatabaseSession {
             let pct = Swift.min(100.0, Double(sampleRows) * 100 / Double(info.rowCount) * 1.5)
             sql = "SELECT * FROM \(t) TABLESAMPLE SYSTEM (\(pct)) LIMIT \(sampleRows)"
         }
-        let r = try await driver.execute(sql, limit: sampleRows)
+        let r = try await readOnlyRun(sql, limit: sampleRows)
         return r.columns.enumerated().map { i, name in ColumnStats.compute(name, r.rows.map { $0[i] }) }
     }
 }

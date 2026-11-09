@@ -35,7 +35,7 @@ final class ApprovalCenter: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored private var started = false
     @ObservationIgnored private var seen: Set<String> = []
     @ObservationIgnored private var panel: NSWindow?
-    /// shortcut: scratch stores (DBMAN_STORE) never notify, so scripted runs raise no permission prompt; banners need a bundle id too.
+    /// shortcut: scratch stores (DBMAN_STORE) never notify, so scripted runs raise no permission prompt; banners need a bundle id too; upgrade with an explicit opt-in setting if scripted runs ever need notifications.
     private var notifications: UNUserNotificationCenter? { Bundle.main.bundleIdentifier != nil && Store.defaultURL == Store.productionURL ? .current() : nil }
 
     /// Once the app has launched: scenes exist, so a sheet or window may open. Rows expire on the clock even if nothing else touches the store.
@@ -67,7 +67,7 @@ final class ApprovalCenter: NSObject, UNUserNotificationCenterDelegate {
 
     func present(_ a: ApprovalRow) {
         current = a
-        sheetTarget = NSApp.orderedWindows.filter(\.isVisible).lazy.compactMap { w in AppModel.shared.workspaces.values.first { $0.profile.name == w.title }?.profile.id }.first
+        sheetTarget = AppModel.shared.frontWorkspace
         guard sheetTarget == nil else { return } // WorkspaceView shows it as a sheet
         panel?.close()
         let w = NSWindow(contentViewController: NSHostingController(rootView: ApprovalDialog(a: a).environment(AppModel.shared)))

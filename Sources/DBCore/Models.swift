@@ -29,7 +29,7 @@ public enum Cell: Hashable, Sendable {
         }
     }
     /// MySQL treats `\` in strings as an escape; Postgres reads a zone-less timestamp in the session zone, so ours (UTC) says so.
-    public func sqlLiteral(_ engine: Engine = .postgres) -> String {
+    public func sqlLiteral(_ engine: Engine) -> String {
         switch self {
         case .null: return "NULL"
         case .integer(let v): return String(v)
@@ -37,7 +37,7 @@ public enum Cell: Hashable, Sendable {
         case .bool(let b): return b ? "TRUE" : "FALSE"
         case .text(let s): return "'" + (engine == .mysql ? s.replacingOccurrences(of: "\\", with: "\\\\") : s).replacingOccurrences(of: "'", with: "''") + "'"
         case .date(let d): return "'" + Cell.dateFormatter.string(from: d) + (engine == .postgres ? "+00" : "") + "'"
-        case .blob: return "NULL"
+        case .blob: return "NULL" // cells hold only the byte count: callers must not write this (commit() refuses blobs, copy-as-INSERT leaves the column out)
         }
     }
     nonisolated(unsafe) static let dateFormatter: DateFormatter = {

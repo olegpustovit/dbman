@@ -21,7 +21,7 @@ public struct AgentPlatform: Identifiable, Sendable {
     }
     public func matches(client name: String) -> Bool { let n = name.lowercased(); return clients.contains { n.contains($0) } }
 
-    // shortcut: client names, Grok/Windsurf/Antigravity paths are from public docs, not verified on a machine with each app; fix here if a VERIFY never completes.
+    // shortcut: client names, Grok/Windsurf/Antigravity paths are from public docs, not verified on a machine with each app; upgrade: correct the entry here when a VERIFY never completes.
     public static let all: [AgentPlatform] = [
         .init(id: "claude-code", name: "Claude Code", mono: "CC", user: ".claude.json", project: ".mcp.json", key: "mcpServers", style: .claudeCode, clients: ["claude-code"]),
         .init(id: "claude-desktop", name: "Claude Desktop", mono: "CD", user: "Library/Application Support/Claude/claude_desktop_config.json", project: nil, key: "mcpServers", style: .plain, clients: ["claude-ai", "claude-desktop"]),
@@ -38,7 +38,9 @@ public struct AgentPlatform: Identifiable, Sendable {
 
 public struct ConfigChange: Sendable {
     public var url: URL, before: String?, after: String
-    public init(url: URL, before: String?, after: String) { self.url = url; self.before = before; self.after = after }
+    /// The file's text when the change was planned; `write` refuses if the file no longer holds it (nil: the file did not exist).
+    public var raw: String?
+    public init(url: URL, before: String?, after: String, raw: String? = nil) { self.url = url; self.before = before; self.after = after; self.raw = raw }
 }
 public struct DiffRow: Equatable, Sendable {
     public var n: Int?
@@ -74,7 +76,7 @@ public enum AgentConfig {
     // MARK: install / uninstall / status (text in, text out)
 
     public static func install(_ p: AgentPlatform, into text: String?, helper: String) throws -> String {
-        if p.style == .toml { return tomlInstall(text ?? "", helper: helper) }
+        if p.style == .toml { try tomlGuard(text ?? ""); return tomlInstall(text ?? "", helper: helper) }
         var root = try parse(text)
         var servers = root[p.key] as? [String: Any] ?? [:]
         servers[table] = entry(p, helper: helper)
@@ -83,7 +85,7 @@ public enum AgentConfig {
     }
 
     public static func uninstall(_ p: AgentPlatform, from text: String) throws -> String {
-        if p.style == .toml { return tomlRemove(text) }
+        if p.style == .toml { try tomlGuard(text); return tomlRemove(text) }
         var root = try parse(text)
         guard var servers = root[p.key] as? [String: Any], servers.removeValue(forKey: table) != nil else { return try json(root) }
         root[p.key] = servers
@@ -150,6 +152,22 @@ public enum AgentConfig {
         return start..<end
     }
 
+    /// A `dbman` server defined any way but our own `[mcp_servers.dbman]` table (inline `mcp_servers = { dbman = … }`, dotted keys, a quoted header)
+    /// would end up twice, which is invalid TOML. shortcut: line-based, so multi-line inline tables are only caught on their `dbman` line; upgrade with a real TOML parser.
+    static func tomlGuard(_ text: String) throws {
+        var inServers = false
+        for line in text.components(separatedBy: "\n") {
+            let t = line.trimmingCharacters(in: .whitespaces)
+            if t.hasPrefix("#") || t.isEmpty { continue }
+            if t.hasPrefix("[") { inServers = t == "[mcp_servers]" }
+            let ours = t == "[mcp_servers.dbman]" || t.hasPrefix("[mcp_servers.dbman.")
+            let defines = t.hasPrefix("mcp_servers") ? t.contains("dbman")
+                : t.hasPrefix("[") ? t.hasPrefix("[mcp_servers.") && t.contains("dbman") && !ours
+                : inServers && t.range(of: #"^["']?dbman["']?\s*[.=]"#, options: .regularExpression) != nil
+            if defines { throw ConfigError(errorDescription: "This config already defines dbman in a form DBMan won't rewrite (inline or dotted TOML). Edit it by hand, or use COPY CONFIG and paste the entry yourself.") }
+        }
+    }
+
     static func tomlInstall(_ text: String, helper: String) -> String {
         var lines = text.components(separatedBy: "\n")
         if lines.last == "" { lines.removeLast() }
@@ -212,25 +230,33 @@ public enum AgentConfig {
         let text = read(u)
         let after = remove ? try uninstall(p, from: text ?? "") : try install(p, into: text, helper: helper)
         let before: String? = text.map { p.style == .toml ? $0 : ((try? parse($0)).flatMap { try? json($0) } ?? $0) }
-        return ConfigChange(url: u, before: before, after: after)
+        return ConfigChange(url: u, before: before, after: after, raw: text)
     }
 
-    public static func backupURL(_ u: URL) -> URL { URL(fileURLWithPath: u.path + ".dbman-backup") }
+    /// Next to the real file: a dotfile manager's symlink is never replaced by a copy.
+    public static func backupURL(_ u: URL) -> URL { URL(fileURLWithPath: u.resolvingSymlinksInPath().path + ".dbman-backup") }
 
-    /// Backs the file up (only when this changes it, so re-applying never overwrites the backup with our own output), then writes.
+    /// Keeps the first backup (the user's original, whatever later applies do) and never overwrites it. shortcut: one backup, so undo goes back to the original; upgrade to timestamped backups.
+    private static func backUp(_ u: URL) throws {
+        let fm = FileManager.default, b = backupURL(u)
+        if read(u) != nil, !fm.fileExists(atPath: b.path) { try fm.copyItem(at: u.resolvingSymlinksInPath(), to: b) }
+    }
+
+    /// Backs the file up, then writes in place through a symlink. Refuses if the file changed since the preview (its app may have rewritten it).
     public static func write(_ c: ConfigChange) throws {
-        let fm = FileManager.default
         let current = read(c.url)
         guard current != c.after else { return }
-        try fm.createDirectory(at: c.url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if current != nil { try? fm.removeItem(at: backupURL(c.url)); try fm.copyItem(at: c.url, to: backupURL(c.url)) }
-        try c.after.write(to: c.url, atomically: true, encoding: .utf8)
+        guard current == c.raw else { throw ConfigError(errorDescription: "\(c.url.lastPathComponent) changed since the preview. Nothing was written; look at the new diff and try again.") }
+        let real = c.url.resolvingSymlinksInPath()
+        try FileManager.default.createDirectory(at: real.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try backUp(c.url)
+        try c.after.write(to: real, atomically: true, encoding: .utf8)
     }
 
     /// Restores the backup; with none (we created the file) removes the file.
     public static func undo(_ u: URL) throws {
-        let fm = FileManager.default, b = backupURL(u)
-        if fm.fileExists(atPath: b.path) { _ = try fm.replaceItemAt(u, withItemAt: b) } else { try? fm.removeItem(at: u) }
+        let fm = FileManager.default, b = backupURL(u), real = u.resolvingSymlinksInPath()
+        if fm.fileExists(atPath: b.path) { _ = try fm.replaceItemAt(real, withItemAt: b) } else { try? fm.removeItem(at: real) }
     }
 
     // MARK: Claude Code CLI
@@ -244,8 +270,7 @@ public enum AgentConfig {
     /// Writes the change. Claude Code user scope on the real home goes through `claude mcp add` (it owns ~/.claude.json); anything else, or a CLI failure, merges JSON.
     public static func apply(_ c: ConfigChange, _ p: AgentPlatform, scope: AgentScope, home: URL, helper: String) throws {
         if p.id == "claude-code", scope == .user, home.path == NSHomeDirectory(), let cli = claudeCLI(home: home) {
-            let fm = FileManager.default
-            if read(c.url) != nil { try? fm.removeItem(at: backupURL(c.url)); try fm.copyItem(at: c.url, to: backupURL(c.url)) }
+            try backUp(c.url)
             _ = try? run(cli, ["mcp", "remove", table, "-s", "user"]) // an update re-adds
             if (try? run(cli, ["mcp", "add", table, "-s", "user", "--", helper, "--stdio"]))?.status == 0 { return }
         }

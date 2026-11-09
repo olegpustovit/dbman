@@ -6,6 +6,12 @@ public struct StoreError: LocalizedError {
     public var errorDescription: String? { message }
 }
 
+extension Array where Element == Any? {
+    /// Row cells as String / Int64; an unexpected NULL (a hand edit with sqlite3 can leave one the schema allows) reads as ""/0 instead of crashing.
+    func s(_ i: Int) -> String { self[i] as? String ?? "" }
+    func n(_ i: Int) -> Int64 { self[i] as? Int64 ?? 0 }
+}
+
 /// Thin synchronous wrapper over one sqlite3 handle. Own helper (not DBCore's driver): that one is async, queue-bound and lives in a target this one must not depend on.
 final class Handle {
     private(set) var db: OpaquePointer?

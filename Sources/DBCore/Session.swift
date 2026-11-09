@@ -38,6 +38,18 @@ public actor DatabaseSession {
         return try await driver.execute(sql, limit: limit)
     }
 
+    /// The one path for agent-authored SQL (MCP reads, dashboard widgets, expanded virtual views): a single statement the engine runs read-only.
+    public func readOnlyRun(_ sql: String, limit: Int = 10_000) async throws -> QueryResult {
+        let mysql = profile.engine == .mysql
+        guard splitStatements(sql, mysql: mysql).count == 1 else { throw DBError.query("one statement per call") }
+        let t = sqlTokens(sql, mysql: mysql)
+        // MySQL's read-only transaction still allows SELECT … INTO OUTFILE / DUMPFILE / @var
+        if mysql, t.indices.dropLast().contains(where: { t[$0].isWord("INTO") && (t[$0 + 1].isWord("OUTFILE") || t[$0 + 1].isWord("DUMPFILE") || t[$0 + 1].text.hasPrefix("@") || t[$0 + 1].isPunct("@")) }) {
+            throw DBError.readOnly
+        }
+        return try await driver.executeReadOnly(sql, limit: limit)
+    }
+
     public nonisolated func stream(_ sql: String, pageSize: Int = 500) -> AsyncThrowingStream<RowPage, Error> {
         // Streaming is for reads only; writes must go through run(), which enforces the read-only lock.
         if SQLClassifier.isWrite(sql) { return AsyncThrowingStream { $0.finish(throwing: DBError.readOnly) } }

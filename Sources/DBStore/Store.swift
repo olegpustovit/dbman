@@ -36,7 +36,7 @@ public final class Store: @unchecked Sendable {
     private var pending = false
     private var watchers: [DispatchSourceFileSystemObject] = []
 
-    private static let migrations: [String] = [PackageResources._001_init_sql, PackageResources._002_approvals_sql].map { String(decoding: $0, as: UTF8.self) } // shortcut: list each migration here (embedInCode mangles the file name), when migrations get many: generate the list
+    private static let migrations: [String] = [PackageResources._001_init_sql, PackageResources._002_approvals_sql].map { String(decoding: $0, as: UTF8.self) } // shortcut: migrations are listed by hand (embedInCode mangles the file name), upgrade: generate the list once there are many
 
     public static let productionURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent("DBMan/dbman.sqlite")
@@ -165,8 +165,7 @@ public final class Store: @unchecked Sendable {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let dest = dir.appendingPathComponent("dbman-\(f.string(from: today)).sqlite")
         if !FileManager.default.fileExists(atPath: dest.path) {
-            lock.lock(); defer { lock.unlock() }
-            try h.query("VACUUM INTO ?", [dest.path])
+            try locked { try h.query("VACUUM INTO ?", [dest.path]) }
         }
         let old = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasPrefix("dbman-") && $0.hasSuffix(".sqlite") }.sorted().dropLast(7)
         for name in old { try? FileManager.default.removeItem(at: dir.appendingPathComponent(name)) }
@@ -175,19 +174,10 @@ public final class Store: @unchecked Sendable {
     // MARK: access
 
     @discardableResult func locked<T>(_ body: () throws -> T) rethrows -> T { lock.lock(); defer { lock.unlock() }; return try body() }
-    private func transaction(_ body: () throws -> Void) throws {
-        lock.lock(); defer { lock.unlock() }
-        try h.transaction(body)
-    }
-    private func meta(_ key: String) throws -> String? {
-        lock.lock(); defer { lock.unlock() }
-        return try h.scalar("SELECT value FROM meta WHERE key = ?", [key]) as? String
-    }
+    private func transaction(_ body: () throws -> Void) throws { try locked { try h.transaction(body) } }
+    private func meta(_ key: String) throws -> String? { try locked { try h.scalar("SELECT value FROM meta WHERE key = ?", [key]) as? String } }
 
-    public func setting(_ key: String) -> String? {
-        lock.lock(); defer { lock.unlock() }
-        return (try? h.scalar("SELECT value FROM settings WHERE key = ?", [key])) as? String
-    }
+    public func setting(_ key: String) -> String? { locked { (try? h.scalar("SELECT value FROM settings WHERE key = ?", [key])) as? String } }
     /// `json` must be valid JSON text (`500`, `true`, `"dark"`); the table's CHECK rejects anything else.
     public func setSetting(_ key: String, json: String) throws { try transaction { try setSettingLocked(key, json: json) } }
     private func setSettingLocked(_ key: String, json: String) throws {
@@ -198,7 +188,7 @@ public final class Store: @unchecked Sendable {
             """, [key, json])
     }
 
-    public func connections() throws -> [ConnectionRow] { lock.lock(); defer { lock.unlock() }; return try connectionsLocked() }
+    public func connections() throws -> [ConnectionRow] { try locked { try connectionsLocked() } }
     /// What MCP may list: everything except the internal store (SPEC §6, G21).
     public func agentVisibleConnections() throws -> [ConnectionRow] { try connections().filter { $0.env != "system" } }
 
@@ -207,10 +197,10 @@ public final class Store: @unchecked Sendable {
             SELECT id, name, engine, host, port, "database", "user", ssl_mode, ssl_root_cert, env, file_path, read_only, stage_writes, last_opened_at
             FROM connections ORDER BY env = 'system', rowid
             """).map { r in
-            var c = ConnectionRow(id: r[0] as! String, name: r[1] as! String, engine: r[2] as! String)
-            c.host = r[3] as! String; c.port = Int(r[4] as! Int64); c.database = r[5] as! String; c.user = r[6] as! String
-            c.sslMode = r[7] as! String; c.sslRootCert = r[8] as? String; c.env = r[9] as! String; c.filePath = r[10] as? String
-            c.readOnly = (r[11] as! Int64) == 1; c.stageWrites = (r[12] as! Int64) == 1
+            var c = ConnectionRow(id: r.s(0), name: r.s(1), engine: r.s(2))
+            c.host = r.s(3); c.port = Int(r.n(4)); c.database = r.s(5); c.user = r.s(6)
+            c.sslMode = r.s(7); c.sslRootCert = r[8] as? String; c.env = r.s(9); c.filePath = r[10] as? String
+            c.readOnly = r.n(11) == 1; c.stageWrites = r.n(12) == 1
             c.lastOpened = (r[13] as? Int64).map { Date(timeIntervalSince1970: Double($0) / 1000) }
             return c
         }
@@ -249,8 +239,7 @@ public final class Store: @unchecked Sendable {
 
     /// Saved FREE-layout positions (JSON text) for a connection.
     public func mapLayout(_ connectionID: String, _ layout: String) -> String? {
-        lock.lock(); defer { lock.unlock() }
-        return (try? h.scalar("SELECT positions FROM map_layouts WHERE connection_id = ? AND layout = ?", [connectionID, layout])) as? String
+        locked { (try? h.scalar("SELECT positions FROM map_layouts WHERE connection_id = ? AND layout = ?", [connectionID, layout])) as? String }
     }
     public func setMapLayout(_ connectionID: String, _ layout: String, positions: String) throws {
         try transaction {
@@ -268,11 +257,12 @@ public final class Store: @unchecked Sendable {
     }
     /// Payloads of the connection's live relation items, oldest first.
     public func relations(_ connectionID: String) -> [String] {
-        lock.lock(); defer { lock.unlock() }
-        let rows = (try? h.query("""
-            SELECT i.payload FROM overlay_items i JOIN layers l ON l.id = i.layer_id
-            WHERE l.connection_id = ? AND l.visible = 1 AND i.kind = 'relation' AND i.status IN ('active', 'stale') ORDER BY i.rowid
-            """, [connectionID])) ?? []
+        let rows = locked {
+            (try? h.query("""
+                SELECT i.payload FROM overlay_items i JOIN layers l ON l.id = i.layer_id
+                WHERE l.connection_id = ? AND l.visible = 1 AND i.kind = 'relation' AND i.status IN ('active', 'stale') ORDER BY i.rowid
+                """, [connectionID])) ?? []
+        }
         return rows.compactMap { $0[0] as? String }
     }
 

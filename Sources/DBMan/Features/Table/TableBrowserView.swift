@@ -91,7 +91,7 @@ struct TableBrowserView: View {
                      onSort: toggleSort, onEdit: { r, c in beginEdit(src: d.src, row: r, col: c) },
                      onFilterValue: { c, v in whereText = TableSQL.and(whereText, TableSQL.equals(c, v, engine: engine)); applyFilter() },
                      onFollowFK: { r, c in follow(c, in: d.rows, row: r) },
-                     onReachEnd: { Task { await loadMore() } }, tableName: tableName, markedRows: markedRows(d.rows), layerCells: d.marks, staleRows: d.stale)
+                     onReachEnd: { Task { await loadMore() } }, tableName: tableName, engine: engine, markedRows: markedRows(d.rows), layerCells: d.marks, staleRows: d.stale)
                 .onKeyPress(.delete) { guard selection != nil else { return .ignored }; requestDelete(); return .handled }
         }
     }

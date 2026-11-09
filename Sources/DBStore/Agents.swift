@@ -26,7 +26,7 @@ public extension Store {
             try h.query("INSERT OR IGNORE INTO permissions(agent_id, connection_id, level) VALUES (?, ?, ?)",
                         [agent, connection.id, connection.env == "production" ? "read" : "overlay"])
             let r = try h.query("SELECT level, timeout_ms, row_cap FROM permissions WHERE agent_id = ? AND connection_id = ?", [agent, connection.id])[0]
-            return Permission(level: r[0] as! String, timeoutMs: (r[1] as? Int64).map(Int.init), rowCap: (r[2] as? Int64).map(Int.init))
+            return Permission(level: r.s(0), timeoutMs: (r[1] as? Int64).map(Int.init), rowCap: (r[2] as? Int64).map(Int.init))
         }
     }
 
@@ -46,7 +46,7 @@ public extension Store {
 
     /// Lower-cased names of columns hidden from agents on this connection.
     func hiddenColumns(connection: String) throws -> Set<String> {
-        try locked { Set(try h.query("SELECT column_name FROM sensitive_columns WHERE connection_id = ? AND hidden = 1", [connection]).map { ($0[0] as! String).lowercased() }) }
+        try locked { Set(try h.query("SELECT column_name FROM sensitive_columns WHERE connection_id = ? AND hidden = 1", [connection]).map { $0.s(0).lowercased() }) }
     }
 
     func logActivity(agent: String?, connection: String?, tool: String, args: String, ms: Int, rows: Int?, status: String, error: String?) throws {

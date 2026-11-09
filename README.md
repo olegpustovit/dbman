@@ -30,6 +30,11 @@ Agents reach DBMan through MCP. Agents never write to a real database: their wri
 - Agents window (Agents toolbar chip): detected agents and their scope, permissions per agent × connection, the activity feed, approvals (credential requests, prod-guard blocks, removals), and PAUSE AGENTS. The app runs in the background (no Dock icon) until a window is open or an approval waits.
 - Store: `DBMAN_STORE=<path>` (DEBUG builds) points the app at a scratch store file instead of `~/Library/Application Support/DBMan/dbman.sqlite`. `make store-open` opens the app on the store's internal connection, `make store-sql` opens the store with sqlite3, `make store-reset` backs it up and deletes it.
 
+### Security model
+- Agent SQL runs only through `DatabaseSession.readOnlyRun`: a single statement inside an engine-enforced read-only transaction (Postgres/MySQL) or `query_only` (SQLite), on every MCP tool, dashboard widget and virtual view.
+- Agent identity is the MCP `clientInfo.name` the client declares. Local processes of the same user are trusted: any of them can claim another agent's name and inherit its permission row.
+- The store file (permissions, approvals, layers) is protected by file permissions only; a same-user process with sqlite3 can edit it. `connections.add` refuses files in the store's folder.
+
 ## Local test servers
 `testdb/up.sh` starts PostgreSQL (55432) and MariaDB (53306) via Nix with the `shop` dataset; `testdb/down.sh` stops them.
 

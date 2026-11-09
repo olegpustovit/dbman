@@ -24,6 +24,7 @@ struct DataGrid: NSViewRepresentable {
     var onFollowFK: ((Int, Int) -> Void)? = nil
     var onReachEnd: (() -> Void)? = nil
     var tableName = "table"   // only used by "Copy as INSERT"
+    var engine: Engine = .postgres  // likewise: identifier quoting and literals of the connection's engine
     var markedRows: Set<Int> = []  // rows with staged changes: amber gutter bar
     var layerCells: [Int: Set<Int>] = [:]  // row → columns patched by a store layer: cobalt cell mark + gutter bar
     var staleRows: Set<Int> = []           // rows whose layer patch is stale (the database moved on): amber cell mark
@@ -233,8 +234,12 @@ struct DataGrid: NSViewRepresentable {
                 let objs = sel.map { r in "  {" + zip(cols, r).map { "\(j(.text($0.name))): \(j($1))" }.joined(separator: ", ") + "}" }
                 return "[\n" + objs.joined(separator: ",\n") + "\n]"
             case .insert:
-                let names = cols.map { "\"\($0.name)\"" }.joined(separator: ", ")
-                return sel.map { "INSERT INTO \"\(p.tableName)\" (\(names)) VALUES (" + $0.map { $0.sqlLiteral() }.joined(separator: ", ") + ");" }.joined(separator: "\n")
+                // grid cells hold only a blob's byte count: leave those columns out instead of writing NULL
+                let blobs = Set(cols.indices.filter { i in sel.contains { if case .blob = $0[i] { return true } else { return false } } })
+                let keep = cols.indices.filter { !blobs.contains($0) }
+                let names = keep.map { quoteIdent(cols[$0].name, p.engine) }.joined(separator: ", ")
+                let note = blobs.isEmpty ? "" : "-- binary column(s) left out, DBMan doesn't copy blob bytes: \(blobs.sorted().map { cols[$0].name }.joined(separator: ", "))\n"
+                return note + sel.map { r in "INSERT INTO \(quoteIdent(p.tableName, p.engine)) (\(names)) VALUES (" + keep.map { r[$0].sqlLiteral(p.engine) }.joined(separator: ", ") + ");" }.joined(separator: "\n")
             }
         }
 

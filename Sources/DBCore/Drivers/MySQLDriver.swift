@@ -24,6 +24,7 @@ final class MyDriver: DatabaseDriver, @unchecked Sendable {
     private let logger = Logger(label: "dbman.mysql")
     private var conn: MySQLConnection?
     private var connectionID: Int64 = 0
+    private let gate = SerialGate()
 
     init(profile: ConnectionProfile, password: String?) { self.profile = profile; self.password = password }
 
@@ -97,7 +98,17 @@ final class MyDriver: DatabaseDriver, @unchecked Sendable {
                            elapsedMs: Date().timeIntervalSince(start) * 1000, truncated: box.truncated)
     }
 
-    func execute(_ sql: String, limit: Int) async throws -> QueryResult {
+    func execute(_ sql: String, limit: Int) async throws -> QueryResult { try await gate.run { try await self.runAll(sql, limit: limit) } }
+
+    func executeReadOnly(_ sql: String, limit: Int) async throws -> QueryResult {
+        try await gate.run {
+            _ = try await self.run("START TRANSACTION READ ONLY", limit: 0)
+            do { let r = try await self.runAll(sql, limit: limit); _ = try? await self.run("ROLLBACK", limit: 0); return r }
+            catch { _ = try? await self.run("ROLLBACK", limit: 0); throw error }
+        }
+    }
+
+    private func runAll(_ sql: String, limit: Int) async throws -> QueryResult {
         // shortcut: a SELECT matching zero rows reports no column names (MySQLNIO exposes them only on rows)
         let start = Date()
         var result = QueryResult()

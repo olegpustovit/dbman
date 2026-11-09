@@ -84,6 +84,50 @@ final class AgentConfigTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: c.url, encoding: .utf8), original)
     }
 
+    func testWriteRefusesWhenFileChangedSincePreview() throws {
+        let c = try tempChange(AgentPlatform.all[3])
+        let theirs = "{\"mcpServers\": {\"theirs\": {}}}\n"
+        try theirs.write(to: c.url, atomically: true, encoding: .utf8) // the agent app rewrote its config after the preview
+        XCTAssertThrowsError(try AgentConfig.write(c)) { XCTAssertTrue($0.localizedDescription.contains("changed since the preview")) }
+        XCTAssertEqual(try String(contentsOf: c.url, encoding: .utf8), theirs)
+    }
+
+    func testSecondApplyKeepsTheFirstBackup() throws {
+        let p = AgentPlatform.all[3]
+        let c = try tempChange(p)
+        let original = try String(contentsOf: c.url, encoding: .utf8)
+        try AgentConfig.write(c)
+        try AgentConfig.write(try AgentConfig.plan(p, scope: .user, home: c.url.deletingLastPathComponent().deletingLastPathComponent(), project: nil, helper: "/other/helper", remove: false))
+        XCTAssertEqual(try String(contentsOf: AgentConfig.backupURL(c.url), encoding: .utf8), original)
+    }
+
+    func testWriteGoesThroughSymlink() throws {
+        let p = AgentPlatform.all[3]
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent("agenthome-\(UUID().uuidString)")
+        let link = p.url(.user, home: home, project: nil)!
+        let real = home.appendingPathComponent("dotfiles/cursor-mcp.json")
+        try FileManager.default.createDirectory(at: real.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: link.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: file(p, "before").url, to: real)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: real)
+        let c = try AgentConfig.plan(p, scope: .user, home: home, project: nil, helper: helper)
+        try AgentConfig.write(c)
+        XCTAssertNotNil(try? FileManager.default.destinationOfSymbolicLink(atPath: link.path), "the link must survive")
+        XCTAssertEqual(try String(contentsOf: real, encoding: .utf8), c.after)
+        try AgentConfig.undo(link)
+        XCTAssertNotNil(try? FileManager.default.destinationOfSymbolicLink(atPath: link.path))
+        XCTAssertEqual(try String(contentsOf: real, encoding: .utf8), try String(contentsOf: file(p, "before").url, encoding: .utf8))
+    }
+
+    func testTomlInlineOrDottedDbmanIsRefused() {
+        let codex = AgentPlatform.all.first { $0.id == "codex" }!
+        for toml in ["mcp_servers = { dbman = { command = \"x\" } }\n", "mcp_servers.dbman.command = \"x\"\n", "[mcp_servers]\ndbman = { command = \"x\" }\n", "[mcp_servers.\"dbman\"]\ncommand = \"x\"\n"] {
+            XCTAssertThrowsError(try AgentConfig.install(codex, into: toml, helper: helper), toml) { XCTAssertTrue($0.localizedDescription.contains("Edit it by hand")) }
+            XCTAssertThrowsError(try AgentConfig.uninstall(codex, from: toml), toml)
+        }
+        XCTAssertNoThrow(try AgentConfig.install(codex, into: "[mcp_servers.other]\ncommand = \"x\"\n", helper: helper)) // others are fine
+    }
+
     func testNewFileIsCreatedAndUndoRemovesIt() throws {
         let home = FileManager.default.temporaryDirectory.appendingPathComponent("agenthome-\(UUID().uuidString)")
         let p = AgentPlatform.all[7]

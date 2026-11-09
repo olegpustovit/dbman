@@ -105,7 +105,7 @@ enum Rules {
     }
 
     /// Reason to block a production query, or nil. Cost comes from the plan root (Postgres total cost, MySQL query_cost); SQLite has no cost,
-    /// so only the seq-scan rule applies there, using the schema's row counts. Nothing below a Limit counts: it bounds the scan.
+    /// so only the seq-scan rule applies there, using the schema's row counts. Nothing below a Limit counts (it bounds the scan) unless a sort sits below it: ORDER BY reads everything first.
     static func prodVerdict(_ plan: PlanNode, schema: SchemaSnapshot, maxCost: Double, maxRows: Double) -> String? {
         let worst = worstScan(plan, schema)
         let costly = plan.cost > maxCost, bigScan = (worst?.rows ?? 0) > maxRows
@@ -126,7 +126,7 @@ enum Rules {
     private static func worstScan(_ plan: PlanNode, _ schema: SchemaSnapshot) -> (table: String, rows: Double)? {
         var worst: (table: String, rows: Double)?
         func walk(_ n: PlanNode) {
-            if n.operation == "Limit" { return }
+            if n.operation == "Limit" && !sorts(n) { return }
             let seq = n.operation.hasSuffix("Seq Scan") || n.operation == "Table Scan" || (n.operation == "SCAN" && !(n.detail ?? "").contains("INDEX"))
             if seq, let rel = n.relation {
                 let rows = schema.table(rel).map { Double($0.rowCount) } ?? n.estimatedRows
@@ -136,6 +136,11 @@ enum Rules {
         }
         walk(plan)
         return worst
+    }
+
+    private static func sorts(_ n: PlanNode) -> Bool {
+        let op = n.operation.lowercased()
+        return op.contains("sort") || op.contains("ordering") || n.children.contains(where: sorts)
     }
 
     private static func sci(_ c: Double) -> String {
