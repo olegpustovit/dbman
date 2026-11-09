@@ -20,6 +20,7 @@ struct ReviewSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             CapsLabel("Review // commit_\(ws.staged.count)_changes", isProd ? "production // \(dbName)" : dbName)
             Text("One transaction. If any statement fails, nothing is written.").ht(.bodySmall).foregroundStyle(HT.C.ink3)
+            if let note = ws.reviewNote { Text(note).ht(.bodySmall).foregroundStyle(HT.C.accent) }
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
                     VStack(alignment: .leading, spacing: 0) { ForEach(Array(ws.staged.items.enumerated()), id: \.offset) { diff($1) } }

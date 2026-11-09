@@ -43,3 +43,62 @@ public func splitStatements(_ sql: String, mysql: Bool = false) -> [String] {
     flush(c.count)
     return out
 }
+
+/// One lexical token of a statement. Strings and comments are skipped (never tokens); quoted identifiers are tokens with their quotes removed.
+public struct SQLToken: Equatable, Sendable {
+    public enum Kind: Sendable { case word, quoted, number, punct }
+    public var kind: Kind
+    public var text: String
+    public var range: Range<String.Index>
+    public var isIdentifier: Bool { kind == .word || kind == .quoted }
+    public func isWord(_ w: String) -> Bool { kind == .word && text.caseInsensitiveCompare(w) == .orderedSame }
+    public func isPunct(_ p: Character) -> Bool { kind == .punct && text == String(p) }
+}
+
+/// Tokenizer for identifier analysis (redaction, view expansion). Same quoting rules as `splitStatements`; string literals,
+/// comments and dollar quotes are dropped, `"x"`/`` `x` `` become `.quoted`. shortcut: nested /* */ comments are not nested (an over-read, never a miss).
+public func sqlTokens(_ sql: String, mysql: Bool = false) -> [SQLToken] {
+    var out: [SQLToken] = []
+    var i = sql.startIndex
+    let end = sql.endIndex
+    func at(_ j: String.Index) -> Character? { j < end ? sql[j] : nil }
+    func isWordChar(_ c: Character) -> Bool { c.isLetter || c.isNumber || c == "_" || c == "$" }
+    while i < end {
+        let ch = sql[i], start = i, next = sql.index(after: i)
+        if ch.isWhitespace { i = next; continue }
+        if (ch == "-" && at(next) == "-") || (ch == "#" && mysql) {
+            while i < end && sql[i] != "\n" { i = sql.index(after: i) }
+        } else if ch == "/" && at(next) == "*" {
+            i = sql.index(next, offsetBy: 1, limitedBy: end) ?? end
+            while i < end && !(sql[i] == "*" && at(sql.index(after: i)) == "/") { i = sql.index(after: i) }
+            i = sql.index(i, offsetBy: 2, limitedBy: end) ?? end
+        } else if ch == "'" || ch == "\"" || ch == "`" {
+            var text = "", j = next
+            while j < end {
+                if sql[j] == "\\" && mysql && ch != "`" { j = sql.index(j, offsetBy: 2, limitedBy: end) ?? end; continue }
+                if sql[j] == ch {
+                    let n = sql.index(after: j)
+                    if at(n) == ch { text.append(ch); j = sql.index(after: n); continue }
+                    break
+                }
+                text.append(sql[j]); j = sql.index(after: j)
+            }
+            i = j < end ? sql.index(after: j) : end
+            if ch != "'" { out.append(SQLToken(kind: .quoted, text: text, range: start..<i)) }
+        } else if ch == "$" && !mysql, let close = sql[next...].firstIndex(where: { !($0.isLetter || $0.isNumber || $0 == "_") }), at(close) == "$", !(sql[next..<close].first?.isNumber ?? false) {
+            let tag = String(sql[start...close])
+            let after = sql.index(after: close)
+            i = sql.range(of: tag, range: after..<end)?.upperBound ?? end
+        } else if ch.isLetter || ch == "_" {
+            while i < end && isWordChar(sql[i]) { i = sql.index(after: i) }
+            out.append(SQLToken(kind: .word, text: String(sql[start..<i]), range: start..<i))
+        } else if ch.isNumber {
+            while i < end && (isWordChar(sql[i]) || sql[i] == ".") { i = sql.index(after: i) }
+            out.append(SQLToken(kind: .number, text: String(sql[start..<i]), range: start..<i))
+        } else {
+            i = next
+            out.append(SQLToken(kind: .punct, text: String(ch), range: start..<i))
+        }
+    }
+    return out
+}

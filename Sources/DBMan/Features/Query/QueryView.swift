@@ -113,7 +113,7 @@ struct QueryView: View {
     // MARK: running
 
     private func run(_ sql: String, all: Bool = false) {
-        let s = sql.trimmingCharacters(in: .whitespacesAndNewlines)
+        let s = ws.layers.expand(sql.trimmingCharacters(in: .whitespacesAndNewlines), mysql: ws.profile.engine == .mysql) // virtual views from visible layers
         guard !s.isEmpty, !tab.running, let session = ws.session else { return }
         tab.running = true; tab.startedAt = Date(); tab.error = nil; tab.result = nil; tab.plan = nil
         readOnlyHit = false; view = 0

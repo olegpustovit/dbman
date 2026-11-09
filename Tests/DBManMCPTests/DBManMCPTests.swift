@@ -80,7 +80,8 @@ final class DBManMCPTests: XCTestCase {
     func testToolsPromptsResources() async throws {
         let names = try await client.listTools().tools.map(\.name)
         same(names, ["connections.list", "connections.add", "connections.test", "connections.remove", "schema.tables", "schema.describe", "schema.graph", "schema.search",
-                               "query.run", "query.explain", "query.sample", "stats.column", "ui.open"])
+                               "query.run", "query.explain", "query.sample", "stats.column", "overlay.status", "overlay.patch_rows", "overlay.diff", "overlay.reset", "views.list", "views.create",
+                     "views.replace", "views.drop", "relations.add", "notes.set", "saved.list", "saved.save", "ui.open"])
         same(try await client.listPrompts().prompts.map(\.name), ["explain-schema", "investigate-table"])
         let uris = try await client.listResources().resources.map(\.uri)
         same(uris, ["dbman://connections", "dbman://shop/schema", "dbman://analytics/schema"]) // never the internal store
@@ -174,7 +175,7 @@ final class DBManMCPTests: XCTestCase {
         same(try raw("SELECT status FROM activity WHERE tool = 'query.run' AND error LIKE 'WRITE_REDIRECTED%' GROUP BY status")[0][0] as? String, "blocked")
         // the read-only read level adds the hint from the spec
         try Handle(path: store.url.path).exec("UPDATE permissions SET level = 'read' WHERE connection_id = 'c-shop'")
-        yes(try await call("query.run", ["connection": "shop", "sql": "delete from orders"]).text.hasSuffix("overlay.* needs OVERLAY, this agent has READ)"))
+        yes(try await call("query.run", ["connection": "shop", "sql": "delete from orders"]).text.hasSuffix("overlay.patch_rows needs OVERLAY, this agent has READ)"))
     }
 
     // MARK: row cap + cursor

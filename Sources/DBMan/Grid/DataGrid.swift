@@ -25,6 +25,8 @@ struct DataGrid: NSViewRepresentable {
     var onReachEnd: (() -> Void)? = nil
     var tableName = "table"   // only used by "Copy as INSERT"
     var markedRows: Set<Int> = []  // rows with staged changes: amber gutter bar
+    var layerCells: [Int: Set<Int>] = [:]  // row → columns patched by a store layer: cobalt cell mark + gutter bar
+    var staleRows: Set<Int> = []           // rows whose layer patch is stale (the database moved on): amber cell mark
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -78,6 +80,7 @@ struct DataGrid: NSViewRepresentable {
         var lastSel = -1
         var endRequestedAt = -1
         var ctx = (row: 0, col: 0)
+        var marks: [Int: Set<Int>] = [:], stale: Set<Int> = []
 
         init(_ p: DataGrid) { self.p = p }
 
@@ -100,6 +103,10 @@ struct DataGrid: NSViewRepresentable {
                     table.reloadData()
                     endRequestedAt = -1
                 }
+            }
+            if p.layerCells != marks || p.staleRows != stale {
+                marks = p.layerCells; stale = p.staleRows
+                table.reloadData()
             }
             if p.sparklines != sparks {
                 sparks = p.sparklines
@@ -164,6 +171,7 @@ struct DataGrid: NSViewRepresentable {
             let v = tableView.makeView(withIdentifier: GridRowView.id, owner: nil) as? GridRowView ?? GridRowView()
             v.identifier = GridRowView.id
             v.isMarked = p.markedRows.contains(row)
+            v.isLayered = marks[row] != nil
             return v
         }
 
@@ -181,7 +189,7 @@ struct DataGrid: NSViewRepresentable {
             } else if let i = dataIndex(tc), i < cols.count, i < rows[row].count {
                 let cell = rows[row][i], col = cols[i]
                 let focused = row == table.selectedRow && i == focus
-                v.set(cell: cell, column: col, focused: focused)
+                v.set(cell: cell, column: col, focused: focused, mark: marks[row]?.contains(i) == true ? (stale.contains(row) ? 2 : 1) : 0)
             }
             return v
         }
@@ -315,9 +323,11 @@ final class GridRowView: NSTableRowView {
     static let id = NSUserInterfaceItemIdentifier("gridRow")
     override var isEmphasized: Bool { get { true } set {} }
     var isMarked = false { didSet { if isMarked != oldValue { needsDisplay = true } } }
+    var isLayered = false { didSet { if isLayered != oldValue { needsDisplay = true } } }
     override func drawBackground(in dirtyRect: NSRect) {
         super.drawBackground(in: dirtyRect)
         if isMarked { HT.NS.amber.setFill(); NSRect(x: 0, y: 0, width: 2, height: bounds.height).fill() }
+        else if isLayered { HT.NS.accent.setFill(); NSRect(x: 0, y: 0, width: 2, height: bounds.height).fill() }
     }
     override func drawSelection(in dirtyRect: NSRect) {
         HT.NS.fill12.setFill(); bounds.fill()
@@ -332,6 +342,7 @@ final class GridCellView: NSView {
     private var text = NSAttributedString()
     private var lineH: CGFloat = 14
     private var inverted = false
+    private var mark = 0 // 1 = patched by a layer, 2 = stale layer patch
 
     override var isFlipped: Bool { true }
 
@@ -341,14 +352,14 @@ final class GridCellView: NSView {
         ps.lineBreakMode = .byTruncatingTail
         text = NSAttributedString(string: s, attributes: [.font: font, .foregroundColor: color, .paragraphStyle: ps])
         lineH = ceil(font.ascender - font.descender + font.leading)
-        inverted = false
+        inverted = false; mark = 0
         setAccessibilityElement(true)
         setAccessibilityRole(.staticText)
         setAccessibilityLabel(label)
         needsDisplay = true
     }
 
-    func set(cell: Cell, column: GridColumn, focused: Bool) {
+    func set(cell: Cell, column: GridColumn, focused: Bool, mark: Int = 0) {
         let isNull = cell.isNull
         let ink = focused ? HT.NS.paper : (isNull ? HT.NS.ink3 : HT.NS.ink)
         set(cell.display, font: isNull ? GridFonts.null : GridFonts.value, color: ink, right: column.alignRight, label: column.name)
@@ -357,13 +368,15 @@ final class GridCellView: NSView {
                              .underlineColor: focused ? HT.NS.paper : HT.NS.accent], range: NSRange(location: 0, length: a.length))
             text = a
         }
-        inverted = focused
+        inverted = focused; self.mark = mark
         setAccessibilityLabel(column.name)
         setAccessibilityValue(cell.display)
     }
 
     override func draw(_ dirtyRect: NSRect) {
         if inverted { HT.NS.ink.setFill(); bounds.fill() }
+        else if mark > 0 { HT.NS.accentSoft.setFill(); bounds.fill() }
+        if mark > 0 { (mark == 2 ? HT.NS.amber : HT.NS.accent).setFill(); NSRect(x: bounds.width - 5, y: 1, width: 4, height: 4).fill() } // layer mark, top-right corner
         text.draw(with: NSRect(x: 8, y: (bounds.height - lineH) / 2, width: bounds.width - 16, height: lineH),
                   options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
     }

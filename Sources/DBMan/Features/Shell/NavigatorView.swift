@@ -30,10 +30,22 @@ struct NavigatorView: View {
                         }
                         tableSection("Tables", shown(.table))
                         tableSection("Views", shown(.view))
+                        virtualViews
                     }
                 }
             }
             .padding(8)
+        }
+    }
+
+    /// Virtual views from visible store layers: a query tab on the view (expanded as a CTE when it runs).
+    @ViewBuilder private var virtualViews: some View {
+        let vv = ws.layers.views.filter { filter.isEmpty || $0.name.localizedCaseInsensitiveContains(filter) }
+        if !vv.isEmpty {
+            section("Virtual views", count: vv.count)
+            ForEach(vv, id: \.name) { v in
+                row(v.name, trailing: layerMono(ws.layers.name(v.layer)), selected: false) { ws.newQuery(sql: "SELECT * FROM \(quoteIdent(v.name, ws.profile.engine))") }
+            }
         }
     }
 

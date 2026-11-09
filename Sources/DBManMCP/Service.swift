@@ -15,7 +15,7 @@ public final class MCPService: @unchecked Sendable {
     public func start(transport: any Transport) async throws -> Server {
         let agent = AgentBox()
         let server = Server(name: "dbman", version: Self.version, title: "DBMan",
-                            instructions: "Read-only access to the user's databases through DBMan. Start with connections.list, then schema.tables. Sensitive columns come back as «redacted». You never write to a database.",
+                            instructions: "Read-only access to the user's databases through DBMan. Start with connections.list, then schema.tables. Sensitive columns come back as «redacted». You never write to a database: record proposed changes in your own overlay layer (overlay.patch_rows, views.create) and the human reviews them.",
                             capabilities: .init(prompts: .init(listChanged: false), resources: .init(subscribe: false, listChanged: false), tools: .init(listChanged: false)))
         await server.withMethodHandler(ListTools.self) { _ in .init(tools: Catalogue.tools) }
         await server.withMethodHandler(CallTool.self) { [self] p in await call(p.name, p.arguments ?? [:], agent: agent.id) }

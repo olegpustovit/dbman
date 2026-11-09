@@ -11,8 +11,11 @@ enum Catalogue {
         for (k, type, d) in props { p[k] = ["type": .string(type), "description": .string(d)] }
         let req = (connection ? ["connection"] : []) + required
         return Tool(name: name, description: desc, inputSchema: ["type": "object", "properties": .object(p), "required": .array(req.map { .string($0) })],
-                    annotations: .init(readOnlyHint: !name.hasSuffix(".add") && !name.hasSuffix(".remove") && name != "ui.open"))
+                    annotations: .init(readOnlyHint: !name.hasSuffix(".add") && !name.hasSuffix(".remove") && name != "ui.open" && !writers.contains(name)))
     }
+
+    /// Tools that write into the agent's own overlay layer (never the database); they need OVERLAY.
+    static let writers: Set = ["overlay.patch_rows", "overlay.reset", "views.create", "views.replace", "views.drop", "relations.add", "notes.set", "saved.save"]
 
     static let tools: [Tool] = [
         tool("connections.list", "List the databases DBMan lets you use: name, engine, env tag (production is guarded), status and YOUR permission level on each.", connection: false),
@@ -26,19 +29,41 @@ enum Catalogue {
              [("table", "string", "Table name")], required: ["table"]),
         tool("schema.graph", "Tables as nodes and declared foreign keys as edges."),
         tool("schema.search", "Find tables and columns whose name contains the text.", [("text", "string", "Case-insensitive substring")], required: ["text"]),
-        tool("query.run", "Run ONE read-only statement (SELECT/WITH/VALUES/TABLE/SHOW). Writes are never executed (WRITE_REDIRECTED). Results are capped; when truncated is true pass the returned cursor to get the next page. Production queries are EXPLAINed first and may be BLOCKED_BY_PROD_GUARD: add a filter on an indexed column.",
-             [("sql", "string", "A single statement"), ("limit", "integer", "Rows to return, at most the row cap"), ("cursor", "string", "From a previous truncated result; sql may then be omitted")]),
+        tool("query.run", "Run ONE read-only statement (SELECT/WITH/VALUES/TABLE/SHOW). Writes are never executed (WRITE_REDIRECTED; record changes with overlay.patch_rows). Your virtual views can be used by name and your row patches are merged into the result. Results are capped; when truncated is true pass the returned cursor to get the next page. Production queries are EXPLAINed first and may be BLOCKED_BY_PROD_GUARD: add a filter on an indexed column.",
+             [("sql", "string", "A single statement"), ("limit", "integer", "Rows to return, at most the row cap"), ("cursor", "string", "From a previous truncated result; sql may then be omitted"),
+              ("layer", "string", "Optional: \"database\" = raw database only, \"mine\" = database + the human's layer. Default: database + MINE + your own layer")]),
         tool("query.explain", "Estimated plan (no execution) as a tree with estimated rows and cost.", [("sql", "string", "A single read statement")], required: ["sql"]),
         tool("query.sample", "First rows of a table (SELECT * … LIMIT n).", [("table", "string", "Table name"), ("n", "integer", "Rows, default 10")], required: ["table"]),
         tool("stats.column", "Profile of one column from a sample: distinct count, null fraction, min/max/median, histogram, top values (not for hidden columns).",
              [("table", "string", "Table name"), ("column", "string", "Column name")], required: ["table", "column"]),
+        tool("overlay.status", "Your overlay layer on this connection: item counts, stale patches, and the note if the human discarded something."),
+        Tool(name: "overlay.patch_rows", description: "Record row changes in YOUR layer (the database is never written; the human reviews them and may adopt or apply them). Rows are keyed by primary key. Needs OVERLAY.",
+             inputSchema: ["type": "object", "required": ["connection", "table", "patches"], "properties": [
+                "connection": ["type": "string", "description": "Connection name or id"], "table": ["type": "string", "description": "Table name"],
+                "patches": ["type": "array", "description": "At most 200", "items": ["type": "object", "required": ["op", "pk"], "properties": [
+                    "op": ["type": "string", "enum": ["insert", "update", "delete"]],
+                    "pk": ["type": "object", "description": "Primary key column → value"],
+                    "values": ["type": "object", "description": "Column → new value (insert, update)"]]]]]],
+             annotations: .init(readOnlyHint: false)),
+        tool("overlay.diff", "Your layer compared with the database: per patched row the before/after values, and both values when the row changed in the database since (stale).",
+             [("table", "string", "Only this table")]),
+        tool("overlay.reset", "Discard everything in your layer (history stays in the store)."),
+        tool("views.list", "Virtual views visible to you (the human's and yours). Use them by name in query.run; they are expanded as CTEs, no DDL."),
+        tool("views.create", "Create a virtual view in your layer from a SELECT. Validated with EXPLAIN. The name must not be a real table or view.", [("name", "string", "Identifier"), ("sql", "string", "A single SELECT")], required: ["name", "sql"]),
+        tool("views.replace", "Replace the SQL of one of your own virtual views.", [("name", "string", "Identifier"), ("sql", "string", "A single SELECT")], required: ["name", "sql"]),
+        tool("views.drop", "Remove one of your own virtual views.", [("name", "string", "Identifier")], required: ["name"]),
+        tool("relations.add", "Record a virtual foreign key in your layer (never DDL).", [("from", "string", "table.column"), ("to", "string", "table.column")], required: ["from", "to"]),
+        tool("notes.set", "Describe a table or column for the human (shown in the table structure). Empty text removes the note.",
+             [("table", "string", "Table name"), ("column", "string", "Optional column"), ("text", "string", "The note")], required: ["table", "text"]),
+        tool("saved.list", "Saved queries visible to you."),
+        tool("saved.save", "Save a query by name in your layer.", [("name", "string", "Name"), ("sql", "string", "A single read statement")], required: ["name", "sql"]),
         tool("ui.open", "Show the human something in DBMan: brings the app to front at a table or a query.",
              [("route", "string", "table | query"), ("selection", "string", "Table name for table, SQL text for query")], required: ["route"]),
     ]
 }
 
 /// Per-call bookkeeping for the activity row.
-final class Trace { var connection: String?; var rows: Int? }
+final class Trace { var connection: String?; var rows: Int?; var status: String? }
 
 extension MCPService {
     // MARK: call pipeline: resolve → gate → run → activity
@@ -56,6 +81,7 @@ extension MCPService {
         } catch {
             status = "error"; failure = ToolError("ERROR", error.localizedDescription).message
         }
+        if failure == nil, let s = trace.status { status = s }
         let summary = (try? String(decoding: Self.encoder.encode(args), as: UTF8.self)) ?? ""
         try? b.store.logActivity(agent: agent, connection: trace.connection, tool: name, args: summary, ms: Int(Date().timeIntervalSince(t0) * 1000), rows: trace.rows, status: status, error: failure)
         if let failure { return .init(content: [.text(text: failure, annotations: nil, _meta: nil)], isError: true) }
@@ -131,9 +157,9 @@ extension MCPService {
             }
             return .array(Array(hits.prefix(50)))
         case "query.run":
-            return try await query(a, c, s, perm: perm, cap: cap, timeoutMs: timeoutMs, trace: trace)
+            return try await query(a, c, s, perm: perm, cap: cap, timeoutMs: timeoutMs, agent: agent, trace: trace)
         case "query.explain":
-            let stmt = try readStatement(a["sql"]?.stringValue, c, perm)
+            let stmt = try expanded(try readStatement(a["sql"]?.stringValue, c, perm), try overlayScope(a, c, agent)).sql
             guard let plan = try await timed(timeoutMs, s, { try await s.explain(stmt, analyze: false) }) else { throw ToolError("UNSUPPORTED", "\(c.engine) returned no plan") }
             return ["plan": Self.tree(plan), "total_cost": .double(plan.cost)]
         case "query.sample":
@@ -141,7 +167,7 @@ extension MCPService {
             let n = min(max(a["n"]?.intValue ?? 10, 1), cap)
             // shortcut: unguarded on production on purpose, the statement is a bare LIMIT scan; EXPLAIN-first applies to query.run
             let r = try await timed(timeoutMs, s) { try await s.run("SELECT * FROM \(quoteIdent(t.name, s.profile.engine)) LIMIT \(n)", limit: n) }
-            return try await rows(r.columns, r.rows, truncated: false, cursor: nil, ms: r.elapsedMs, c, trace)
+            return try await rows(r.columns, r.rows, truncated: false, cursor: nil, ms: r.elapsedMs, sql: "SELECT * FROM \(quoteIdent(t.name, s.profile.engine))", c, trace)
         case "stats.column":
             let t = try await table(a, c, s)
             guard let col = a["column"]?.stringValue, t.columns.contains(where: { $0.name == col }) else { throw ToolError("NOT_FOUND", "column \"\(a["column"]?.stringValue ?? "")\" in \(t.name)") }
@@ -155,7 +181,7 @@ extension MCPService {
             out["top_values"] = .array(st.topValues.map { ["value": .string($0.value), "share": .double($0.share)] })
             return .object(out)
         default:
-            throw ToolError("UNKNOWN_TOOL", name)
+            return try await overlayTool(name, a, c, s, perm: perm, agent: agent, trace: trace)
         }
     }
 
@@ -201,7 +227,7 @@ extension MCPService {
         return sc
     }
 
-    private func table(_ a: [String: Value], _ c: ConnectionRow, _ s: DatabaseSession) async throws -> TableInfo {
+    func table(_ a: [String: Value], _ c: ConnectionRow, _ s: DatabaseSession) async throws -> TableInfo {
         guard let n = a["table"]?.stringValue else { throw ToolError("INVALID_ARGUMENT", "table is required") }
         let sc = try await schema(c, s)
         guard let t = sc.table(n) ?? sc.tables.first(where: { $0.name.lowercased() == n.lowercased() }) else { throw ToolError("NOT_FOUND", "table \"\(n)\" in \(c.name); see schema.tables") }
@@ -225,27 +251,29 @@ extension MCPService {
     // MARK: query
 
     /// One statement, read-only. The engine-level read-only session is the real guard; this gives agents the typed error.
-    private func readStatement(_ sql: String?, _ c: ConnectionRow, _ perm: Permission) throws -> String {
+    func readStatement(_ sql: String?, _ c: ConnectionRow, _ perm: Permission) throws -> String {
         guard let sql, !sql.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ToolError("INVALID_ARGUMENT", "sql is required") }
         let stmts = splitStatements(sql, mysql: c.engine == "mysql")
         guard stmts.count == 1 else { throw ToolError("INVALID_ARGUMENT", "one statement per call") }
         switch Rules.classify(stmts[0]) {
         case .read: return stmts[0]
         case .write:
-            let need = perm.level == "read" ? "; overlay.* needs OVERLAY, this agent has READ" : ""
-            throw ToolError("WRITE_REDIRECTED", "query.run never writes to \(c.name); use overlay.* to record the change in your own layer\(need)", status: "blocked")
+            let need = perm.level == "read" ? "; overlay.patch_rows needs OVERLAY, this agent has READ" : ""
+            throw ToolError("WRITE_REDIRECTED", "query.run never writes to \(c.name); use overlay.patch_rows to record the change in your own layer\(need)", status: "blocked")
         case .other:
             throw ToolError("UNSUPPORTED_STATEMENT", "query.run accepts SELECT, WITH, VALUES, TABLE, SHOW; use query.explain for plans")
         }
     }
 
-    private func query(_ a: [String: Value], _ c: ConnectionRow, _ s: DatabaseSession, perm: Permission, cap: Int, timeoutMs: Int, trace: Trace) async throws -> Value {
+    private func query(_ a: [String: Value], _ c: ConnectionRow, _ s: DatabaseSession, perm: Permission, cap: Int, timeoutMs: Int, agent: String, trace: Trace) async throws -> Value {
         var sql = a["sql"]?.stringValue, start = 0
         if let tok = a["cursor"]?.stringValue {
             guard let cur = Cursor(token: tok) else { throw ToolError("INVALID_ARGUMENT", "unknown cursor") }
             sql = cur.sql; start = cur.offset
         }
-        let stmt = try readStatement(sql, c, perm), offset = start
+        let asked = try readStatement(sql, c, perm), offset = start
+        let scope = try overlayScope(a, c, agent)
+        let (stmt, views) = expanded(asked, scope)
         if c.env == "production" {
             let sc = try await schema(c, s)
             if let plan = try await timed(timeoutMs, s, { try await s.explain(stmt, analyze: false) }),
@@ -256,13 +284,38 @@ extension MCPService {
         let n = min(max(a["limit"]?.intValue ?? cap, 1), cap)
         let r = try await timed(timeoutMs, s) { try await s.run(stmt, limit: offset + n + 1) }
         let rest = r.rows.dropFirst(offset), more = rest.count > n
-        return try await rows(r.columns, Array(rest.prefix(n)), truncated: more, cursor: more ? Cursor(sql: stmt, offset: offset + n).token : nil, ms: r.elapsedMs, c, trace)
+        var page = Array(rest.prefix(n)), extra: [String: Value] = [:]
+        let patches = scope.compactMap(OverlayEngine.patch)
+        if !patches.isEmpty {
+            let m = OverlayEngine.merge(sql: asked, mysql: c.engine == "mysql", schema: try await schema(c, s), columns: r.columns, rows: page, patches: patches, lastPage: !more)
+            page = m.rows
+            if let note = m.note { extra["overlay"] = .string(note) }
+        }
+        if !views.isEmpty { extra["views"] = .array(views.map { .string($0) }) }
+        return try await rows(r.columns, page, truncated: more, cursor: more ? Cursor(sql: asked, offset: offset + n).token : nil, ms: r.elapsedMs, sql: stmt, c, trace, extra: extra)
     }
 
-    private func rows(_ columns: [String], _ rows: [[Cell]], truncated: Bool, cursor: String?, ms: Double, _ c: ConnectionRow, _ trace: Trace) async throws -> Value {
-        let safe = Rules.redact(columns: columns, rows: rows, hidden: try b.store.hiddenColumns(connection: c.id))
+    /// The layers this read sees (SPEC §1.10): DATABASE + MINE + own. `layer` may only narrow that.
+    func overlayScope(_ a: [String: Value], _ c: ConnectionRow, _ agent: String) throws -> [OverlayItem] {
+        switch a["layer"]?.stringValue?.lowercased() {
+        case nil, agent, "own": return try OverlayEngine.scope(b.store, connection: c.id, agent: agent).items
+        case "mine": return try OverlayEngine.scope(b.store, connection: c.id, agent: agent, mineOnly: true).items
+        case "database": return []
+        default: throw ToolError("INVALID_ARGUMENT", "layer must be database or mine")
+        }
+    }
+
+    /// Virtual views named in `sql`, expanded as CTEs (plain SELECT/WITH only).
+    func expanded(_ sql: String, _ items: [OverlayItem]) -> (sql: String, used: [String]) {
+        guard ["SELECT", "WITH"].contains(SQLClassifier.firstKeyword(sql)) else { return (sql, []) }
+        return Overlay.expand(sql, views: items.filter { $0.kind == "view" }.compactMap { i in i.name.map { ($0, OverlayEngine.sql(i)) } })
+    }
+
+    private func rows(_ columns: [String], _ rows: [[Cell]], truncated: Bool, cursor: String?, ms: Double, sql: String, _ c: ConnectionRow, _ trace: Trace, extra: [String: Value] = [:]) async throws -> Value {
+        let safe = Rules.redact(sql: sql, mysql: c.engine == "mysql", columns: columns, rows: rows, hidden: try b.store.hiddenColumns(connection: c.id))
         trace.rows = safe.count
-        var out: [String: Value] = ["columns": .array(columns.map { .string($0) }), "rows": .array(safe.map { .array($0.map(Self.value)) }), "truncated": .bool(truncated), "ms": .int(Int(ms))]
+        var out = extra
+        out["columns"] = .array(columns.map { .string($0) }); out["rows"] = .array(safe.map { .array($0.map(Self.value)) }); out["truncated"] = .bool(truncated); out["ms"] = .int(Int(ms))
         if let cursor { out["cursor"] = .string(cursor) }
         return .object(out)
     }
@@ -286,7 +339,7 @@ extension MCPService {
     }
 
     /// Statement timeout: cancelling the task (client went away) or the clock cancels the driver too.
-    private func timed<T: Sendable>(_ ms: Int, _ s: DatabaseSession, _ op: @escaping @Sendable () async throws -> T) async throws -> T {
+    func timed<T: Sendable>(_ ms: Int, _ s: DatabaseSession, _ op: @escaping @Sendable () async throws -> T) async throws -> T {
         var timedOut = false
         let r: T? = try await withTaskCancellationHandler {
             try await withThrowingTaskGroup(of: T?.self) { g in

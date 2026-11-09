@@ -5,6 +5,9 @@ import SwiftUI
 
 /// Filters handed to the next-opened table (FK follow / child-row links); `ws.go` carries no payload.
 
+/// What the grid shows: database rows with store layers merged, then staged changes; `src` maps back to `rows` (-1: a layer's insert).
+private typealias Shown = (rows: [[Cell]], src: [Int], marks: [Int: Set<Int>], stale: Set<Int>)
+
 private struct EditTarget: Identifiable { let id = UUID(); var src: Int; var col: Int; var text: String; var isNull: Bool }
 
 struct TableBrowserView: View {
@@ -42,7 +45,7 @@ struct TableBrowserView: View {
             VStack(spacing: HT.M.gap) {
                 HStack(spacing: HT.M.gap) {
                     mainFrame(d)
-                    if ws.showInspector, tab == 0 {
+                    if ws.showInspector, tab == 0, !ws.layers.open {
                         TableInspector(ws: ws, info: info, columns: columnNames, row: selection.flatMap { $0 < d.rows.count ? d.rows[$0] : nil },
                                        focused: $focused, stats: stats, staged: mine, onFollow: { follow($0, in: d.rows) })
                             .frame(width: HT.M.inspector)
@@ -62,10 +65,10 @@ struct TableBrowserView: View {
 
     // MARK: layout
 
-    private func mainFrame(_ d: (rows: [[Cell]], src: [Int])) -> some View {
+    private func mainFrame(_ d: Shown) -> some View {
         HTFrame(title: tableName, tail: ([info?.schema] + [info?.sizeBytes.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }]).compactMap { $0 }.joined(separator: " · ")) {
             switch tab {
-            case 1: if let info { StructureView(info: info) }
+            case 1: if let info { StructureView(info: info, notes: ws.layers.notes(tableName)) }
             case 2: if let info { RelationsView(ws: ws, info: info) }
             case 3: StatsView(info: info, stats: stats)
             default: dataView(d)
@@ -73,7 +76,7 @@ struct TableBrowserView: View {
         }
     }
 
-    private func dataView(_ d: (rows: [[Cell]], src: [Int])) -> some View {
+    private func dataView(_ d: Shown) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 filterBar(d)
@@ -86,12 +89,12 @@ struct TableBrowserView: View {
                      onSort: toggleSort, onEdit: { r, c in beginEdit(src: d.src, row: r, col: c) },
                      onFilterValue: { c, v in whereText = TableSQL.and(whereText, TableSQL.equals(c, v, engine: engine)); applyFilter() },
                      onFollowFK: { r, c in follow(c, in: d.rows, row: r) },
-                     onReachEnd: { Task { await loadMore() } }, tableName: tableName, markedRows: markedRows(d.rows))
+                     onReachEnd: { Task { await loadMore() } }, tableName: tableName, markedRows: markedRows(d.rows), layerCells: d.marks, staleRows: d.stale)
                 .onKeyPress(.delete) { guard selection != nil else { return .ignored }; requestDelete(); return .handled }
         }
     }
 
-    private func filterBar(_ d: (rows: [[Cell]], src: [Int])) -> some View {
+    private func filterBar(_ d: Shown) -> some View {
         HStack(spacing: 6) {
             CapsLabel("Where").foregroundStyle(HT.C.ink3)
             TextField("status = 'paid' AND total > 100", text: $whereText).textFieldStyle(.plain).ht(.data)
@@ -163,11 +166,20 @@ struct TableBrowserView: View {
         Dictionary(pk.compactMap { c in columnNames.firstIndex(of: c).map { (c, r[$0]) } }, uniquingKeysWith: { a, _ in a })
     }
 
-    /// Rows with staged updates applied and staged deletes hidden; `src` maps back to `rows`.
-    private var display: (rows: [[Cell]], src: [Int]) {
-        guard !mine.isEmpty, !pk.isEmpty else { return (rows, Array(rows.indices)) }
-        var out: [[Cell]] = [], src: [Int] = []
-        for (i, r) in rows.enumerated() {
+    /// Database rows, store layers merged over them (cobalt marks), then staged updates applied and staged deletes hidden.
+    private var display: Shown {
+        var base = rows, src = Array(rows.indices), marks: [Int: Set<Int>] = [:], stale = Set<Int>()
+        let patches = ws.layers.patches(tableName)
+        if !patches.isEmpty, !pk.isEmpty {
+            // inserts belong at the end of the table: only when nothing filters or sorts the page and every row is loaded
+            let m = Overlay.merge(columns: columnNames, rows: rows, pk: pk, patches: patches, addInserts: applied.isEmpty && sort == nil && done)
+            (base, src, marks) = (m.rows, m.source, m.cells)
+            let staleKeys = Set(patches.filter(\.stale).map { Overlay.keyString(pk, $0.key) })
+            stale = Set(base.indices.filter { marks[$0] != nil && staleKeys.contains(Overlay.keyString(pk, key(base[$0]))) })
+        }
+        guard !mine.isEmpty, !pk.isEmpty else { return (base, src, marks, stale) }
+        var out: [[Cell]] = [], osrc: [Int] = [], omarks: [Int: Set<Int>] = [:], ostale = Set<Int>()
+        for (i, r) in base.enumerated() {
             let k = key(r)
             var r2 = r, gone = false
             for c in mine {
@@ -177,9 +189,13 @@ struct TableBrowserView: View {
                 default: break
                 }
             }
-            if !gone { out.append(r2); src.append(i) }
+            if !gone {
+                if let m = marks[i] { omarks[out.count] = m }
+                if stale.contains(i) { ostale.insert(out.count) }
+                out.append(r2); osrc.append(src[i])
+            }
         }
-        return (out, src)
+        return (out, osrc, omarks, ostale)
     }
 
     // MARK: loading
@@ -191,6 +207,7 @@ struct TableBrowserView: View {
         if let s = ws.session, let i = info { await TableSQL.selfCheck(session: s, engine: engine, table: i) }
         #endif
         async let st: Void = loadStats()
+        Task { await ws.layers.refresh(ws) } // stale marks for patched rows
         await reload()
         await st
         if selection == nil { selection = DevHooks.select }
@@ -266,7 +283,7 @@ struct TableBrowserView: View {
 
     private func beginEdit(src: [Int], row: Int, col: Int) {
         if let why = readOnlyReason() { notice = why; return }
-        guard row < src.count, col < columnNames.count else { return }
+        guard row < src.count, src[row] >= 0, col < columnNames.count else { notice = "READ-ONLY // this row exists only in a store layer."; return }
         let cell = display.rows[row][col]
         if case .blob = cell { notice = "READ-ONLY // binary values cannot be edited here."; return }
         notice = nil
@@ -285,7 +302,7 @@ struct TableBrowserView: View {
     }
 
     private func stageDelete(_ src: [Int]) {
-        guard let s = selection, s < src.count else { return }
+        guard let s = selection, s < src.count, src[s] >= 0 else { return }
         ws.stage(.delete(table: tableName, key: key(rows[src[s]])))
         selection = nil
     }

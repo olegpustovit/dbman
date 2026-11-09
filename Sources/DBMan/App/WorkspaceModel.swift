@@ -65,6 +65,9 @@ final class WorkspaceModel {
     var reviewOpen = false
     var writesUnlocked = false
     var staged = ChangeSet()
+    let layers = LayerModel()
+    /// Shown in the review sheet when the staged changes come from a layer (APPLY TO DATABASE).
+    var reviewNote: String?
     var console: [ConsoleEntry] = []
     var relativeDates = false
     /// WHERE clause to apply when a table opens (FK follow, child links).
@@ -138,7 +141,7 @@ final class WorkspaceModel {
         Task { await session?.stage(c) }
     }
     func undoStaged() { staged.undo(); Task { await session?.undoLastChange() } }
-    func discardStaged() { staged = ChangeSet(); Task { await session?.discardChanges() } }
+    func discardStaged() { staged = ChangeSet(); reviewNote = nil; Task { await session?.discardChanges() } }
     func unlockWrites() {
         // The internal store unlocks only on a deliberate ⌥-click (UNLOCK INTERNAL STORE).
         if profile.environment == .system && !NSEvent.modifierFlags.contains(.option) {
@@ -152,7 +155,8 @@ final class WorkspaceModel {
         let sql = staged.transactionSQL(engine: profile.engine)
         try await session.commit()
         log(sql, "committed \(staged.count) changes")
-        staged = ChangeSet()
+        staged = ChangeSet(); reviewNote = nil
+        layers.applied()
         await refreshSchema()
     }
 }

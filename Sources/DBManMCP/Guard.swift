@@ -26,11 +26,61 @@ enum Rules {
     }
 
     static let redacted = Cell.text("«redacted»")
-    /// shortcut: projection by result column name, so `select email as e` or `email || ''` slip through; upgrade with SQL column lineage.
-    static func redact(columns: [String], rows: [[Cell]], hidden: Set<String>) -> [[Cell]] {
-        let idx = Set(columns.indices.filter { hidden.contains(columns[$0].lowercased()) })
-        guard !idx.isEmpty else { return rows }
-        return rows.map { r in r.enumerated().map { idx.contains($0.offset) ? redacted : $0.element } }
+
+    /// Hidden values never leave. A result column named like a hidden column is wholly masked. If the statement also names a hidden column
+    /// anywhere (`email as e`, `lower(email)`, `email || ''`, a subquery), every text/blob cell is masked except columns that are provably a
+    /// plain, non-hidden column of the outer SELECT; numbers, booleans and NULLs pass so COUNT/SUM still work. `SELECT *` alone keeps the name match.
+    static func redact(sql: String, mysql: Bool = false, columns: [String], rows: [[Cell]], hidden: Set<String>) -> [[Cell]] {
+        guard !hidden.isEmpty else { return rows }
+        let byName = Set(columns.indices.filter { hidden.contains(columns[$0].lowercased()) })
+        let toks = sqlTokens(sql, mysql: mysql)
+        var scrub = Set<Int>()
+        if toks.contains(where: { $0.isIdentifier && hidden.contains($0.text.lowercased()) }) {
+            let flat = toks.filter { $0.isWord("SELECT") }.count == 1 // a subquery or CTE can alias a hidden column into a plain-looking name
+            let items = flat ? selectItems(toks) : nil
+            let starOnly = items?.allSatisfy { $0.last?.isPunct("*") == true } == true
+            if !starOnly {
+                var plain = Set<Int>()
+                if let items, items.count == columns.count { plain = Set(items.indices.filter { isPlainColumn(items[$0], hidden: hidden) }) }
+                scrub = Set(columns.indices).subtracting(plain)
+            }
+        }
+        guard !byName.isEmpty || !scrub.isEmpty else { return rows }
+        return rows.map { r in
+            r.enumerated().map { i, c in
+                if byName.contains(i) { return redacted }
+                guard scrub.contains(i) else { return c }
+                switch c { case .text, .blob, .date: return redacted; default: return c }
+            }
+        }
+    }
+
+    /// The outermost SELECT's list items, or nil when the statement is not a plain `SELECT … [FROM …]` (WITH, set operations, no SELECT).
+    static func selectItems(_ t: [SQLToken]) -> [[SQLToken]]? {
+        guard t.first?.isWord("SELECT") == true else { return nil }
+        var items: [[SQLToken]] = [[]], depth = 0
+        for (i, tok) in t.enumerated().dropFirst() {
+            if tok.isPunct("(") { depth += 1 } else if tok.isPunct(")") { depth -= 1 }
+            if depth == 0 {
+                if ["UNION", "INTERSECT", "EXCEPT"].contains(where: tok.isWord) { return nil }
+                if tok.isWord("FROM") { break }
+                if tok.isPunct(",") { items.append([]); continue }
+                if i == 1, tok.isWord("DISTINCT") || tok.isWord("ALL") { continue }
+            }
+            items[items.count - 1].append(tok)
+        }
+        return depth == 0 ? items : nil
+    }
+
+    /// `col`, `t.col`, optionally followed by `[AS] alias`, and `col` is not hidden.
+    private static func isPlainColumn(_ t: [SQLToken], hidden: Set<String>) -> Bool {
+        var i = 0
+        guard i < t.count, t[i].isIdentifier else { return false }
+        var name = t[i].text; i += 1
+        if i + 1 < t.count, t[i].isPunct("."), t[i + 1].isIdentifier { name = t[i + 1].text; i += 2 }
+        if i < t.count, t[i].isWord("AS") { i += 1; guard i < t.count else { return false } }
+        if i < t.count { guard t[i].isIdentifier else { return false }; i += 1 }
+        return i == t.count && !hidden.contains(name.lowercased())
     }
 
     /// Reason to block a production query, or nil. Cost comes from the plan root (Postgres total cost, MySQL query_cost); SQLite has no cost,

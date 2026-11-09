@@ -12,6 +12,8 @@ final class AppModel {
 
     /// All connections from the store, the internal one last.
     private(set) var profiles: [ConnectionProfile] = []
+    /// Bumped on every store change (own writes, agents over MCP, sqlite3): views that read layers re-load on it.
+    private(set) var storeRev = 0
     /// App-wide settings, backed by the store's `settings` table (Settings window, table pages, dates).
     var pageSize = 500 { didSet { if pageSize != oldValue && !reloading { save("page_size", String(pageSize)) } } }
     var relativeDates = false { didSet { if relativeDates != oldValue && !reloading { save("relative_dates", String(relativeDates)) } } }
@@ -40,6 +42,7 @@ final class AppModel {
 
     func reload() {
         reloading = true; defer { reloading = false }
+        storeRev += 1
         profiles = ((try? store.connections()) ?? []).map(Self.profile)
         pageSize = store.setting("page_size").flatMap(Int.init) ?? 500
         relativeDates = store.setting("relative_dates") == "true"

@@ -154,3 +154,43 @@ final class DBStoreTests: XCTestCase {
         XCTAssertEqual(s.setting("page_size"), "900")
     }
 }
+
+extension DBStoreTests {
+    func testLayersItemsAdoptDiscardArchive() throws {
+        let s = try Store.open(at: url)
+        try s.upsert(ConnectionRow(id: "A", name: "a", engine: "sqlite"))
+        try s.upsertAgent(id: "cc", name: "claude-code", version: nil)
+        let l = try s.agentLayer("A", agent: "cc")
+        XCTAssertEqual(try s.agentLayer("A", agent: "cc"), l) // idempotent
+        XCTAssertEqual(try s.layers("A").map(\.name), ["MINE", "claude-code"]) // human first, then agents; named after the agent
+        try s.putPatch(layer: l, table: "t", pk: #"{"id":1}"#, op: "update", before: #"{"x":1}"#, after: #"{"x":2}"#, baseHash: "h")
+        _ = try s.putPatch(layer: l, table: "t", pk: #"{"id":1}"#, op: "update", before: nil, after: #"{"x":3}"#, baseHash: "h") // same row replaces
+        try s.addItem(layer: l, kind: "view", name: "v", payload: #"{"sql":"select 1"}"#)
+        try s.addItem(layer: l, kind: "view", name: "v", payload: #"{"sql":"select 2"}"#) // same name replaces
+        XCTAssertEqual(try s.items("A", layers: [l]).map { $0.after ?? $0.payload }, [#"{"x":3}"#, #"{"sql":"select 2"}"#])
+        XCTAssertEqual(try s.layers("A")[1].items, 2)
+        let all = try s.items("A", layers: [l])
+        try s.adopt(all.map(\.id), connection: "A")
+        XCTAssertEqual(try s.items("A", layers: ["mine:A"]).map(\.kind), ["row_patch", "view"])
+        XCTAssertEqual(try s.items("A", layers: [l]).count, 0) // originals are adopted, not live
+        XCTAssertEqual(try s.items("A", layers: ["mine:A"]).first?.table, "t")
+        try s.adopt(try s.items("A", layers: ["mine:A"]).map(\.id), connection: "A") // MINE items are not re-adopted
+        XCTAssertEqual(try s.items("A", layers: ["mine:A"]).count, 2)
+        // discard keeps history and stores the note; items come back as nothing
+        let k = try s.addItem(layer: l, kind: "note", name: "t", payload: "{}")
+        try s.discard(layer: l, note: "no")
+        XCTAssertEqual(try s.items("A", layers: [l]).count, 0)
+        XCTAssertEqual(try s.items("A", layers: [l], statuses: ["discarded"]).map(\.id), [k])
+        XCTAssertEqual(s.discardNote(layer: l)?.note, "no")
+        XCTAssertNil(s.discardNote(layer: "mine:A"))
+        // idle agent layers are archived, never deleted; a new write brings it back
+        _ = try raw("UPDATE overlay_items SET updated_at = updated_at - 31 * 86400000; UPDATE layers SET updated_at = updated_at - 31 * 86400000")
+        try s.archiveIdleLayers()
+        XCTAssertEqual(try s.layers("A").map(\.archived), [false, true]) // MINE is never archived
+        _ = try s.agentLayer("A", agent: "cc")
+        XCTAssertEqual(try s.layers("A").map(\.archived), [false, false])
+        try s.setLayerVisible(l, false)
+        XCTAssertFalse(try s.layers("A")[1].visible)
+        XCTAssertTrue(s.relations("A").isEmpty)
+    }
+}

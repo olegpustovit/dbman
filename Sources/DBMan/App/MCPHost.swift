@@ -27,6 +27,7 @@ import Foundation
             },
             openUI: { row, route, selection in await MCPHost.open(app, row, route, selection) })
         try? store.pruneActivity()
+        try? store.archiveIdleLayers() // SPEC G20: untouched 30 days → archived, never deleted
         let l = MCPListener(service: MCPService(backend), path: UnixSocket.path(storeDir: store.url.deletingLastPathComponent().path))
         do { try l.start(); listener = l } catch { NSLog("DBMan MCP: %@", error.localizedDescription) }
     }

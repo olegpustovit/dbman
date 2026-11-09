@@ -42,7 +42,8 @@ struct WorkspaceView: View {
             HStack(spacing: HT.M.gap) {
                 NavigatorView(ws: ws)
                     .frame(width: HT.M.sidebar)
-                content
+                if ws.layers.compare && ws.layers.open { LayerDiffView(ws: ws) } else { content }
+                if ws.layers.open { LayersPanel(ws: ws).frame(width: HT.M.inspector) }
             }
             StatusStrip(ws: ws)
         }
@@ -50,6 +51,8 @@ struct WorkspaceView: View {
         .background(DotGridBackground())
         .overlay { if ws.paletteOpen { PaletteView(ws: ws) } }
         .sheet(isPresented: $ws.reviewOpen) { ReviewSheet(ws: ws) }
+        .task(id: AppModel.shared.storeRev) { ws.layers.reload(ws) } // own writes, agents over MCP, sqlite3
+        .background(Button("") { ws.layers.open.toggle(); if !ws.layers.open { ws.layers.compare = false } }.keyboardShortcut("l", modifiers: [.option, .command]).opacity(0).accessibilityHidden(true))
     }
 
     @ViewBuilder private var content: some View {

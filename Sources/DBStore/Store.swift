@@ -256,13 +256,10 @@ public final class Store: @unchecked Sendable {
         }
     }
 
-    /// An accepted inferred relation: an `overlay_items` row (kind `relation`) in the connection's MINE layer. P3 builds the rest of the overlay engine.
+    /// An accepted inferred relation: a `relation` item in the connection's MINE layer (agents add theirs with `addItem` into their own layer).
     public func addRelation(_ connectionID: String, name: String, payload: String) throws {
-        try transaction {
-            try ensureMine(connectionID)
-            try h.query("INSERT INTO overlay_items(id, layer_id, kind, name, payload) VALUES (?, ?, 'relation', ?, ?)",
-                        [UUID().uuidString, "mine:" + connectionID, name, payload])
-        }
+        try ensureMineLayer(connectionID)
+        try addItem(layer: Self.mineID(connectionID), kind: "relation", name: name, payload: payload)
     }
     /// Payloads of the connection's live relation items, oldest first.
     public func relations(_ connectionID: String) -> [String] {

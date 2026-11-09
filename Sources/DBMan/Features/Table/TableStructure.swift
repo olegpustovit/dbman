@@ -5,10 +5,13 @@ import SwiftUI
 /// 02 STRUCTURE: columns and indexes.
 struct StructureView: View {
     let info: TableInfo
+    /// Notes agents or the human left in store layers: `table` and `table.column` → text.
+    var notes: [String: String] = [:]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                if let n = notes[info.name] { note(n) }
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 0) {
                     GridRow { ForEach(["Column", "Type", "Null", "Default", "Constraint"], id: \.self) { CapsLabel($0).foregroundStyle(HT.C.ink3) } }
                     ForEach(info.columns) { c in
@@ -20,6 +23,7 @@ struct StructureView: View {
                             Text(c.defaultValue ?? "").ht(.dataSmall).foregroundStyle(HT.C.ink2).lineLimit(1)
                             Text(constraint(c)).ht(.dataSmall).foregroundStyle(HT.C.ink2)
                         }.frame(minHeight: HT.M.row)
+                        if let n = notes["\(info.name).\(c.name)"] { GridRow { note(n).gridCellColumns(5) } }
                     }
                 }
                 CapsLabel("Indexes", "\(info.indexes.count)").foregroundStyle(HT.C.ink3)
@@ -34,6 +38,13 @@ struct StructureView: View {
                 }
             }.padding(12)
         }
+    }
+
+    private func note(_ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("Note //").ht(.labelSmall).foregroundStyle(HT.C.accent)
+            Text(text).ht(.bodySmall).foregroundStyle(HT.C.ink2)
+        }.padding(.bottom, 4)
     }
 
     @ViewBuilder private func name(_ c: ColumnInfo) -> some View {

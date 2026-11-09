@@ -27,6 +27,7 @@ struct TopStrip: View {
             HTNavButton("Query", systemImage: "terminal", isActive: currentQuery != nil && currentQuery?.plan == nil, action: openQuery)
             HTNavButton("Explain", systemImage: "point.3.connected.trianglepath.dotted", isActive: currentQuery?.plan != nil, action: openExplain)
             HTNavButton("Activity", systemImage: "waveform.path.ecg", isActive: false) { ws.go(.overview) }
+            HTNavButton("Layers", systemImage: "square.3.layers.3d", isActive: ws.layers.open) { ws.layers.open.toggle(); if !ws.layers.open { ws.layers.compare = false } }
             Divider().frame(height: 14)
             ScrollView(.horizontal) {
                 HStack(spacing: 2) { ForEach(ws.openTabs, id: \.self) { tab($0) } }

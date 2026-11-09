@@ -7,6 +7,7 @@ import SwiftUI
 ///   DBMAN_ROUTE=table:<name>|query:<sql>|schema-map (+ DBMAN_MAP=<layout>[:<table>[:<hops>]] DBMAN_MAP_PATH=a>b DBMAN_MAP_DETAIL=names|keys|all)   DBMAN_VIEW=<rail index>   DBMAN_AUTORUN=1   DBMAN_SELECT=<row>
 ///   DBMAN_STAGE=<table>.<column>=<value> (stages an update of the first row by id)   DBMAN_REVIEW=1   DBMAN_COMMIT=1   DBMAN_PALETTE=1
 ///   DBMAN_APPEARANCE=dark   DBMAN_WINDOW=settings|min (min: resize the database window to its 1100x700 minimum)
+///   DBMAN_LAYER=<agent>[:diff|:apply] (open the Store panel on that agent's layer; :diff = compare view, :apply = the review sheet)   DBMAN_SNAPSHOT=<png> (render this window's own view to a file after 4 s; used where screencapture is not permitted)
 ///   DBMAN_CONNECT_TEST=<url> (Connections editor: fill the URL and press TEST)
 @MainActor enum DevHooks {
     /// Passwords from DBMAN_OPEN URLs, so scripted runs never touch the Keychain (a rebuilt binary triggers an access prompt).
@@ -57,6 +58,25 @@ import SwiftUI
         if env("DBMAN_REVIEW") != nil { ws.reviewOpen = true }
         if env("DBMAN_WINDOW") == "min" { NSApp.windows.first { $0.title == ws.profile.name }?.setContentSize(NSSize(width: 1100, height: 700)) }
         if env("DBMAN_PALETTE") != nil { ws.paletteOpen = true }
+        if let l = env("DBMAN_LAYER") { ws.layers.devSelect(l, ws) }
+        if let path = env("DBMAN_SNAPSHOT") {
+            try? await Task.sleep(for: .seconds(4))
+            guard let v = NSApp.windows.first(where: { $0.title == ws.profile.name })?.contentView else { return }
+            // the sheet is a separate window: render it on top of the main one when open
+            let sheet = NSApp.windows.first { $0.sheetParent != nil }?.contentView
+            let img = NSImage(size: v.bounds.size)
+            if let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) {
+                v.cacheDisplay(in: v.bounds, to: rep)
+                img.addRepresentation(rep)
+            }
+            if let s = sheet, let rep = s.bitmapImageRepForCachingDisplay(in: s.bounds) {
+                s.cacheDisplay(in: s.bounds, to: rep)
+                img.lockFocus(); NSGraphicsContext.current?.cgContext.setFillColor(NSColor.black.withAlphaComponent(0.25).cgColor)
+                NSRect(origin: .zero, size: v.bounds.size).fill(using: .sourceOver)
+                rep.draw(in: NSRect(x: (v.bounds.width - s.bounds.width) / 2, y: v.bounds.height - s.bounds.height - 30, width: s.bounds.width, height: s.bounds.height)); img.unlockFocus()
+            }
+            if let tiff = img.tiffRepresentation, let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: path)) }
+        }
     }
     #else
     static var view: Int { 0 }
