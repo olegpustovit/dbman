@@ -11,10 +11,13 @@ let package = Package(
         .library(name: "Halftone", targets: ["Halftone"]),
         .library(name: "DBCore", targets: ["DBCore"]),
         .library(name: "DBStore", targets: ["DBStore"]),
+        .library(name: "DBManMCP", targets: ["DBManMCP"]),
+        .executable(name: "dbman-mcp", targets: ["dbman-mcp"]),
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
         .package(url: "https://github.com/vapor/mysql-nio.git", from: "1.7.0"),
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.9.0"),
     ],
     targets: [
         // Design system: tokens, type, frames, instruments. No app knowledge.
@@ -36,8 +39,17 @@ let package = Package(
             swiftSettings: v5,
             linkerSettings: [.linkedLibrary("sqlite3")]
         ),
-        .executableTarget(name: "DBMan", dependencies: ["Halftone", "DBCore", "DBStore"], swiftSettings: v5),
+        // MCP server: tool handlers, permission gate, redaction, prod guard. The app hosts it on a Unix socket (MCPHost).
+        .target(
+            name: "DBManMCP",
+            dependencies: ["DBCore", "DBStore", .product(name: "MCP", package: "swift-sdk")],
+            swiftSettings: v5
+        ),
+        // stdio <-> Unix socket byte pipe that agents spawn; holds no credentials.
+        .executableTarget(name: "dbman-mcp", dependencies: ["DBStore"], swiftSettings: v5),
+        .executableTarget(name: "DBMan", dependencies: ["Halftone", "DBCore", "DBStore", "DBManMCP"], swiftSettings: v5),
         .testTarget(name: "DBCoreTests", dependencies: ["DBCore"], swiftSettings: v5),
+        .testTarget(name: "DBManMCPTests", dependencies: ["DBManMCP", "DBCore", "DBStore"], swiftSettings: v5),
         .testTarget(name: "DBStoreTests", dependencies: ["DBStore"], resources: [.copy("Fixtures")], swiftSettings: v5),
     ]
 )

@@ -4,11 +4,13 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 config=${1:-release}
 swift build -c "$config"
-bin=$(swift build -c "$config" --show-bin-path)/DBMan
+bindir=$(swift build -c "$config" --show-bin-path)
+bin=$bindir/DBMan
 app=dist/DBMan.app
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Helpers"
 cp "$bin" "$app/Contents/MacOS/DBMan"
+cp "$bindir/dbman-mcp" "$app/Contents/Helpers/dbman-mcp" # the stdio shim agents launch (SPEC §1.1)
 cat > "$app/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -33,8 +35,10 @@ PLIST
 # SIGN_IDENTITY set (make install): real signature + hardened runtime, so Keychain "Always Allow" survives reinstalls.
 # Unset: ad-hoc signature for local dev builds.
 if [ -n "${SIGN_IDENTITY:-}" ]; then
+  codesign --force --options runtime --sign "$SIGN_IDENTITY" "$app/Contents/Helpers/dbman-mcp" # inside-out: helper first
   codesign --force --options runtime --sign "$SIGN_IDENTITY" "$app"
 else
+  codesign --force --sign - "$app/Contents/Helpers/dbman-mcp" >/dev/null
   codesign --force --sign - "$app" >/dev/null
 fi
 echo "$app"

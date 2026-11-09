@@ -12,7 +12,7 @@ SIGN_IDENTITY ?= $(shell security find-identity -v -p codesigning 2>/dev/null | 
 # DBMan's own store; DBMAN_STORE=<path> points every store-* target (and a DEBUG app) at a scratch file.
 STORE ?= $(or $(DBMAN_STORE),$(HOME)/Library/Application Support/DBMan/dbman.sqlite)
 
-.PHONY: build run install uninstall test check-signing db-up db-down clean store-open store-sql store-reset
+.PHONY: build run install uninstall test check-signing db-up db-down clean store-open store-sql store-reset mcp mcp-inspect mcp-smoke
 
 build:
 	scripts/bundle.sh debug
@@ -59,6 +59,25 @@ store-sql:
 
 store-reset:
 	@[ -f "$(STORE)" ] && cp "$(STORE)" "$(STORE).reset-$$(date +%Y%m%d-%H%M%S)" && rm -f "$(STORE)" "$(STORE)-wal" "$(STORE)-shm" && echo "store reset (backup kept)" || echo "no store at $(STORE)"
+
+# MCP (SPEC §7 P1). The helper is the stdio shim agents spawn; it finds the app in whose bundle it sits (dist/DBMan.app after `make build`)
+# and passes DBMAN_STORE through, so these targets never touch the real store when STORE is overridden.
+HELPER := $(CURDIR)/$(APP)/Contents/Helpers/dbman-mcp
+
+mcp:
+	swift build --product dbman-mcp
+
+mcp-inspect: build
+	npx -y @modelcontextprotocol/inspector --cli "$(HELPER)" --stdio -e DBMAN_STORE="$(STORE)" --method tools/list
+
+# Claude Code round trip with a TEMP config (--strict-mcp-config): no user agent config is read or written. Leaves DBMan running (quit it yourself).
+# DBMAN_OPEN adds SMOKE_DB (any SQLite file) as a connection of the scratch store, so there is something to list.
+SMOKE_DB ?= $(HOME)/Library/Application Support/DBMan/sample.sqlite
+mcp-smoke: build
+	@cfg=$$(mktemp -t dbman-mcp-smoke).json; trap 'rm -f $$cfg' EXIT; \
+	printf '{"mcpServers":{"dbman":{"command":"%s","args":["--stdio"],"env":{"DBMAN_STORE":"%s"}}}}' "$(HELPER)" "$(STORE)" > $$cfg; \
+	open -g -n --env DBMAN_STORE="$(STORE)" --env DBMAN_OPEN="$(SMOKE_DB)" $(APP); sleep 3; \
+	claude -p "list my dbman connections and describe the schema of the sample database" --mcp-config $$cfg --strict-mcp-config --allowedTools "mcp__dbman"
 
 clean:
 	rm -rf .build dist

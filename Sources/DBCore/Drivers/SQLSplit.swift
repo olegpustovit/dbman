@@ -1,7 +1,7 @@
 import Foundation
 
 /// Splits a script on top-level semicolons, ignoring quotes, comments and (Postgres) dollar quotes.
-func splitStatements(_ sql: String, mysql: Bool = false) -> [String] {
+public func splitStatements(_ sql: String, mysql: Bool = false) -> [String] {
     let c = Array(sql.unicodeScalars)
     var out: [String] = [], start = 0, i = 0
     func flush(_ end: Int) {

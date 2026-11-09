@@ -30,8 +30,8 @@ public final class Store: @unchecked Sendable {
     public var onChange: (@Sendable () -> Void)?
     public let url: URL
 
-    private let h: Handle
-    private let lock = NSLock()
+    let h: Handle
+    let lock = NSLock()
     private let pendingLock = NSLock() // separate: the update hook fires while `lock` is held
     private var pending = false
     private var watchers: [DispatchSourceFileSystemObject] = []

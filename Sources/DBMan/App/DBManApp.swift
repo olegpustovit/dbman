@@ -38,8 +38,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // SPM executables start as accessory apps; make it a regular Dock app.
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+        MCPHost.shared.start(AppModel.shared)
         DevHooks.launch()
     }
+    func applicationWillTerminate(_ notification: Notification) { MCPHost.shared.stop() }
     func application(_ application: NSApplication, open urls: [URL]) {
         // Dropping a .sqlite on the Dock icon opens it.
         Task { @MainActor in for url in urls { AppModel.shared.openFile(url) } }

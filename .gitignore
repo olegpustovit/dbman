@@ -4,3 +4,4 @@ testdb/pgdata/
 testdb/mysqldata/
 testdb/run/
 testdb/tls/
+.claude/
