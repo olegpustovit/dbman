@@ -51,7 +51,7 @@ final class ApprovalCenter: NSObject, UNUserNotificationCenterDelegate {
     func refresh(_ store: Store) {
         guard started else { return }
         let rows = (try? store.pendingApprovals()) ?? []
-        if rows != pending { pending = rows }
+        if rows != pending { pending = rows; AppDelegate.updateActivationPolicy() }
         NSApp.dockTile.badgeLabel = rows.isEmpty ? nil : String(rows.count)
         let fresh = rows.filter { seen.insert($0.id).inserted }
         notifications?.removeDeliveredNotifications(withIdentifiers: seen.filter { id in !rows.contains { $0.id == id } })

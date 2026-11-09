@@ -12,7 +12,7 @@ SIGN_IDENTITY ?= $(shell security find-identity -v -p codesigning 2>/dev/null | 
 # DBMan's own store; DBMAN_STORE=<path> points every store-* target (and a DEBUG app) at a scratch file.
 STORE ?= $(or $(DBMAN_STORE),$(HOME)/Library/Application Support/DBMan/dbman.sqlite)
 
-.PHONY: build run install uninstall test check-signing db-up db-down clean store-open store-sql store-reset mcp mcp-inspect mcp-smoke
+.PHONY: build run install uninstall test check-signing db-up db-down clean icon store-open store-sql store-reset mcp mcp-inspect mcp-smoke
 
 build:
 	scripts/bundle.sh debug
@@ -78,6 +78,10 @@ mcp-smoke: build
 	printf '{"mcpServers":{"dbman":{"command":"%s","args":["--stdio"],"env":{"DBMAN_STORE":"%s"}}}}' "$(HELPER)" "$(STORE)" > $$cfg; \
 	open -g -n --env DBMAN_STORE="$(STORE)" --env DBMAN_OPEN="$(SMOKE_DB)" $(APP); sleep 3; \
 	claude -p "list my dbman connections and describe the schema of the sample database" --mcp-config $$cfg --strict-mcp-config --allowedTools "mcp__dbman"
+
+# Rebuilds Resources/AppIcon.icns from docs/v2/icon-dbman.svg (only needed when the icon changes).
+icon:
+	zsh scripts/icon.sh
 
 clean:
 	rm -rf .build dist

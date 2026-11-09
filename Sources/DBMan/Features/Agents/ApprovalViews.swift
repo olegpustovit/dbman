@@ -36,6 +36,7 @@ struct CredentialSheet: View {
     @State private var reached: String?
     @State private var problem: String?
     @State private var testing = false
+    @State private var note = ""
 
     init(a: ApprovalRow) { self.a = a; _env = State(initialValue: EnvironmentTag(rawValue: a.field("env") ?? "") ?? .local) }
 
@@ -82,6 +83,9 @@ struct CredentialSheet: View {
                     }
                 }
                 Text("\(a.who) never sees this password: it goes straight to the Keychain and the agent only receives an id.").ht(.bodySmall).foregroundStyle(HT.C.ink2)
+                TextField("Note to \(a.who) if you reject (optional)", text: $note).textFieldStyle(.plain).ht(.bodySmall)
+                    .padding(.horizontal, 8).frame(height: 26)
+                    .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
                 HStack(spacing: 8) {
                     Button(testing ? "Testing…" : "Test") { test() }.buttonStyle(.htOutline).keyboardShortcut(.return, modifiers: [.option, .command]).disabled(testing)
                     if let reached { StatusText(label: "REACHED", value: reached) }
@@ -93,7 +97,7 @@ struct CredentialSheet: View {
                 Text("SAVED TO // \(env.rawValue.uppercased())").ht(.labelSmall).foregroundStyle(HT.C.ink3)
                 Spacer()
                 Button("Later // esc") { ApprovalCenter.shared.dismiss() }.buttonStyle(.htOutline).keyboardShortcut(.cancelAction)
-                Button("Reject") { ApprovalCenter.shared.decide(a, "rejected") }.buttonStyle(.htDestructive)
+                Button("Reject") { ApprovalCenter.shared.decide(a, "rejected", note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? [:] : ["note": note.trimmingCharacters(in: .whitespacesAndNewlines)]) }.buttonStyle(.htDestructive)
                 Button("Save // ⌘S") { save() }.buttonStyle(.htPrimary).keyboardShortcut("s")
             }.padding(.horizontal, 12).frame(height: 44)
         }
@@ -181,8 +185,8 @@ struct ApprovalCard: View {
 struct PauseButton: View {
     @Environment(AppModel.self) private var app
     var body: some View {
-        Button(app.agentsPaused ? "▶ Resume" : "‖ Pause all") { app.agentsPaused.toggle() }
-            .buttonStyle(.htOutline).foregroundStyle(app.agentsPaused ? HT.C.amber : HT.C.ink)
+        Button(app.agentsPaused ? "▶ Resume" : "‖ Pause agents") { app.agentsPaused.toggle() }
+            .buttonStyle(.htOutline).foregroundStyle(app.agentsPaused ? HT.C.amber : HT.C.ink).fixedSize().lineLimit(1)
             .help("Pause all agents: every call returns APP_LOCKED until resumed")
     }
 }
