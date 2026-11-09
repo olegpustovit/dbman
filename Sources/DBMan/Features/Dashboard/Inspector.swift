@@ -83,7 +83,9 @@ private struct WidgetInspector: View {
         section("Data")
         HTSegmented(selection: $mode, options: [("sql", "SQL"), ("table", "TABLE + AGGREGATION")])
         if mode == "sql" {
-            TextField("SELECT …", text: $sql, axis: .vertical).textFieldStyle(.plain).ht(.dataSmall).lineLimit(4...8).htInput() // 4 to 8 lines, then scrolls inside
+            // The house editor at a fixed ~5 lines (a multi-line TextField clipped its first line); longer SQL scrolls inside.
+            SQLEditor(text: $sql, completions: tables.map(\.name), onRunStatement: { _ in run() }, onRunAll: { _ in run() })
+                .frame(height: 104).overlay(Rectangle().strokeBorder(HT.C.line, lineWidth: 1))
             HStack {
                 Button("RUN ⌘⏎") { run() }.buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)
                 if let t = result { Text("\(t.rows.count) ROWS // \(Int(t.ms)) MS").ht(.labelSmall).foregroundStyle(HT.C.ink3) }

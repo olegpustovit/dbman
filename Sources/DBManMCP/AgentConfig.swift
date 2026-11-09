@@ -253,9 +253,10 @@ public enum AgentConfig {
     }
 
     @discardableResult
-    public static func run(_ exe: URL, _ args: [String], cwd: URL? = nil) throws -> (status: Int32, output: String) {
+    public static func run(_ exe: URL, _ args: [String], cwd: URL? = nil, env: [String: String]? = nil) throws -> (status: Int32, output: String) {
         let p = Process(), pipe = Pipe()
         p.executableURL = exe; p.arguments = args; p.currentDirectoryURL = cwd
+        if let env { p.environment = ProcessInfo.processInfo.environment.merging(env) { $1 } }
         p.standardOutput = pipe; p.standardError = pipe
         try p.run()
         let out = pipe.fileHandleForReading.readDataToEndOfFile()

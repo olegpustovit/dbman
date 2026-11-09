@@ -50,6 +50,7 @@ struct SQLEditor: NSViewRepresentable {
         let sv = NSScrollView()
         sv.documentView = tv
         sv.hasVerticalScroller = true
+        sv.clipsToBounds = true // the ruler's separator line otherwise paints past a short editor (dashboard inspector)
         sv.drawsBackground = true
         sv.backgroundColor = HT.NS.paper
         let ruler = LineNumberRuler(scrollView: sv, orientation: .verticalRuler)

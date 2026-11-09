@@ -67,13 +67,13 @@ struct WidgetCard: View {
         else if (w.query ?? "").isEmpty { notice("NO_QUERY", "Open the inspector to add one.") }
         else {
             switch m.data[w.id] {
-            case nil, .loading?: Text("LOADING…").ht(.label).foregroundStyle(HT.C.ink3).accessibilityLabel("\(w.title), loading")
+            case nil, .loading?: Skeleton().accessibilityLabel("\(w.title), loading")
             case .failed(let msg)?: failure(msg)
             case .ready(let t, let stale)?:
-                if t.rows.isEmpty { notice("NO_ROWS", "The query returned nothing for these variables.") }
+                if t.rows.isEmpty { notice("NO ROWS FOR RANGE", m.values.isEmpty ? "The query returned nothing." : m.values.sorted { $0.key < $1.key }.map { ":\($0.key) = \($0.value)" }.joined(separator: " · ")) }
                 else {
                     ZStack(alignment: .bottomTrailing) {
-                        if table { TableGrid(t: t, columns: nil) } else { WidgetBody(ws: ws, w: w, t: t).accessibilityElement(children: .ignore).accessibilityLabel(Summary.text(w, t)) }
+                        if table { TableGrid(t: t, columns: nil) } else { WidgetBody(ws: ws, w: w, t: t).opacity(stale ? 0.55 : 1).accessibilityElement(children: .ignore).accessibilityLabel(Summary.text(w, t)) } // stale: last good result stays, dimmed (Components 04)
                         if stale { Text("STALE // REFRESH FAILED").ht(.labelSmall).foregroundStyle(HT.C.amber).padding(2).background(HT.C.paper) }
                     }
                 }
@@ -92,12 +92,27 @@ struct WidgetCard: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(msg).ht(.data).foregroundStyle(HT.C.alert).fixedSize(horizontal: false, vertical: true)
                 if m.isProposal { Text("VALIDATION FAILED // NOT ADOPTED").ht(.labelSmall).foregroundStyle(HT.C.ink3) }
-                else { Button("ASK AGENT TO FIX") { m.copyFixPrompt(w, error: msg, ws) }.buttonStyle(.htOutline) }
+                else {
+                    HStack {
+                        Button("ASK AGENT TO FIX") { m.copyFixPrompt(w, error: msg, ws) }.buttonStyle(.htOutline)
+                        Button("EDIT SQL") { m.edit = true; m.selected = w.id }.buttonStyle(.htOutline)
+                    }
+                }
             }
             Spacer(minLength: 0)
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .accessibilityElement(children: .combine).accessibilityLabel("\(w.title), error: \(msg)")
+    }
+}
+
+/// Loading state (Components 01): a skeleton of bars, shown only after 400 ms so fast queries never flash it (Doherty).
+private struct Skeleton: View {
+    @State private var late = false
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 3) { ForEach(0..<18, id: \.self) { i in Rectangle().fill(HT.C.line).frame(height: CGFloat(14 + (i * 7) % 30)) } }
+            .frame(maxHeight: .infinity, alignment: .bottom).opacity(late ? 1 : 0)
+            .task { try? await Task.sleep(for: .milliseconds(400)); late = true }
     }
 }
 

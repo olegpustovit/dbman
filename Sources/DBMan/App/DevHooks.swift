@@ -8,6 +8,7 @@ import SwiftUI
 ///   DBMAN_STAGE=<table>.<column>=<value> (stages an update of the first row by id)   DBMAN_REVIEW=1   DBMAN_COMMIT=1   DBMAN_PALETTE=1
 ///   DBMAN_APPEARANCE=dark   DBMAN_WINDOW=settings|min (min: resize the database window to its 1100x700 minimum)
 ///   DBMAN_LAYER=<agent>[:diff|:apply|:seeas] (open the Store panel on that agent's layer; :diff = compare view, :apply = the review sheet)   DBMAN_SNAPSHOT=<png>[+DBMAN_SNAPSHOT_WINDOW=<title>] (render the key window's own view to a file after 6 s; used where screencapture is not permitted)
+///   DBMAN_UNLOCK=1 (unlock writes on the opened connection)
 ///   DBMAN_CONNECT_TEST=<url> (Connections editor: fill the URL and press TEST)
 @MainActor enum DevHooks {
     /// Passwords from DBMAN_OPEN URLs, so scripted runs never touch the Keychain (a rebuilt binary triggers an access prompt).
@@ -21,13 +22,17 @@ import SwiftUI
     static var openSettings: Bool { env("DBMAN_WINDOW") == "settings" }
     /// DBMAN_AGENTS=<platform id>|perms|activity|agentpack|other opens the Agents window there. DBMAN_AGENT_HOME=<dir> is the fake HOME for detection (AgentsModel).
     static var agentsSection: String? { env("DBMAN_AGENTS") }
+    /// DBMAN_AGENTPACK_RUN=<project dir> fills the AGENTPACK panel's project and presses RUN.
+    static var agentpackRun: String? { env("DBMAN_AGENTPACK_RUN") }
+    /// DBMAN_AGENTS_CONNECT=<platform id> runs CONNECT for it when the Agents window appears (VERIFY then waits for a real client).
+    static var agentsConnect: String? { env("DBMAN_AGENTS_CONNECT") }
 
-    /// DBMAN_SNAPSHOT=<png>: after 6 s write the key window's own pixels (DBMAN_SNAPSHOT_WINDOW=<title> picks another, e.g. Agents). In-process, so no screen capture is involved.
+    /// DBMAN_SNAPSHOT=<png>: after 6 s (DBMAN_SNAPSHOT_DELAY=<s>) write the key window's own pixels (DBMAN_SNAPSHOT_WINDOW=<title> picks another, e.g. Agents). In-process, so no screen capture is involved.
     /// A sheet on that window is composited on top, since it is a separate window.
     private static func snapshot() {
         guard let path = env("DBMAN_SNAPSHOT") else { return }
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(6))
+            try? await Task.sleep(for: .seconds(env("DBMAN_SNAPSHOT_DELAY").flatMap(Double.init) ?? 6))
             let title = env("DBMAN_SNAPSHOT_WINDOW")
             let idle = ["", "Connections", "Database"] // a restored workspace window without a connection is titled "Database"
             let win = NSApp.windows.first { title != nil ? $0.title == title : ($0 == NSApp.keyWindow && !idle.contains($0.title)) }
@@ -102,6 +107,7 @@ import SwiftUI
         if env("DBMAN_REVIEW") != nil { ws.reviewOpen = true }
         if env("DBMAN_WINDOW") == "min" { NSApp.windows.first { $0.title == ws.profile.name }?.setContentSize(NSSize(width: 1100, height: 700)) }
         if env("DBMAN_PALETTE") != nil { ws.paletteOpen = true }
+        if env("DBMAN_UNLOCK") != nil { ws.writesUnlocked = true; await ws.session?.unlockWrites() } // the ⌥-click UNLOCK INTERNAL STORE path, scripted
         if let l = env("DBMAN_LAYER") { ws.layers.devSelect(l, ws) }
     }
     #else
@@ -111,6 +117,8 @@ import SwiftUI
     static var connectURL: String? { nil }
     static var openSettings: Bool { false }
     static var agentsSection: String? { nil }
+    static var agentsConnect: String? { nil }
+    static var agentpackRun: String? { nil }
     static func launch() {}
     static func connected(_ ws: WorkspaceModel) async {}
     #endif

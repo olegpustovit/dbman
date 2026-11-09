@@ -35,6 +35,7 @@ struct TopStrip: View {
             }.scrollIndicators(.hidden)
             Spacer(minLength: 0)
             readout
+            if ws.profile.environment == .system { systemChips }
             AgentsChip()
             Button { ws.paletteOpen = true } label: {
                 HStack(spacing: 5) { Text("Jump_to"); Text("⌘K").foregroundStyle(HT.C.ink3) }
@@ -48,6 +49,16 @@ struct TopStrip: View {
         .frame(height: HT.M.topStrip)
         .background(HT.C.paper, in: RoundedRectangle(cornerRadius: HT.M.radius))
         .overlay(RoundedRectangle(cornerRadius: HT.M.radius).strokeBorder(HT.C.line, lineWidth: 1))
+    }
+
+    /// Internal store only (Internal board): SYSTEM tag, lock state, and the ⌥-click unlock (unlockWrites refuses a plain click).
+    private var systemChips: some View {
+        HStack(spacing: 6) {
+            Text("SYSTEM").ht(.labelSmall).padding(.horizontal, 6).frame(height: 22).overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(HT.C.ink, lineWidth: 1))
+            Text(ws.writesUnlocked ? "UNLOCKED" : "READ-ONLY").ht(.labelSmall).foregroundStyle(ws.writesUnlocked ? HT.C.amber : HT.C.ink2)
+            Button(ws.writesUnlocked ? "LOCK" : "⌥ UNLOCK") { ws.writesUnlocked ? ws.lockWrites() : ws.unlockWrites() }
+                .buttonStyle(.htOutline).help("UNLOCK INTERNAL STORE (advanced): ⌥-click to allow edits through the review sheet")
+        }
     }
 
     private func tab(_ r: Route) -> some View {

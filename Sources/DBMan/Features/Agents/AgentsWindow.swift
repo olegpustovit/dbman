@@ -21,7 +21,8 @@ struct AgentsWindow: View {
         }
         .padding(HT.M.windowPadding)
         .background(DotGridBackground())
-        .onAppear { m.rescan(); m.reload(app.store); if let s = DevHooks.agentsSection { m.section = Self.section(s) } }
+        .onAppear { m.rescan(); m.reload(app.store); if let s = DevHooks.agentsSection { m.section = Self.section(s) }
+            if let c = DevHooks.agentsConnect, let p = AgentPlatform.all.first(where: { $0.id == c }), m.phase[c] == nil { m.connect(p) } }
     }
 
     static func section(_ s: String) -> AgentsModel.Section {
@@ -356,7 +357,7 @@ private struct AgentpackPane: View {
                         step("Add DBMan to agentpack.toml", "agentpack mcp add dbman --command \(m.helper) --args --stdio", $addMCP)
                         step("Run agentpack sync", "agentpack sync", $sync)
                         HStack {
-                            Button(running ? "RUNNING…" : "RUN \((addMCP ? 1 : 0) + (sync ? 1 : 0)) STEPS // ⌘⏎") { run() }
+                            Button(running ? "RUNNING…" : "RUN \((toml == nil ? 1 : 0) + (addMCP ? 1 : 0) + (sync ? 1 : 0)) STEPS // ⌘⏎") { run() }
                                 .buttonStyle(.htPrimary).keyboardShortcut(.return, modifiers: .command)
                                 .disabled(running || project == nil || (!addMCP && !sync))
                             Text("WRITES agentpack.toml + pack.lock").ht(.labelSmall).foregroundStyle(HT.C.ink3)
@@ -379,6 +380,7 @@ private struct AgentpackPane: View {
                     .padding(8).frame(maxWidth: .infinity, alignment: .leading).overlay(alignment: .top) { Rectangle().fill(HT.C.line).frame(height: 1) }
             }
         }
+        .onAppear { if let p = DevHooks.agentpackRun, m.projectPath.isEmpty { m.projectPath = p; run() } }
     }
 
     private func step(_ title: String, _ cmd: String, _ on: Binding<Bool>) -> some View {
@@ -407,11 +409,13 @@ private struct AgentpackPane: View {
     private func run() {
         guard let cli, let project else { return }
         running = true; output = ""
-        let helper = m.helper, steps = (addMCP ? [["mcp", "add", "dbman", "--command", helper, "--args", "--stdio"]] : []) + (sync ? [["sync"]] : [])
+        let helper = m.helper, home = ["HOME": m.home.path] // sync touches agent dirs under HOME; DBMAN_AGENT_HOME keeps a dev run off the real ones
+        // `mcp add` refuses a project without agentpack.toml (verified against agentpack 0.13.9), so a new project gets `init` first.
+        let steps = (toml == nil ? [["init"]] : []) + (addMCP ? [["mcp", "add", "dbman", "--command", helper, "--args", "--stdio"]] : []) + (sync ? [["sync"]] : [])
         Task.detached {
             var log = ""
             for a in steps {
-                let r = try? AgentConfig.run(cli, a, cwd: project)
+                let r = try? AgentConfig.run(cli, a, cwd: project, env: home)
                 log += "$ agentpack \(a.joined(separator: " "))\n" + (r?.output ?? "could not run agentpack\n")
                 if r?.status != 0 { log += "exit \(r?.status ?? -1)\n"; break }
             }
