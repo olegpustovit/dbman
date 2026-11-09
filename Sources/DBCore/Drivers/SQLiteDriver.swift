@@ -33,6 +33,7 @@ public final class SQLiteDriver: DatabaseDriver, @unchecked Sendable {
             throw DBError.connection("Cannot open \(path): \(msg)")
         }
         db = h
+        sqlite3_busy_timeout(h, 2000) // the internal store (unlocked) is also written by agent activity logging: wait instead of SQLITE_BUSY
     }
 
     deinit { if let db { sqlite3_close_v2(db) } }
@@ -88,39 +89,49 @@ public final class SQLiteDriver: DatabaseDriver, @unchecked Sendable {
 
     // MARK: DatabaseDriver
 
-    public func execute(_ sql: String, limit: Int) async throws -> QueryResult {
+    public func execute(_ sql: String, limit: Int) async throws -> QueryResult { try await onQueue { [self] in try runAll(sql, limit: limit) } }
+
+    /// query_only on for the call, then back to whatever the session had (a locked session stays locked).
+    public func executeReadOnly(_ sql: String, limit: Int) async throws -> QueryResult {
         try await onQueue { [self] in
-            let start = Date()
-            var result = QueryResult()
-            var affected = 0
-            try sql.withCString { base in
-                var cursor: UnsafePointer<CChar>? = base
-                while let cur = cursor, cur.pointee != 0 {
-                    var st: OpaquePointer?
-                    var tail: UnsafePointer<CChar>?
-                    let rc = sqlite3_prepare_v2(db, cur, -1, &st, &tail)
-                    guard rc == SQLITE_OK else { throw fail(rc) }
-                    cursor = tail
-                    guard let st else { continue } // whitespace/comment only
-                    defer { sqlite3_finalize(st) }
-                    let cols = columns(st)
-                    var out: [[Cell]] = []
-                    var truncated = false
-                    while true {
-                        let rc = sqlite3_step(st)
-                        if rc == SQLITE_DONE { break }
-                        guard rc == SQLITE_ROW else { throw fail(rc) }
-                        if limit > 0 && out.count >= limit { truncated = true; break }
-                        out.append((0..<Int32(cols.count)).map { cell(st, $0) })
-                    }
-                    if cols.isEmpty { affected = Int(sqlite3_changes(db)) }
-                    else { result = QueryResult(columns: cols, rows: out, truncated: truncated); affected = 0 }
-                }
-            }
-            result.rowsAffected = result.columns.isEmpty ? affected : result.rows.count
-            result.elapsedMs = Date().timeIntervalSince(start) * 1000
-            return result
+            let was = try rows("PRAGMA query_only").first?.first
+            _ = try rows("PRAGMA query_only = 1")
+            defer { _ = try? rows("PRAGMA query_only = \(was == .integer(0) ? 0 : 1)") }
+            return try runAll(sql, limit: limit)
         }
+    }
+
+    private func runAll(_ sql: String, limit: Int) throws -> QueryResult {
+        let start = Date()
+        var result = QueryResult()
+        var affected = 0
+        try sql.withCString { base in
+            var cursor: UnsafePointer<CChar>? = base
+            while let cur = cursor, cur.pointee != 0 {
+                var st: OpaquePointer?
+                var tail: UnsafePointer<CChar>?
+                let rc = sqlite3_prepare_v2(db, cur, -1, &st, &tail)
+                guard rc == SQLITE_OK else { throw fail(rc) }
+                cursor = tail
+                guard let st else { continue } // whitespace/comment only
+                defer { sqlite3_finalize(st) }
+                let cols = columns(st)
+                var out: [[Cell]] = []
+                var truncated = false
+                while true {
+                    let rc = sqlite3_step(st)
+                    if rc == SQLITE_DONE { break }
+                    guard rc == SQLITE_ROW else { throw fail(rc) }
+                    if limit > 0 && out.count >= limit { truncated = true; break }
+                    out.append((0..<Int32(cols.count)).map { cell(st, $0) })
+                }
+                if cols.isEmpty { affected = Int(sqlite3_changes(db)) }
+                else { result = QueryResult(columns: cols, rows: out, truncated: truncated); affected = 0 }
+            }
+        }
+        result.rowsAffected = result.columns.isEmpty ? affected : result.rows.count
+        result.elapsedMs = Date().timeIntervalSince(start) * 1000
+        return result
     }
 
     public func stream(_ sql: String, pageSize: Int) -> AsyncThrowingStream<RowPage, Error> {
@@ -217,7 +228,7 @@ public final class SQLiteDriver: DatabaseDriver, @unchecked Sendable {
         }
         let roots = raws.filter { r in !raws.contains { $0.id == r.parent } }.map(build)
         if roots.count == 1 { return roots[0] }
-        return roots.isEmpty ? nil : PlanNode(operation: "Query", estimatedRows: 0, cost: 0, children: roots)
+        return PlanNode(operation: "Query", estimatedRows: 0, cost: 0, children: roots)
     }
 
     public func cancelCurrent() async { if let db { sqlite3_interrupt(db) } }

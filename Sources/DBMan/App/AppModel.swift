@@ -23,6 +23,8 @@ final class AppModel {
     var workspaces: [UUID: WorkspaceModel] = [:]
     /// Set by the UI layer so model code can open windows.
     var openWindow: ((UUID) -> Void)?
+    /// The connection whose window is key right now (set by the window itself, so duplicate connection names can't confuse it).
+    var frontWorkspace: UUID?
 
     let store: Store
     private var reloading = false
@@ -64,12 +66,9 @@ final class AppModel {
     func profile(_ id: UUID) -> ConnectionProfile? { profiles.first { $0.id == id } }
 
     private static func profile(_ r: ConnectionRow) -> ConnectionProfile {
-        let internalStore = r.id == Store.internalID
-        return ConnectionProfile(
-            id: internalStore ? ConnectionProfile.internalID : UUID(uuidString: r.id) ?? UUID(), name: r.name, engine: Engine(rawValue: r.engine) ?? .sqlite,
-            host: r.host, port: r.port, database: r.database, user: r.user, filePath: r.filePath, sslMode: SSLMode(rawValue: r.sslMode) ?? .prefer,
-            environment: EnvironmentTag(rawValue: r.env) ?? .local, openReadOnly: r.readOnly && !internalStore, // internal: locked via .system, unlockable
-            stageWrites: r.stageWrites, lastOpened: r.lastOpened, sslRootCert: r.sslRootCert)
+        var p = r.profile
+        if r.id == Store.internalID { p.id = ConnectionProfile.internalID; p.openReadOnly = false } // internal: locked via .system, unlockable
+        return p
     }
     private static func row(_ p: ConnectionProfile) -> ConnectionRow {
         var r = ConnectionRow(id: p.id.uuidString, name: p.name, engine: p.engine.rawValue)

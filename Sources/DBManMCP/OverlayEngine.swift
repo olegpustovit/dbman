@@ -37,7 +37,7 @@ public enum OverlayEngine {
         var out: [String: (columns: [String], row: [Cell])] = [:]
         for chunk in stride(from: 0, to: keys.count, by: 40).map({ Array(keys[$0..<min($0 + 40, keys.count)]) }) {
             let cond = chunk.map { k in "(" + pk.map { n in "\(quoteIdent(n, e)) = \((k.first { $0.key.lowercased() == n.lowercased() }?.value ?? .null).sqlLiteral(e))" }.joined(separator: " AND ") + ")" }.joined(separator: " OR ")
-            let r = try await session.run("SELECT * FROM \(quoteIdent(t.name, e)) WHERE \(cond)", limit: chunk.count + 1)
+            let r = try await session.readOnlyRun("SELECT * FROM \(quoteIdent(t.name, e)) WHERE \(cond)", limit: chunk.count + 1)
             for row in r.rows {
                 let m = Dictionary(zip(r.columns, row), uniquingKeysWith: { a, _ in a })
                 out[Overlay.keyString(pk, m)] = (r.columns, row)

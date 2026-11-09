@@ -7,6 +7,7 @@ struct WorkspaceWindow: View {
     let profileID: UUID?
     @Environment(AppModel.self) private var app
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.controlActiveState) private var active
 
     var body: some View {
         Group {
@@ -14,6 +15,8 @@ struct WorkspaceWindow: View {
                 WorkspaceView(ws: ws)
                     .focusedSceneValue(\.workspace, ws)
                     .navigationTitle(ws.profile.name)
+                    .onChange(of: active, initial: true) { _, a in if a == .key { app.frontWorkspace = id } }
+                    .onDisappear { if app.frontWorkspace == id { app.frontWorkspace = nil } }
                     .task {
                         app.markOpened(id)
                         if ws.session == nil {

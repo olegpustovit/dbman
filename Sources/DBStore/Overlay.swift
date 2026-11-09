@@ -40,9 +40,9 @@ public extension Store {
                        (SELECT max(i.updated_at) FROM overlay_items i WHERE i.layer_id = l.id)
                 FROM layers l WHERE l.connection_id = ? ORDER BY l.owner = 'agent', l.position, l.rowid
                 """, [connection]).map { r in
-                Layer(id: r[0] as! String, connection: r[1] as! String, owner: r[2] as! String, agentID: r[3] as? String, name: r[4] as! String,
-                      visible: (r[5] as! Int64) == 1, archived: (r[6] as! Int64) == 1, items: Int(r[8] as! Int64), stale: Int(r[9] as! Int64),
-                      last: ((r[10] as? Int64) ?? (r[7] as! Int64)).ms)
+                Layer(id: r.s(0), connection: r.s(1), owner: r.s(2), agentID: r[3] as? String, name: r.s(4),
+                      visible: r.n(5) == 1, archived: r.n(6) == 1, items: Int(r.n(8)), stale: Int(r.n(9)),
+                      last: ((r[10] as? Int64) ?? r.n(7)).ms)
             }
         }
     }
@@ -87,8 +87,8 @@ public extension Store {
             if let kind { sql += " AND i.kind = ?"; args.append(kind) }
             if !ids.isEmpty { sql += " AND i.layer_id IN (\(ids.map { _ in "?" }.joined(separator: ",")))"; args += ids }
             return try h.query(sql + " ORDER BY i.rowid", args).map { r in
-                OverlayItem(id: r[0] as! String, layer: r[1] as! String, kind: r[2] as! String, name: r[3] as? String, payload: r[4] as! String, baseHash: r[5] as? String,
-                            status: r[6] as! String, updated: (r[7] as! Int64).ms, table: r[8] as? String, pk: r[9] as? String, op: r[10] as? String, before: r[11] as? String, after: r[12] as? String)
+                OverlayItem(id: r.s(0), layer: r.s(1), kind: r.s(2), name: r[3] as? String, payload: r.s(4), baseHash: r[5] as? String,
+                            status: r.s(6), updated: r.n(7).ms, table: r[8] as? String, pk: r[9] as? String, op: r[10] as? String, before: r[11] as? String, after: r[12] as? String)
             }
         }
     }
@@ -137,8 +137,8 @@ public extension Store {
         try locked {
             try h.transaction {
                 for id in ids {
-                    guard let r = try h.query("SELECT kind, name, payload, base_hash, layer_id FROM overlay_items WHERE id = ? AND status IN ('active','stale')", [id]).first, (r[4] as! String) != mine else { continue }
-                    let copy = UUID().uuidString, kind = r[0] as! String
+                    guard let r = try h.query("SELECT kind, name, payload, base_hash, layer_id FROM overlay_items WHERE id = ? AND status IN ('active','stale')", [id]).first, r.s(4) != mine else { continue }
+                    let copy = UUID().uuidString, kind = r.s(0)
                     if let p = try h.query("SELECT table_name, pk, op, \"before\", \"after\" FROM row_patches WHERE item_id = ?", [id]).first {
                         try h.query("""
                             DELETE FROM overlay_items WHERE kind = 'row_patch' AND layer_id = ? AND status IN ('active','stale')
@@ -173,7 +173,7 @@ public extension Store {
     /// The human's last discard note for a layer and how many items were discarded since the agent last wrote.
     func discardNote(layer: String) -> (note: String, at: Date)? {
         locked {
-            (try? h.query("SELECT value, updated_at FROM meta WHERE key = ?", ["discard_note:" + layer]))?.first.map { ($0[0] as! String, ($0[1] as! Int64).ms) }
+            (try? h.query("SELECT value, updated_at FROM meta WHERE key = ?", ["discard_note:" + layer]))?.first.map { ($0.s(0), $0.n(1).ms) }
         }
     }
 
@@ -184,8 +184,8 @@ public extension Store {
                 SELECT i.id, i.layer_id, i.kind, i.name, i.payload, i.base_hash, i.status, i.updated_at, l.connection_id
                 FROM overlay_items i JOIN layers l ON l.id = i.layer_id WHERE i.id = ?
                 """, [id]).first.map { r in
-                (OverlayItem(id: r[0] as! String, layer: r[1] as! String, kind: r[2] as! String, name: r[3] as? String, payload: r[4] as! String, baseHash: r[5] as? String,
-                             status: r[6] as! String, updated: (r[7] as! Int64).ms), r[8] as! String)
+                (OverlayItem(id: r.s(0), layer: r.s(1), kind: r.s(2), name: r[3] as? String, payload: r.s(4), baseHash: r[5] as? String,
+                             status: r.s(6), updated: r.n(7).ms), r.s(8))
             }
         }
     }

@@ -193,8 +193,8 @@ extension MCPService {
         case "query.sample":
             let t = try await table(a, c, s)
             let n = min(max(a["n"]?.intValue ?? 10, 1), cap)
-            // shortcut: unguarded on production on purpose, the statement is a bare LIMIT scan; EXPLAIN-first applies to query.run
-            let r = try await timed(timeoutMs, s) { try await s.run("SELECT * FROM \(quoteIdent(t.name, s.profile.engine)) LIMIT \(n)", limit: n) }
+            // shortcut: unguarded on production on purpose (a bare LIMIT scan), so a huge table with bloat can still be slow; upgrade by running the EXPLAIN-first guard here too
+            let r = try await timed(timeoutMs, s) { try await s.readOnlyRun("SELECT * FROM \(quoteIdent(t.name, s.profile.engine)) LIMIT \(n)", limit: n) }
             return try await rows(r.columns, r.rows, truncated: false, cursor: nil, ms: r.elapsedMs, sql: "SELECT * FROM \(quoteIdent(t.name, s.profile.engine))", c, trace)
         case "stats.column":
             let t = try await table(a, c, s)
@@ -249,6 +249,12 @@ extension MCPService {
         guard let name = a["name"]?.stringValue, !name.isEmpty else { throw ToolError("INVALID_ARGUMENT", "name is required") }
         guard let url = a["url"]?.stringValue, let (p, password) = ConnectionURL.parseWithPassword(url) else { throw ToolError("INVALID_ARGUMENT", "url is required (postgres://user@host/db, mysql://…, or a .sqlite path)") }
         guard password == nil else { throw ToolError("INVALID_ARGUMENT", "passwords are never accepted over MCP; DBMan asks the human for it") }
+        if let f = p.filePath {
+            // the store holds approvals, permissions and layers: an agent must not be able to open it as a database (case-insensitive: default macOS volumes)
+            let dir = b.store.url.deletingLastPathComponent().resolvingSymlinksInPath().path.lowercased()
+            let file = URL(fileURLWithPath: (f as NSString).expandingTildeInPath).resolvingSymlinksInPath().path.lowercased()
+            guard !file.hasPrefix(dir + "/") else { throw ToolError("INVALID_ARGUMENT", "that file lives in DBMan's own store folder; pick another database") }
+        }
         let env = a["env"]?.stringValue ?? "local"
         guard ["local", "staging", "production"].contains(env) else { throw ToolError("INVALID_ARGUMENT", "env must be local, staging or production") }
         let payload = Value.object(["name": .string(name), "engine": .string(p.engine.rawValue), "host": .string(p.host), "port": .int(p.port), "database": .string(p.database),
@@ -325,9 +331,10 @@ extension MCPService {
         let (stmt, views) = expanded(asked, scope)
         if c.env == "production" {
             let sc = try await schema(c, s)
-            if let plan = try await timed(timeoutMs, s, { try await s.explain(stmt, analyze: false) }),
-               let why = Rules.prodVerdict(plan, schema: sc, maxCost: Double(b.store.setting("prod_guard_cost") ?? "") ?? 1e6, maxRows: Double(b.store.setting("prod_guard_rows") ?? "") ?? 1e6) {
-                let hint = Rules.prodHint(plan, schema: sc)
+            // fails closed: no plan means no verdict, so the statement does not run
+            let plan = try await timed(timeoutMs, s, { try await s.explain(stmt, analyze: false) })
+            if let why = plan.map({ Rules.prodVerdict($0, schema: sc, maxCost: Double(b.store.setting("prod_guard_cost") ?? "") ?? 1e6, maxRows: Double(b.store.setting("prod_guard_rows") ?? "") ?? 1e6) }) ?? "no plan" {
+                let hint = plan.map { Rules.prodHint($0, schema: sc) } ?? "run query.explain to see why the engine returned no plan"
                 let hash = Self.hash(asked)
                 if try !b.store.consumeAllowance(agent: agent, connection: c.id, hash: hash) { // ALLOW ONCE: this exact statement, once
                     try b.store.requestOverride(agent: agent, connection: c.id, hash: hash, payload: Self.json(
@@ -337,7 +344,7 @@ extension MCPService {
             }
         }
         let n = min(max(a["limit"]?.intValue ?? cap, 1), cap)
-        let r = try await timed(timeoutMs, s) { try await s.run(stmt, limit: offset + n + 1) }
+        let r = try await timed(timeoutMs, s) { try await s.readOnlyRun(stmt, limit: offset + n + 1) }
         let rest = r.rows.dropFirst(offset), more = rest.count > n
         var page = Array(rest.prefix(n)), extra: [String: Value] = [:]
         let patches = scope.compactMap(OverlayEngine.patch)

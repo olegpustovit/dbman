@@ -77,7 +77,11 @@ final class SQLiteTests: XCTestCase {
         // production opens read-write (so Unlock works) but locked: the engine refuses writes the classifier misses
         let prod = ConnectionProfile(name: "p", engine: .sqlite, filePath: path, environment: .production)
         let ps = try await DatabaseSession.connect(prod, password: nil)
-        do { _ = try await ps.run("WITH x AS (SELECT 1) DELETE FROM users"); XCTFail() } catch {}
+        do { _ = try await ps.run("WITH x AS (SELECT 1) DELETE FROM users"); XCTFail() } catch let DBError.query(m, _) { XCTAssertTrue(m.contains("readonly"), m) }
+        let left = try await ps.run("SELECT count(*) FROM users")
+        XCTAssertEqual(left.rows[0][0], .integer(4)) // 3 + the id 9 inserted above
+        await ps.unlockWrites(); await ps.lockWrites() // relocking refuses again
+        do { _ = try await ps.run("WITH x AS (SELECT 1) DELETE FROM users"); XCTFail() } catch DBError.query {}
         await ps.unlockWrites()
         await ps.stage(.insert(table: "users", values: ["id": .integer(50), "name": .blob(3)]))
         do { try await ps.commit(); XCTFail("blob insert must be refused") } catch DBError.query {}
@@ -93,6 +97,48 @@ final class SQLiteTests: XCTestCase {
         let uid = try XCTUnwrap(st.first { $0.column == "user_id" })
         XCTAssertEqual(uid.topValues.first?.value, "1")
     }
+}
+
+/// SPEC rule: agent-authored SQL never writes. `readOnlyRun` is the one path; the engine refuses, whatever the statement says.
+final class ReadOnlyRunTests: XCTestCase {
+    func testSQLite() async throws {
+        let (s, _) = try await SQLiteTests().makeSession() // unlocked, like a human's window
+        do { _ = try await s.readOnlyRun("WITH x AS (SELECT 1) DELETE FROM users"); XCTFail() } catch let DBError.query(m, _) { XCTAssertTrue(m.contains("readonly"), m) }
+        do { _ = try await s.readOnlyRun("SELECT 1; SELECT 2"); XCTFail() } catch let DBError.query(m, _) { XCTAssertEqual(m, "one statement per call") }
+        let r = try await s.readOnlyRun("SELECT count(*) FROM users")
+        XCTAssertEqual(r.rows[0][0], .integer(3))
+        _ = try await s.run("DELETE FROM orders WHERE id = 3") // the human's unlocked session still writes afterwards
+    }
+
+    func server(_ key: String) async throws {
+        guard let url = ProcessInfo.processInfo.environment[key] else { throw XCTSkip("\(key) not set") }
+        let (p, pw) = try XCTUnwrap(ConnectionURL.parseWithPassword(url))
+        let s = try await DatabaseSession.connect(p, password: pw)
+        let t = "dbman_ro_\(Int.random(in: 1000...9999))"
+        _ = try await s.run("CREATE TABLE \(t) (id INT PRIMARY KEY)")
+        _ = try await s.run("INSERT INTO \(t) VALUES (1),(2)")
+        do {
+            let r = try await s.readOnlyRun("SELECT count(*) FROM \(t)")
+            XCTAssertEqual(r.rows[0][0], .integer(2))
+            do { _ = try await s.readOnlyRun("DELETE FROM \(t)"); XCTFail("write ran") } catch DBError.query {}
+            if p.engine == .postgres {
+                _ = try await s.readOnlyRun("select set_config('default_transaction_read_only','off',false)") // a session default flip must not stick
+                do { _ = try await s.readOnlyRun("WITH d AS (DELETE FROM \(t) RETURNING *) SELECT count(*) FROM d"); XCTFail("write ran") } catch DBError.query {}
+                do { _ = try await s.readOnlyRun("SELECT 1; DELETE FROM \(t)"); XCTFail() } catch DBError.query {}
+            } else {
+                for sql in ["SELECT id FROM \(t) INTO OUTFILE '/tmp/dbman_ro.txt'", "SELECT id FROM \(t) INTO DUMPFILE '/tmp/dbman_ro.txt'", "SELECT 1 INTO @x"] {
+                    do { _ = try await s.readOnlyRun(sql); XCTFail(sql) } catch DBError.readOnly {}
+                }
+            }
+            let n = try await s.run("SELECT count(*) FROM \(t)")
+            XCTAssertEqual(n.rows[0][0], .integer(2))
+            _ = try await s.run("DELETE FROM \(t) WHERE id = 2") // the connection is writable again for the human
+        } catch { _ = try? await s.run("DROP TABLE \(t)"); await s.close(); throw error }
+        _ = try? await s.run("DROP TABLE \(t)")
+        await s.close()
+    }
+    func testPostgres() async throws { try await server("DBMAN_PG_URL") }
+    func testMySQL() async throws { try await server("DBMAN_MYSQL_URL") }
 }
 
 final class ConnectionURLTests: XCTestCase {

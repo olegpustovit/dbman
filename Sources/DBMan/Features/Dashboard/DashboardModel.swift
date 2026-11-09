@@ -145,7 +145,7 @@ final class DashboardModel {
             let now = Date(), prev = rates[w.id]
             var counter = 0.0
             if src.arg != "console" {
-                do { counter = DashData.num(try await s.run(src.arg, limit: 1).rows.first?.first) } catch { return .failure(DashError(message: Self.drift(error.localizedDescription))) }
+                do { counter = DashData.num(try await s.readOnlyRun(src.arg, limit: 1).rows.first?.first) } catch { return .failure(DashError(message: Self.drift(error.localizedDescription))) }
             }
             var series = prev?.series ?? []
             if let p = prev, now.timeIntervalSince(p.at) < 1 { /* a refresh right behind another: keep the sample */ }
@@ -162,9 +162,8 @@ final class DashboardModel {
     }
 
     private nonisolated static func fetch(_ s: DatabaseSession, _ w: DashWidget, _ sql: String) async -> Result<WTable, Error> {
-        guard ["SELECT", "WITH", "VALUES"].contains(SQLClassifier.firstKeyword(sql)) else { return .failure(DashError(message: "widgets run one read-only SELECT")) }
         do {
-            let r = try await s.run(sql, limit: 500)
+            let r = try await s.readOnlyRun(sql, limit: 500)
             if let missing = w.missingColumn(in: r.columns) { return .failure(DashError(message: "column `\(missing)` not found")) }
             return .success(WTable(columns: r.columns, rows: r.rows, ms: r.elapsedMs))
         } catch { return .failure(DashError(message: drift(error.localizedDescription))) }
@@ -184,7 +183,7 @@ final class DashboardModel {
     func loadOptions(_ ws: WorkspaceModel) async {
         guard let s = ws.session else { return }
         for v in spec?.variables ?? [] where v.type == "enum" {
-            guard let sql = v.sql, let r = try? await s.run(sql, limit: 50) else { continue }
+            guard let sql = v.sql, let r = try? await s.readOnlyRun(sql, limit: 50) else { continue }
             options[v.name] = ["all"] + r.rows.compactMap { $0.first?.display }
         }
     }

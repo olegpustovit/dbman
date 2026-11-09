@@ -114,7 +114,9 @@ struct QueryView: View {
     // MARK: running
 
     private func run(_ sql: String, all: Bool = false) {
-        let s = ws.layers.expand(sql.trimmingCharacters(in: .whitespacesAndNewlines), mysql: ws.profile.engine == .mysql) // virtual views from visible layers
+        let typed = sql.trimmingCharacters(in: .whitespacesAndNewlines)
+        let s = ws.layers.expand(typed, mysql: ws.profile.engine == .mysql) // virtual views from visible layers
+        let viaViews = s != typed // agent-authored view SQL is in the statement: it only ever runs read-only
         guard !s.isEmpty, !tab.running, let session = ws.session else { return }
         tab.running = true; tab.startedAt = Date(); tab.error = nil; tab.result = nil; tab.plan = nil
         readOnlyHit = false; view = 0
@@ -122,7 +124,9 @@ struct QueryView: View {
             let t0 = Date()
             let ms = { Date().timeIntervalSince(t0) * 1000 }
             do {
-                if !all, Self.readKeywords.contains(SQLClassifier.firstKeyword(s)) {
+                if viaViews {
+                    tab.result = try await session.readOnlyRun(s)
+                } else if !all, Self.readKeywords.contains(SQLClassifier.firstKeyword(s)) {
                     for try await page in session.stream(s) {
                         if tab.result == nil { tab.result = QueryResult(columns: page.columns) }
                         tab.result?.rows.append(contentsOf: page.rows)
@@ -217,7 +221,7 @@ struct QueryView: View {
             DataGrid(columns: r.columns.enumerated().map { i, n in
                         GridColumn(name: n, alignRight: r.rows.first.map { i < $0.count && $0[i].isNumeric } ?? false)
                      },
-                     rows: r.rows, selection: $selection, focusedColumn: $focusedColumn)
+                     rows: r.rows, selection: $selection, focusedColumn: $focusedColumn, engine: ws.profile.engine)
         } else if let r = tab.result {
             Readout(value: r.rowsAffected.formatted(), label: "ROWS AFFECTED", tail: "\(Int(r.elapsedMs)) MS", size: .m).padding(12)
         } else if tab.running {

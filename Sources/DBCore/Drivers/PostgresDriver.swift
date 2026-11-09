@@ -33,6 +33,7 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
     private var conn: PostgresConnection?
     private var pid: Int64 = 0
     private var cursorCounter = 0
+    private let gate = SerialGate()
 
     init(config: PostgresConnection.Configuration) { self.config = config }
 
@@ -105,7 +106,20 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
         } catch { throw wrap(error) }
     }
 
-    func execute(_ sql: String, limit: Int) async throws -> QueryResult {
+    func execute(_ sql: String, limit: Int) async throws -> QueryResult { try await gate.run { try await self.runAll(sql, limit: limit) } }
+
+    /// A READ ONLY transaction can't be flipped by set_config/SET once started, unlike a session default.
+    func executeReadOnly(_ sql: String, limit: Int) async throws -> QueryResult {
+        try await gate.run {
+            _ = try await self.run("BEGIN READ ONLY", limit: 0)
+            do { let r = try await self.runAll(sql, limit: limit); _ = try? await self.run("ROLLBACK", limit: 0); return r }
+            catch { _ = try? await self.run("ROLLBACK", limit: 0); throw error }
+        }
+    }
+
+    private func gated(_ sql: String, limit: Int) async throws -> QueryResult { try await gate.run { try await self.run(sql, limit: limit) } }
+
+    private func runAll(_ sql: String, limit: Int) async throws -> QueryResult {
         // shortcut: a SELECT matching zero rows reports no column names (PostgresNIO exposes them only on rows)
         let start = Date()
         var result = QueryResult()
@@ -129,17 +143,17 @@ final class PGDriver: DatabaseDriver, @unchecked Sendable {
                 var declared = false
                 do {
                     // WITH HOLD keeps the cursor usable outside a transaction so other queries can interleave.
-                    _ = try await run("DECLARE \(name) NO SCROLL CURSOR WITH HOLD FOR \(body)", limit: 0)
+                    _ = try await gated("DECLARE \(name) NO SCROLL CURSOR WITH HOLD FOR \(body)", limit: 0)
                     declared = true
                     while !Task.isCancelled {
-                        let r = try await run("FETCH FORWARD \(size) FROM \(name)", limit: 0)
+                        let r = try await gated("FETCH FORWARD \(size) FROM \(name)", limit: 0)
                         let last = r.rows.count < size
                         cont.yield(RowPage(columns: r.columns, rows: r.rows, isLast: last))
                         if last { break }
                     }
                     cont.finish()
                 } catch { cont.finish(throwing: error) }
-                if declared { _ = try? await run("CLOSE \(name)", limit: 0) }
+                if declared { _ = try? await gated("CLOSE \(name)", limit: 0) }
             }
             cont.onTermination = { _ in task.cancel() }
         }
