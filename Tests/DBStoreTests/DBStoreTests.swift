@@ -37,7 +37,6 @@ final class DBStoreTests: XCTestCase {
         let t0 = Date()
         let s = try Store.open(at: url)
         let ms = Date().timeIntervalSince(t0) * 1000
-        print("bootstrap empty store: \(ms) ms")
         XCTAssertLessThan(ms, 50)
         XCTAssertEqual(s.setting("page_size"), "500")
         XCTAssertEqual(s.setting("relative_dates"), "false")

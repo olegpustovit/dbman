@@ -52,6 +52,10 @@ extension DBManMCPTests {
         same(r("select id, city from t where email = 'q'", ["id", "city"])[0], [.integer(1), .text("a@b.c")]) // both plain: allowed
         same(r("select length(email) from t", ["length(email)"])[0], [.integer(1)]) // numbers pass
         same(r("select 1 x from t where email is not null", ["x"])[0], [.integer(1)])
+        func one(_ sql: String, _ col: String) -> [Cell] { Rules.redact(sql: sql, columns: [col], rows: [[.text("a@b.c")]], hidden: hid)[0] }
+        same(one("select to_jsonb(c) j from t c", "j"), [Rules.redacted]) // whole-row reference
+        same(one("select c from t as c", "c"), [Rules.redacted])
+        same(one("select c.city from public.t c", "city"), [.text("a@b.c")]) // qualified column is not a whole-row reference
         same(r("select * from t", ["id", "email", "city"])[0], [.integer(1), Rules.redacted, .text("x")])
     }
 

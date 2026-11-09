@@ -133,7 +133,7 @@ final class DBManMCPTests: XCTestCase {
         same(try await golden("schema.describe", a.merging(["table": "orders"]) { $1 }),
                        #"{"columns":[{"name":"id","nullable":false,"pk":true,"type":"INTEGER"},{"name":"customer_id","nullable":true,"pk":false,"references":"customers.id","type":"INTEGER"},{"name":"total","nullable":true,"pk":false,"type":"REAL"}],"indexes":[{"columns":["customer_id"],"name":"idx_orders_customer","unique":false}],"kind":"table","referenced_by":[],"row_estimate":3,"table":"orders"}"#)
         same(try await golden("schema.graph", a),
-                       #"{"edges":[{"declared":true,"from":"orders.customer_id","to":"customers.id"}],"nodes":[{"rows":3,"table":"customers"},{"rows":1200,"table":"events"},{"rows":3,"table":"orders"}]}"#)
+                       #"{"edges":[{"from":"orders.customer_id","kind":"declared","to":"customers.id"}],"nodes":[{"rows":3,"table":"customers"},{"rows":1200,"table":"events"},{"rows":3,"table":"orders"}]}"#)
         same(try await golden("schema.search", a.merging(["text": "CUSTOMER"]) { $1 }),
                        #"[{"table":"customers"},{"column":"customer_id","table":"orders","type":"INTEGER"}]"#)
         let (t, err) = try await call("schema.describe", ["connection": "shop", "table": "nope"])
@@ -259,6 +259,8 @@ final class DBManMCPTests: XCTestCase {
         same(await opened.routes, ["shop:table:orders"])
         _ = try await call("ui.open", ["connection": "shop", "route": "dashboard", "selection": "Overview // default"])
         same(await opened.routes, ["shop:table:orders", "shop:dashboard:Overview // default"])
+        _ = try await call("ui.open", ["connection": "shop", "route": "schema-map", "selection": "orders"])
+        same(await opened.routes.last, "shop:schema-map:orders")
         yes(try await call("ui.open", ["connection": "shop", "route": "chart"]).text.hasPrefix("UNSUPPORTED"))
     }
 

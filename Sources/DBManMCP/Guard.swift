@@ -35,13 +35,14 @@ enum Rules {
         let byName = Set(columns.indices.filter { hidden.contains(columns[$0].lowercased()) })
         let toks = sqlTokens(sql, mysql: mysql)
         var scrub = Set<Int>()
-        if toks.contains(where: { $0.isIdentifier && hidden.contains($0.text.lowercased()) }) {
+        let wholeRow = hasWholeRowRef(toks)
+        if wholeRow || toks.contains(where: { $0.isIdentifier && hidden.contains($0.text.lowercased()) }) {
             let flat = toks.filter { $0.isWord("SELECT") }.count == 1 // a subquery or CTE can alias a hidden column into a plain-looking name
             let items = flat ? selectItems(toks) : nil
             let starOnly = items?.allSatisfy { $0.last?.isPunct("*") == true } == true
             if !starOnly {
                 var plain = Set<Int>()
-                if let items, items.count == columns.count { plain = Set(items.indices.filter { isPlainColumn(items[$0], hidden: hidden) }) }
+                if !wholeRow, let items, items.count == columns.count { plain = Set(items.indices.filter { isPlainColumn(items[$0], hidden: hidden) }) }
                 scrub = Set(columns.indices).subtracting(plain)
             }
         }
@@ -52,6 +53,26 @@ enum Rules {
                 guard scrub.contains(i) else { return c }
                 switch c { case .text, .blob, .date: return redacted; default: return c }
             }
+        }
+    }
+
+    /// `to_jsonb(c)`, `row_to_json(c)`, `select c from customers c`: a FROM/JOIN table or alias used bare carries every column, hidden ones included.
+    /// shortcut: a column named like a table or alias over-redacts (safe side); upgrade by resolving names against the schema.
+    private static func hasWholeRowRef(_ t: [SQLToken]) -> Bool {
+        let stop = ["WHERE", "JOIN", "ON", "USING", "LEFT", "RIGHT", "INNER", "OUTER", "CROSS", "FULL", "NATURAL", "GROUP", "ORDER", "LIMIT", "HAVING", "UNION", "INTERSECT", "EXCEPT", "WINDOW", "OFFSET", "SELECT"]
+        var names = Set<String>(), decl = Set<Int>()
+        func take(_ j: Int) { decl.insert(j); names.insert(t[j].text.lowercased()) }
+        for (i, tok) in t.enumerated() where tok.isWord("FROM") || tok.isWord("JOIN") {
+            var j = i + 1
+            guard j < t.count, t[j].isIdentifier, !stop.contains(where: t[j].isWord) else { continue }
+            while j + 2 < t.count, t[j + 1].isPunct("."), t[j + 2].isIdentifier { decl.insert(j); j += 2 } // schema.table
+            take(j); j += 1
+            if j < t.count, t[j].isWord("AS") { j += 1 }
+            if j < t.count, t[j].isIdentifier, !stop.contains(where: t[j].isWord) { take(j) }
+        }
+        return t.indices.contains { i in
+            !decl.contains(i) && t[i].isIdentifier && names.contains(t[i].text.lowercased())
+                && !(i > 0 && t[i - 1].isPunct(".")) && !(i + 1 < t.count && (t[i + 1].isPunct(".") || t[i + 1].isPunct("(")))
         }
     }
 

@@ -31,17 +31,12 @@ public enum OverlayEngine {
 
     // MARK: stale detection (G19)
 
-    static func literal(_ c: Cell, _ e: Engine) -> String {
-        if case .text(let s) = c, e == .mysql { return "'" + s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "''") + "'" }
-        return c.sqlLiteral
-    }
-
     /// Current database rows for `keys` of one table: key string → (columns, row). Chunked OR-lists; names come from the schema, values are literals.
     public static func fetch(_ session: DatabaseSession, _ t: TableInfo, keys: [[String: Cell]]) async throws -> [String: (columns: [String], row: [Cell])] {
         let e = await session.profile.engine, pk = t.primaryKey
         var out: [String: (columns: [String], row: [Cell])] = [:]
         for chunk in stride(from: 0, to: keys.count, by: 40).map({ Array(keys[$0..<min($0 + 40, keys.count)]) }) {
-            let cond = chunk.map { k in "(" + pk.map { n in "\(quoteIdent(n, e)) = \(literal(k.first { $0.key.lowercased() == n.lowercased() }?.value ?? .null, e))" }.joined(separator: " AND ") + ")" }.joined(separator: " OR ")
+            let cond = chunk.map { k in "(" + pk.map { n in "\(quoteIdent(n, e)) = \((k.first { $0.key.lowercased() == n.lowercased() }?.value ?? .null).sqlLiteral(e))" }.joined(separator: " AND ") + ")" }.joined(separator: " OR ")
             let r = try await session.run("SELECT * FROM \(quoteIdent(t.name, e)) WHERE \(cond)", limit: chunk.count + 1)
             for row in r.rows {
                 let m = Dictionary(zip(r.columns, row), uniquingKeysWith: { a, _ in a })

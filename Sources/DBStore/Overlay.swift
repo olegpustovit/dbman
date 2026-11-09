@@ -201,7 +201,6 @@ public extension Store {
     }
 
     private func touch(_ layer: String) throws { try h.query("UPDATE layers SET updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE id = ?", [layer]) }
-    @discardableResult private func locked<T>(_ body: () throws -> T) rethrows -> T { lock.lock(); defer { lock.unlock() }; return try body() }
 }
 
 private extension Int64 { var ms: Date { Date(timeIntervalSince1970: Double(self) / 1000) } }

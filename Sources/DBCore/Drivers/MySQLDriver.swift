@@ -188,25 +188,29 @@ final class MyDriver: DatabaseDriver, @unchecked Sendable {
         return Self.node(qb, "Query Block")
     }
 
+    /// MySQL: `cost_info`, `rows_examined_per_scan`. MariaDB: `cost`, `rows`, and wrappers (`block-nl-join`, `read_sorted_file`, `filesort`, `temporary_table`) around tables.
     static func node(_ d: [String: Any], _ label: String) -> PlanNode {
         func num(_ v: Any?) -> Double { (v as? NSNumber)?.doubleValue ?? Double(v as? String ?? "") ?? 0 }
-        let cost = num((d["cost_info"] as? [String: Any])?["query_cost"] ?? (d["cost_info"] as? [String: Any])?["prefix_cost"])
+        let info = d["cost_info"] as? [String: Any]
+        let cost = num(info?["query_cost"] ?? info?["prefix_cost"] ?? d["cost"])
         if label == "table" {
             let access = d["access_type"] as? String ?? ""
             return PlanNode(operation: access == "ALL" ? "Table Scan" : "Index " + access, relation: d["table_name"] as? String,
-                            detail: (d["key"] as? String).map { "using " + $0 }, estimatedRows: num(d["rows_examined_per_scan"]), cost: cost)
+                            detail: (d["key"] as? String).map { "using " + $0 }, estimatedRows: num(d["rows_examined_per_scan"] ?? d["rows"]), cost: cost)
         }
-        var kids: [PlanNode] = []
-        if let t = d["table"] as? [String: Any] { kids.append(node(t, "table")) }
-        if let nl = d["nested_loop"] as? [[String: Any]] {
-            for item in nl { if let t = item["table"] as? [String: Any] { kids.append(node(t, "table")) } }
+        func kids(_ x: [String: Any]) -> [PlanNode] {
+            var out: [PlanNode] = []
+            if let t = x["table"] as? [String: Any], t["table_name"] != nil { out.append(node(t, "table")) }
+            for k in ["ordering_operation", "grouping_operation", "duplicates_removal", "buffer_result", "windowing", "block-nl-join", "read_sorted_file", "filesort", "temporary_table"] {
+                if let sub = x[k] as? [String: Any] { out.append(node(sub, k)) }
+            }
+            for item in x["nested_loop"] as? [[String: Any]] ?? [] { out += kids(item) }
+            return out
         }
-        for k in ["ordering_operation", "grouping_operation", "duplicates_removal", "buffer_result", "windowing"] {
-            if let sub = d[k] as? [String: Any] { kids.append(node(sub, k)) }
-        }
-        if kids.count == 1 && (d["nested_loop"] as? [Any])?.count == 1 { return kids[0] }
+        let k = kids(d)
+        if k.count == 1 && (d["nested_loop"] as? [Any])?.count == 1 { var only = k[0]; if cost > 0 { only.cost = cost }; return only } // root cost, not the table's prefix cost
         let op = d["nested_loop"] != nil ? "Nested Loop" : label.replacingOccurrences(of: "_", with: " ").capitalized
-        return PlanNode(operation: op, estimatedRows: kids.first?.estimatedRows ?? 0, cost: cost, children: kids)
+        return PlanNode(operation: op, estimatedRows: k.first?.estimatedRows ?? 0, cost: cost, children: k)
     }
 
     func cancelCurrent() async {

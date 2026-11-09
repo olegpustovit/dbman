@@ -234,7 +234,7 @@ struct DataGrid: NSViewRepresentable {
                 return "[\n" + objs.joined(separator: ",\n") + "\n]"
             case .insert:
                 let names = cols.map { "\"\($0.name)\"" }.joined(separator: ", ")
-                return sel.map { "INSERT INTO \"\(p.tableName)\" (\(names)) VALUES (" + $0.map(\.sqlLiteral).joined(separator: ", ") + ");" }.joined(separator: "\n")
+                return sel.map { "INSERT INTO \"\(p.tableName)\" (\(names)) VALUES (" + $0.map { $0.sqlLiteral() }.joined(separator: ", ") + ");" }.joined(separator: "\n")
             }
         }
 

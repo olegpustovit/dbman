@@ -93,7 +93,8 @@ extension MCPService {
                 do {
                     let r = try await query(["sql": .string(sql), "limit": .int(min(cap, 100))], c, s, perm: perm, cap: cap, timeoutMs: timeoutMs, agent: agent, trace: trace)
                     let cols = r.objectValue?["columns"]?.arrayValue?.compactMap(\.stringValue) ?? [], n = r.objectValue?["rows"]?.arrayValue?.count ?? 0
-                    if let missing = w.missingColumn(in: cols) { fail("QUERY_FAILED (column `\(missing)` not found in the result; it has \(cols.joined(separator: ", ")))") }
+                    // zero rows: Postgres/MySQL report no column names, so nothing can be checked
+                    if !cols.isEmpty, let missing = w.missingColumn(in: cols) { fail("QUERY_FAILED (column `\(missing)` not found in the result; it has \(cols.joined(separator: ", ")))") }
                     else { o["ok"] = true; o["rows"] = .int(n); rows += n }
                 } catch let e as ToolError { fail(e.message) }
             } else { o["ok"] = true }

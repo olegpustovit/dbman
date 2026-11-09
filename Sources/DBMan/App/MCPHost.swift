@@ -16,7 +16,7 @@ import Observation
     /// Call once after the store is open. A second DBMan on the same store simply doesn't listen.
     func start(_ app: AppModel) {
         let store = app.store
-        let headless = HeadlessSessions { Keychain.password(for: $0.agentProfile) }
+        let headless = HeadlessSessions { UUID(uuidString: $0.id).flatMap { DevHooks.passwords[$0] } ?? Keychain.password(for: $0.agentProfile) }
         let backend = Backend(
             store: store,
             // A window's session is shared only while it is a locked SQLite one (engine-level query_only); servers get their own read-only connection.
@@ -52,6 +52,7 @@ import Observation
         case ("dashboard", _):
             ws.dash.reload(ws)
             ws.go(ws.dash.entries.first { $0.id == selection || $0.title == selection }.map { .dashboard($0.id) } ?? .overview)
+        case ("schema-map", let t): ws.go(.schemaMap); if let t { ws.map.selection = t; ws.map.focusOn = t }
         case ("table", let t?): ws.go(.table(t))
         case (_, let sql?): ws.newQuery(sql: sql)
         default: break

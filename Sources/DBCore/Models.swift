@@ -28,14 +28,15 @@ public enum Cell: Hashable, Sendable {
         case .blob(let n): return "<\(n) bytes>"
         }
     }
-    public var sqlLiteral: String {
+    /// MySQL treats `\` in strings as an escape; Postgres reads a zone-less timestamp in the session zone, so ours (UTC) says so.
+    public func sqlLiteral(_ engine: Engine = .postgres) -> String {
         switch self {
         case .null: return "NULL"
         case .integer(let v): return String(v)
         case .real(let v): return String(v)
         case .bool(let b): return b ? "TRUE" : "FALSE"
-        case .text(let s): return "'" + s.replacingOccurrences(of: "'", with: "''") + "'"
-        case .date(let d): return "'" + Cell.dateFormatter.string(from: d) + "'"
+        case .text(let s): return "'" + (engine == .mysql ? s.replacingOccurrences(of: "\\", with: "\\\\") : s).replacingOccurrences(of: "'", with: "''") + "'"
+        case .date(let d): return "'" + Cell.dateFormatter.string(from: d) + (engine == .postgres ? "+00" : "") + "'"
         case .blob: return "NULL"
         }
     }

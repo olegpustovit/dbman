@@ -49,7 +49,7 @@ let package = Package(
         .executableTarget(name: "dbman-mcp", dependencies: ["DBStore"], swiftSettings: v5),
         .executableTarget(name: "DBMan", dependencies: ["Halftone", "DBCore", "DBStore", "DBManMCP"], swiftSettings: v5),
         .testTarget(name: "DBCoreTests", dependencies: ["DBCore"], swiftSettings: v5),
-        .testTarget(name: "DBManMCPTests", dependencies: ["DBManMCP", "DBCore", "DBStore", "dbman-mcp"], swiftSettings: v5),
+        .testTarget(name: "DBManMCPTests", dependencies: ["DBManMCP", "DBCore", "DBStore", "dbman-mcp"], exclude: ["Fixtures"], swiftSettings: v5),
         .testTarget(name: "DBStoreTests", dependencies: ["DBStore"], resources: [.copy("Fixtures")], swiftSettings: v5),
     ]
 )

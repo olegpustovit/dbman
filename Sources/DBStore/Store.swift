@@ -174,6 +174,7 @@ public final class Store: @unchecked Sendable {
 
     // MARK: access
 
+    @discardableResult func locked<T>(_ body: () throws -> T) rethrows -> T { lock.lock(); defer { lock.unlock() }; return try body() }
     private func transaction(_ body: () throws -> Void) throws {
         lock.lock(); defer { lock.unlock() }
         try h.transaction(body)

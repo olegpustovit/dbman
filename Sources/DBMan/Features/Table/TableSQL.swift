@@ -19,7 +19,7 @@ enum TableSQL {
     /// `col = literal` (or IS NULL) used by quick filters, FK follow and "filter by this value".
     static func equals(_ column: String, _ value: Cell, engine: Engine) -> String {
         let c = quoteIdent(column, engine)
-        return value.isNull ? "\(c) IS NULL" : "\(c) = \(value.sqlLiteral)"
+        return value.isNull ? "\(c) IS NULL" : "\(c) = \(value.sqlLiteral(engine))"
     }
 
     static func and(_ a: String, _ b: String) -> String { a.trimmingCharacters(in: .whitespaces).isEmpty ? b : "\(a) AND \(b)" }

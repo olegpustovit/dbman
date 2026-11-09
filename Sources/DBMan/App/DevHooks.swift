@@ -11,7 +11,7 @@ import SwiftUI
 ///   DBMAN_CONNECT_TEST=<url> (Connections editor: fill the URL and press TEST)
 @MainActor enum DevHooks {
     /// Passwords from DBMAN_OPEN URLs, so scripted runs never touch the Keychain (a rebuilt binary triggers an access prompt).
-    static var passwords: [UUID: String] = [:]
+    nonisolated(unsafe) static var passwords: [UUID: String] = [:] // read by the MCP headless sessions too; written once at launch
     #if DEBUG
     private static func env(_ k: String) -> String? { ProcessInfo.processInfo.environment[k] }
     static var view: Int { env("DBMAN_VIEW").flatMap(Int.init) ?? 0 }

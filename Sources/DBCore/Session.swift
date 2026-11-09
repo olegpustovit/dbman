@@ -66,6 +66,15 @@ public actor DatabaseSession {
     /// Commits staged changes in one transaction. Throws if the session is read-only.
     public func commit() async throws {
         guard writesUnlocked else { throw DBError.readOnly }
+        // Grid cells hold only a blob's byte count, so writing one would store NULL: refuse instead of losing data.
+        let writesBlob = changes.items.contains { c in
+            switch c {
+            case .update(_, _, _, _, .blob): return true
+            case .insert(_, let v): return v.values.contains { if case .blob = $0 { return true } else { return false } }
+            default: return false
+            }
+        }
+        if writesBlob { throw DBError.query("Binary (blob) values can't be written from DBMan yet; leave that column out of the change.") }
         let sql = changes.transactionSQL(engine: profile.engine)
         guard !changes.isEmpty else { return }
         _ = try await driver.execute(sql, limit: 0)

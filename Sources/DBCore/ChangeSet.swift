@@ -13,14 +13,14 @@ public enum StagedChange: Sendable, Hashable {
     public func sql(engine: Engine) -> String {
         let q = { quoteIdent($0, engine) }
         func whereClause(_ key: [String: Cell]) -> String {
-            key.sorted { $0.key < $1.key }.map { "\(q($0.key)) = \($0.value.sqlLiteral)" }.joined(separator: " AND ")
+            key.sorted { $0.key < $1.key }.map { "\(q($0.key)) = \($0.value.sqlLiteral(engine))" }.joined(separator: " AND ")
         }
         switch self {
         case .update(let t, let key, let col, _, let new):
-            return "UPDATE \(q(t)) SET \(q(col)) = \(new.sqlLiteral) WHERE \(whereClause(key));"
+            return "UPDATE \(q(t)) SET \(q(col)) = \(new.sqlLiteral(engine)) WHERE \(whereClause(key));"
         case .insert(let t, let values):
             let cols = values.keys.sorted()
-            return "INSERT INTO \(q(t)) (\(cols.map(q).joined(separator: ", "))) VALUES (\(cols.map { values[$0]!.sqlLiteral }.joined(separator: ", ")));"
+            return "INSERT INTO \(q(t)) (\(cols.map(q).joined(separator: ", "))) VALUES (\(cols.map { values[$0]!.sqlLiteral(engine) }.joined(separator: ", ")));"
         case .delete(let t, let key):
             return "DELETE FROM \(q(t)) WHERE \(whereClause(key));"
         }

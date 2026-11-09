@@ -71,5 +71,4 @@ public extension Store {
         return id
     }
 
-    @discardableResult private func locked<T>(_ body: () throws -> T) rethrows -> T { lock.lock(); defer { lock.unlock() }; return try body() }
 }

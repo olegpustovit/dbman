@@ -302,9 +302,7 @@ public enum DashSQL {
             case (.sqlite, _): return "'-\(n) \(u == "h" ? "hours" : "days")'"
             }
         }
-        var s = (value ?? "all").replacingOccurrences(of: "\0", with: "").replacingOccurrences(of: "'", with: "''")
-        if e == .mysql { s = s.replacingOccurrences(of: "\\", with: "\\\\") } // backslash escapes quotes in MySQL's default mode
-        return "'" + s + "'"
+        return Cell.text((value ?? "all").replacingOccurrences(of: "\0", with: "")).sqlLiteral(e)
     }
 }
 

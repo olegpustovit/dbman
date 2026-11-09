@@ -72,7 +72,8 @@ enum DashData {
         top.append(w("rate", "kpi.spark", e == .postgres ? "Tx/s" : "Queries/s", 2, query: {
             switch e {
             case .postgres: "rate:SELECT xact_commit + xact_rollback AS value FROM pg_stat_database WHERE datname = current_database()"
-            case .mysql: "rate:SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME = 'Questions'" // shortcut: MySQL 5.6 has no performance_schema.global_status, upgrade by falling back to SHOW
+            // shortcut: MariaDB keeps it in information_schema (its performance_schema.global_status is empty); MySQL 5.6 has neither, upgrade by falling back to SHOW
+            case .mysql: "rate:SELECT VARIABLE_VALUE FROM \(ws.schema?.serverVersion.contains("MariaDB") == true ? "information_schema.GLOBAL_STATUS" : "performance_schema.global_status") WHERE VARIABLE_NAME = 'Questions'"
             case .sqlite: "rate:console"
             }
         }(), enc: ["x": DashEnc("x"), "y": DashEnc("y")]))
@@ -139,7 +140,7 @@ enum DashData {
             let cc = quoteIdent(c.column, e)
             base.table = t.name; base.column = c.column; base.names = names
             base.sql = """
-                SELECT \(bucket(e, dc)) AS day, \(cc) AS category, COUNT(*) AS n FROM \(quoteIdent(t.name, e)) WHERE \(since(e, t.name, dc)) AND \(cc) IN (\(names.map { "'" + $0.replacingOccurrences(of: "'", with: "''") + "'" }.joined(separator: ", "))) GROUP BY 1, 2 ORDER BY 1
+                SELECT \(bucket(e, dc)) AS day, \(cc) AS category, COUNT(*) AS n FROM \(quoteIdent(t.name, e)) WHERE \(since(e, t.name, dc)) AND \(cc) IN (\(names.map { Cell.text($0).sqlLiteral(e) }.joined(separator: ", "))) GROUP BY 1, 2 ORDER BY 1
                 """
             break
         }

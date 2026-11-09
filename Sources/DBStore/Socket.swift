@@ -14,7 +14,7 @@ public enum UnixSocket {
     private static func addr(_ path: String) -> sockaddr_un {
         var a = sockaddr_un()
         a.sun_family = sa_family_t(AF_UNIX)
-        withUnsafeMutableBytes(of: &a.sun_path) { _ = $0.copyBytes(from: path.utf8.prefix($0.count - 1)) }
+        withUnsafeMutableBytes(of: &a.sun_path) { $0.copyBytes(from: path.utf8.prefix($0.count - 1)) }
         return a
     }
     private static func socket() -> Int32 {

@@ -28,7 +28,7 @@ enum Catalogue {
         tool("schema.tables", "List tables and views with estimated row counts and column counts. Start here."),
         tool("schema.describe", "Columns (type, nullability, PK, FK), indexes, row estimate and referencing tables of one table. Columns marked hidden return «redacted» in query results.",
              [("table", "string", "Table name")], required: ["table"]),
-        tool("schema.graph", "Tables as nodes and declared foreign keys as edges."),
+        tool("schema.graph", "Tables as nodes; edges are declared foreign keys, inferred ones (column name matches a key) and virtual relations, each with its kind."),
         tool("schema.search", "Find tables and columns whose name contains the text.", [("text", "string", "Case-insensitive substring")], required: ["text"]),
         tool("query.run", "Run ONE read-only statement (SELECT/WITH/VALUES/TABLE/SHOW). Writes are never executed (WRITE_REDIRECTED; record changes with overlay.patch_rows). Your virtual views can be used by name and your row patches are merged into the result. Results are capped; when truncated is true pass the returned cursor to get the next page. Production queries are EXPLAINed first and may be BLOCKED_BY_PROD_GUARD: add a filter on an indexed column.",
              [("sql", "string", "A single statement"), ("limit", "integer", "Rows to return, at most the row cap"), ("cursor", "string", "From a previous truncated result; sql may then be omitted"),
@@ -72,8 +72,8 @@ enum Catalogue {
                 "ops": ["type": "array", "description": "e.g. [{\"op\":\"replace\",\"path\":\"/widgets/0/query\",\"value\":\"select ...\"}]",
                         "items": ["type": "object", "required": ["op", "path"], "properties": ["op": ["enum": ["add", "remove", "replace"]], "path": ["type": "string"], "value": [:]]]]]],
              annotations: .init(readOnlyHint: false)),
-        tool("ui.open", "Show the human something in DBMan: brings the app to front at a table, a query or a dashboard.",
-             [("route", "string", "table | query | dashboard"), ("selection", "string", "Table name for table, SQL text for query, id or title for dashboard (none: the default Overview)")], required: ["route"]),
+        tool("ui.open", "Show the human something in DBMan: brings the app to front at a table, a query, a dashboard or the schema map.",
+             [("route", "string", "table | query | dashboard | schema-map"), ("selection", "string", "Table name for table or schema-map (none: the whole map), SQL text for query, id or title for dashboard (none: the default Overview)")], required: ["route"]),
     ]
 }
 
@@ -150,7 +150,7 @@ extension MCPService {
             return ["removed": .string(c.name)]
         case "ui.open":
             guard let route = a["route"]?.stringValue else { throw ToolError("INVALID_ARGUMENT", "route is required") }
-            guard ["table", "query", "dashboard"].contains(route) else { throw ToolError("UNSUPPORTED", "route \(route) is not available; use table, query or dashboard") }
+            guard ["table", "query", "dashboard", "schema-map"].contains(route) else { throw ToolError("UNSUPPORTED", "route \(route) is not available; use table, query, dashboard or schema-map") }
             await b.openUI(c, route, a["selection"]?.stringValue)
             return ["opened": true]
         default: break
@@ -170,9 +170,10 @@ extension MCPService {
             return try await describe(try table(a, c, s), c, s)
         case "schema.graph":
             let sc = try await schema(c, s)
-            // shortcut: declared foreign keys only; inferred edges arrive with the schema map (P5)
+            let virtual = b.store.relations(c.id).compactMap { try? JSONDecoder().decode(VirtualRelation.self, from: Data($0.utf8)) } // every visible layer's, like the map
+            let g = SchemaGraph(schema: sc, virtual: virtual)
             return ["nodes": .array(sc.tables.map { ["table": .string($0.name), "rows": .int(Int($0.rowCount))] }),
-                    "edges": .array(sc.tables.flatMap { t in t.columns.compactMap { col in col.foreignKey.map { ["from": .string("\(t.name).\(col.name)"), "to": .string("\($0.table).\($0.column)"), "declared": true] } } })]
+                    "edges": .array(g.edges.filter { !$0.manyToMany }.map { ["from": .string("\($0.from).\($0.fromColumn)"), "to": .string("\($0.to).\($0.toColumn)"), "kind": .string($0.kind.rawValue)] })]
         case "schema.search":
             let q = (a["text"]?.stringValue ?? "").lowercased()
             guard !q.isEmpty else { throw ToolError("INVALID_ARGUMENT", "text is required") }
@@ -186,7 +187,7 @@ extension MCPService {
         case "query.run":
             return try await query(a, c, s, perm: perm, cap: cap, timeoutMs: timeoutMs, agent: agent, trace: trace)
         case "query.explain":
-            let stmt = try expanded(try readStatement(a["sql"]?.stringValue, c, perm), try overlayScope(a, c, agent)).sql
+            let stmt = expanded(try readStatement(a["sql"]?.stringValue, c, perm), try overlayScope(a, c, agent)).sql
             guard let plan = try await timed(timeoutMs, s, { try await s.explain(stmt, analyze: false) }) else { throw ToolError("UNSUPPORTED", "\(c.engine) returned no plan") }
             return ["plan": Self.tree(plan), "total_cost": .double(plan.cost)]
         case "query.sample":

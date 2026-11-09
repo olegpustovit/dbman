@@ -79,6 +79,9 @@ final class SQLiteTests: XCTestCase {
         let ps = try await DatabaseSession.connect(prod, password: nil)
         do { _ = try await ps.run("WITH x AS (SELECT 1) DELETE FROM users"); XCTFail() } catch {}
         await ps.unlockWrites()
+        await ps.stage(.insert(table: "users", values: ["id": .integer(50), "name": .blob(3)]))
+        do { try await ps.commit(); XCTFail("blob insert must be refused") } catch DBError.query {}
+        await ps.discardChanges()
         _ = try await ps.run("WITH x AS (SELECT 1) DELETE FROM orders")
     }
 
@@ -131,6 +134,27 @@ final class MiscTests: XCTestCase {
         XCTAssertFalse(SQLClassifier.isWrite("SELECT 1"))
         XCTAssertEqual(SQLClassifier.firstKeyword("with x as (select 1) select * from x"), "WITH")
     }
+    func testMariaDBPlanCostAndWrappers() throws {
+        func plan(_ json: String) throws -> PlanNode {
+            let root = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+            return MyDriver.node(try XCTUnwrap(root["query_block"] as? [String: Any]), "Query Block")
+        }
+        let cross = try plan(#"{"query_block":{"cost":2615122.079,"nested_loop":[{"table":{"table_name":"a","access_type":"index","rows":167808,"cost":24.7}},{"block-nl-join":{"table":{"table_name":"b","access_type":"ALL","rows":167808,"cost":2615097.3}}}]}}"#)
+        XCTAssertEqual(cross.cost, 2615122.079); XCTAssertEqual(cross.children.count, 2)
+        XCTAssertEqual(cross.children[1].children.first?.operation, "Table Scan")
+        let sorted = try plan(#"{"query_block":{"cost":40.4,"nested_loop":[{"read_sorted_file":{"filesort":{"table":{"table_name":"orders","access_type":"ALL","rows":48263,"cost":8}}}}]}}"#)
+        XCTAssertEqual(sorted.cost, 40.4)
+        XCTAssertEqual(sorted.children.first?.children.first?.relation, "orders") // the scan under the sort stays visible to the prod guard
+    }
+
+    func testLiteralsPerEngine() {
+        XCTAssertEqual(Cell.text("a\\b'c").sqlLiteral(.mysql), "'a\\\\b''c'") // MySQL: backslash is an escape
+        XCTAssertEqual(Cell.text("a\\b'c").sqlLiteral(.postgres), "'a\\b''c'")
+        let d = Cell.date(Date(timeIntervalSince1970: 0))
+        XCTAssertEqual(d.sqlLiteral(.postgres), "'1970-01-01 00:00:00+00'") // else read in the session time zone
+        XCTAssertEqual(d.sqlLiteral(.mysql), "'1970-01-01 00:00:00'")
+    }
+
     func testChangeSetCollapseUndoSQL() {
         var cs = ChangeSet()
         let k: [String: Cell] = ["id": .integer(1)]
